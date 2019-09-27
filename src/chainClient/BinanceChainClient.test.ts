@@ -1,7 +1,7 @@
 // @ts-ignore
 import sdk from '@binance-chain/javascript-sdk';
-import {BinanceChainClient} from "./ChainClientFactory";
 import {MultiChainConfig} from './types';
+import {BinanceChainClient} from './BinanceChainClient';
 
 const conf = {
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
