@@ -4,5 +4,6 @@ export * from './chainClient/ChainUtils';
 export * from './chainClient/EthereumClient';
 export * from './chainClient/GasPriceProvider';
 export * from './chainClient/CreateNewAddress';
+export * from './chainClient/BinanceChainClient';
 
 export * from './tools/ChainTransactionProcessor';

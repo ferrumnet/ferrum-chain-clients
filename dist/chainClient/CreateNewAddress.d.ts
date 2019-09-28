@@ -1,8 +1,9 @@
-import { Injectable } from 'ferrum-plumbing';
+import { HexString, Injectable } from 'ferrum-plumbing';
 import { AddressWithSecretKeys, Network } from 'ferrum-plumbing';
 import { MultiChainConfig } from './types';
 export interface CreateNewAddress {
     newAddress(): Promise<AddressWithSecretKeys>;
+    addressFromSk(sk: HexString): Promise<AddressWithSecretKeys>;
 }
 /**
  * Note: Do not directly use this. Instead use ChainClientFactory
@@ -18,13 +19,24 @@ export declare class BinanceChainAddress implements CreateNewAddress, Injectable
     private readonly network;
     constructor(config: MultiChainConfig);
     __name__(): string;
+    addressFromSk(sk: HexString): Promise<{
+        address: string;
+        network: Network;
+        privateKeyHex: string;
+    }>;
     newAddress(): Promise<AddressWithSecretKeys>;
 }
 export declare class EthereumAddress implements CreateNewAddress, Injectable {
     private readonly network;
     private readonly provider;
+    private web3;
     constructor(config: MultiChainConfig);
     __name__(): string;
+    addressFromSk(sk: HexString): Promise<{
+        address: string;
+        network: Network;
+        privateKeyHex: string;
+    }>;
     newAddress(): Promise<AddressWithSecretKeys>;
 }
 //# sourceMappingURL=CreateNewAddress.d.ts.map

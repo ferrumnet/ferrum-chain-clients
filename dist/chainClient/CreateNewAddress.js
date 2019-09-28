@@ -52,10 +52,8 @@ class BinanceChainAddress {
     __name__() {
         return 'BinanceChainAddress';
     }
-    newAddress() {
+    addressFromSk(sk) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Create a new private key
-            const sk = crypto.generatePrivateKey();
             const pk = crypto.getPublicKeyFromPrivateKey(sk);
             const address = crypto.getAddressFromPrivateKey(sk, this.network === 'prod' ? 'bnb' : 'tbnb');
             // Test
@@ -74,24 +72,30 @@ class BinanceChainAddress {
             };
         });
     }
+    newAddress() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Create a new private key
+            const sk = crypto.generatePrivateKey();
+            return this.addressFromSk(sk);
+        });
+    }
 }
 exports.BinanceChainAddress = BinanceChainAddress;
 class EthereumAddress {
     constructor(config) {
         this.network = config.networkStage;
         this.provider = config.web3Provider;
+        this.web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
     }
     __name__() {
         return 'EthereumAddress';
     }
-    newAddress() {
+    addressFromSk(sk) {
         return __awaiter(this, void 0, void 0, function* () {
-            const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
-            const account = web3.eth.accounts.create(web3.utils.randomHex(32));
-            // Test
+            const account = this.web3.eth.accounts.privateKeyToAccount(sk);
             const testData = utils.sha3(Buffer.from('TEST DATA').toString('hex')).toString('hex');
             const sign = account.sign(testData);
-            const verif = web3.eth.accounts.recover(sign);
+            const verif = this.web3.eth.accounts.recover(sign);
             if (verif !== account.address) {
                 const msg = 'CreateNewAddress: Error creating a new address. Could not verify generated signature';
                 console.error(msg, account.privateKey);
@@ -102,6 +106,12 @@ class EthereumAddress {
                 network: 'ETHEREUM',
                 privateKeyHex: account.privateKey.substr(2),
             };
+        });
+    }
+    newAddress() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
+            return this.addressFromSk(web3.utils.randomHex(32));
         });
     }
 }

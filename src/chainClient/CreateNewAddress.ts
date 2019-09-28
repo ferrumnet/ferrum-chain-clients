@@ -6,10 +6,10 @@ import * as crypto from '@binance-chain/javascript-sdk/lib/crypto';
 import * as utils from '@binance-chain/javascript-sdk/lib/utils';
 import Web3 from 'web3';
 import {MultiChainConfig} from './types';
-import {ChainUtils} from './ChainUtils';
 
 export interface CreateNewAddress {
-    newAddress(): Promise<AddressWithSecretKeys>
+    newAddress(): Promise<AddressWithSecretKeys>;
+    addressFromSk(sk: HexString): Promise<AddressWithSecretKeys>;
 }
 
 /**
@@ -43,9 +43,7 @@ export class BinanceChainAddress implements CreateNewAddress, Injectable {
         return 'BinanceChainAddress';
     }
 
-    async newAddress(): Promise<AddressWithSecretKeys> {
-        // Create a new private key
-        const sk = crypto.generatePrivateKey() as HexString;
+    async addressFromSk(sk: HexString) {
         const pk = crypto.getPublicKeyFromPrivateKey(sk) as HexString;
         const address = crypto.getAddressFromPrivateKey(sk, this.network === 'prod' ? 'bnb' : 'tbnb') as Buffer;
         // Test
@@ -63,27 +61,33 @@ export class BinanceChainAddress implements CreateNewAddress, Injectable {
             privateKeyHex: sk,
         }
     }
+
+    async newAddress(): Promise<AddressWithSecretKeys> {
+        // Create a new private key
+        const sk = crypto.generatePrivateKey() as HexString;
+        return this.addressFromSk(sk);
+    }
 }
 
 export class EthereumAddress implements CreateNewAddress, Injectable {
     private readonly network: "test" | "prod";
     private readonly provider: string;
+    private web3: Web3;
     constructor(config: MultiChainConfig) {
         this.network = config.networkStage;
         this.provider = config.web3Provider;
+        this.web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
     }
 
     __name__(): string {
         return 'EthereumAddress';
     }
 
-    async newAddress(): Promise<AddressWithSecretKeys> {
-        const web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
-        const account = web3.eth.accounts.create(web3.utils.randomHex(32));
-        // Test
+    async addressFromSk(sk: HexString) {
+        const account = this.web3.eth.accounts.privateKeyToAccount(sk);
         const testData = utils.sha3(Buffer.from('TEST DATA').toString('hex')).toString('hex');
         const sign = account.sign(testData);
-        const verif = web3.eth.accounts.recover(sign);
+        const verif = this.web3.eth.accounts.recover(sign);
         if (verif !== account.address) {
             const msg = 'CreateNewAddress: Error creating a new address. Could not verify generated signature';
             console.error(msg, account.privateKey);
@@ -94,5 +98,10 @@ export class EthereumAddress implements CreateNewAddress, Injectable {
             network: 'ETHEREUM' as Network,
             privateKeyHex: account.privateKey.substr(2),
         }
+    }
+
+    async newAddress(): Promise<AddressWithSecretKeys> {
+        const web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
+        return this.addressFromSk(web3.utils.randomHex(32));
     }
 }
