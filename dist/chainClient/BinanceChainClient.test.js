@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // @ts-ignore
 const javascript_sdk_1 = __importDefault(require("@binance-chain/javascript-sdk"));
 const BinanceChainClient_1 = require("./BinanceChainClient");
+const TestnetConfig_1 = require("../testUtils/configs/TestnetConfig");
 const conf = {
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
     contractAddresses: {
@@ -47,13 +48,21 @@ test('get txt for user', () => __awaiter(void 0, void 0, void 0, function* () {
     const tx = yield client.getRecentTransactionsByAddress(address);
     console.log(tx);
 }));
-test('ppk', () => {
+test('ppk', () => __awaiter(void 0, void 0, void 0, function* () {
     // const nmonic = process.env.NMN;
     //  const sk = sdk.crypto.getPrivateKeyFromMnemonic(nmonic);
-    const sk = process.env.sk;
-    const addr = javascript_sdk_1.default.crypto.getAddressFromPrivateKey(sk, 'bnb');
+    const sk = TestnetConfig_1.TEST_ACCOUNTS.mainAccountSk; // process.env.sk;
+    const addr = javascript_sdk_1.default.crypto.getAddressFromPrivateKey(sk, 'tbnb');
     console.log(addr);
-});
+    const skNew = process.env.PRIVATE_KEY;
+    console.log('About to process payment from ', javascript_sdk_1.default.crypto.getAddressFromPrivateKey(skNew, 'tbnb'), skNew);
+    const client = TestnetConfig_1.testChainClientFactory();
+    const bnbTest = client.forNetwork('BINANCE');
+    // const txId = await bnbTest.processPaymentFromPrivateKey(skNew!, TEST_ACCOUNTS.mainAccountAddressBnb,
+    //     'FRM-410', 500);
+    // const txId = await bnbTest.processPaymentFromPrivateKey(skNew!, TEST_ACCOUNTS.mainAccountAddressBnb, 'BNB', 0.1);
+    // console.log('Tx_Id', txId)
+}));
 test('get balance', () => __awaiter(void 0, void 0, void 0, function* () {
     const address = 'tbnb136zj94xtalc7tp6pcp73r4zx9csdh8cyn7re2d';
     const client = new BinanceChainClient_1.BinanceChainClient('test', conf);

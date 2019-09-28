@@ -31,13 +31,16 @@ class BinanceChainClient {
             const bnbClient = new javascript_sdk_1.default(this.url);
             const bal = (yield bnbClient.getBalance(address)) || [];
             const tokenBal = bal.find((b) => b.symbol === currency);
-            return tokenBal ? tokenBal.free : undefined;
+            return tokenBal ? Number(tokenBal.free) : undefined;
         });
     }
     getTransactionById(tid) {
         return __awaiter(this, void 0, void 0, function* () {
             const apiUrl = `${this.url}/api/v1/tx/${tid}?format=json`;
             const apiRes = yield this.api(apiUrl);
+            if (!apiRes) {
+                return undefined;
+            }
             ferrum_plumbing_1.ValidationUtils.isTrue(apiRes['code'] === 0, 'API return error: ' + apiRes['log']);
             const tx = apiRes['tx']['value']['msg'][0];
             if (tx['type'] !== 'cosmos-sdk/Send' ||
@@ -135,6 +138,9 @@ class BinanceChainClient {
             const res = yield cross_fetch_1.default(api);
             if (res.status >= 400) {
                 const text = yield res.text();
+                if (res.status === 404) { // Not found
+                    return undefined;
+                }
                 throw new Error(`Error getting api ${api}: ${res.statusText} - ${text}`);
             }
             return res.json();
@@ -148,7 +154,7 @@ class BinanceChainClient {
     }
     waitForTransaction(transactionId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return ChainUtils_1.waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils_1.ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT);
+            return ChainUtils_1.waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils_1.ChainUtils.TX_FETCH_TIMEOUT);
         });
     }
 }

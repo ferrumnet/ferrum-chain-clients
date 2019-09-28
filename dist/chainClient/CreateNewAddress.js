@@ -24,7 +24,6 @@ const crypto = __importStar(require("@binance-chain/javascript-sdk/lib/crypto"))
 // @ts-ignore
 const utils = __importStar(require("@binance-chain/javascript-sdk/lib/utils"));
 const web3_1 = __importDefault(require("web3"));
-const ChainUtils_1 = require("./ChainUtils");
 /**
  * Note: Do not directly use this. Instead use ChainClientFactory
  */
@@ -71,7 +70,7 @@ class BinanceChainAddress {
             return {
                 address: address.toString('hex'),
                 network: 'BINANCE',
-                privateKeyHex: ChainUtils_1.ChainUtils.bufferToHex(sk),
+                privateKeyHex: sk,
             };
         });
     }

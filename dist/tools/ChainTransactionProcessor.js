@@ -22,12 +22,12 @@ class ChainTransactionProcessor {
     sendTokenUsingSk(network, feeProviderSk, fromSk, fromAddress, toAddress, currency, amount) {
         return __awaiter(this, void 0, void 0, function* () {
             const client = this.clientFactory.forNetwork(network);
-            const fromBal = yield client.getBalance(fromAddress, currency);
+            const fromBal = (yield client.getBalance(fromAddress, currency)) || 0;
             ferrum_plumbing_1.ValidationUtils.isTrue(fromBal >= amount, `Sender '${fromAddress}' does not have enough balance. Required ${amount}, available: ${fromBal}`);
             const gasPriceProvider = this.clientFactory.gasPriceProvider(network);
             const gasPrice = (yield gasPriceProvider.getGasPrice()).low;
             const requiredFee = gasPriceProvider.getTransactionGas(currency, gasPrice);
-            const feeBal = yield client.getBalance(fromAddress, client.feeCurrency());
+            const feeBal = (yield client.getBalance(fromAddress, client.feeCurrency())) || 0;
             const txs = [];
             if (feeBal < requiredFee) {
                 // Transfer fee to address

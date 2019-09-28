@@ -50,7 +50,7 @@ export interface ChainClient {
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
     processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any, amount: number): Promise<string>;
     getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[] | undefined>;
-    getBalance(address: string, currency: string): Promise<number>;
+    getBalance(address: string, currency: string): Promise<number | undefined>;
     waitForTransaction(tid: string): Promise<SimpleTransferTransaction | undefined>;
     feeCurrency(): string;
 }

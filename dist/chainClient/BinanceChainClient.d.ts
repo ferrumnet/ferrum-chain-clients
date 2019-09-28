@@ -6,7 +6,7 @@ export declare class BinanceChainClient implements ChainClient {
     private readonly txWaitTimeout;
     constructor(networkStage: NetworkStage, config: MultiChainConfig);
     feeCurrency(): string;
-    getBalance(address: string, currency: string): Promise<number>;
+    getBalance(address: string, currency: string): Promise<number | undefined>;
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
     processPaymentFromPrivateKey(sk: HexString, targetAddress: string, currency: string, amount: number): Promise<string>;
     getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[] | undefined>;
