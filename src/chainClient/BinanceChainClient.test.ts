@@ -2,6 +2,7 @@
 import sdk from '@binance-chain/javascript-sdk';
 import {MultiChainConfig} from './types';
 import {BinanceChainClient} from './BinanceChainClient';
+import {TEST_ACCOUNTS, testChainClientFactory} from '../testUtils/configs/TestnetConfig';
 
 const conf = {
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
@@ -40,12 +41,21 @@ test('get txt for user', async () => {
     console.log(tx);
 });
 
-test('ppk', () => {
+test('ppk', async () => {
    // const nmonic = process.env.NMN;
    //  const sk = sdk.crypto.getPrivateKeyFromMnemonic(nmonic);
-    const sk = process.env.sk;
-    const addr = sdk.crypto.getAddressFromPrivateKey(sk, 'bnb')
+    const sk = TEST_ACCOUNTS.mainAccountSk; // process.env.sk;
+    const addr = sdk.crypto.getAddressFromPrivateKey(sk, 'tbnb')
     console.log(addr)
+
+    const skNew = process.env.PRIVATE_KEY;
+    console.log('About to process payment from ', sdk.crypto.getAddressFromPrivateKey(skNew, 'tbnb'), skNew);
+    const client = testChainClientFactory();
+    const bnbTest = client.forNetwork('BINANCE');
+    // const txId = await bnbTest.processPaymentFromPrivateKey(skNew!, TEST_ACCOUNTS.mainAccountAddressBnb,
+    //     'FRM-410', 500);
+    // const txId = await bnbTest.processPaymentFromPrivateKey(skNew!, TEST_ACCOUNTS.mainAccountAddressBnb, 'BNB', 0.1);
+    // console.log('Tx_Id', txId)
 });
 
 test('get balance', async () => {

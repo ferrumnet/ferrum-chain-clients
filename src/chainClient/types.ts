@@ -48,7 +48,7 @@ export interface ChainClient {
 
   getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[]|undefined>;
 
-  getBalance(address: string, currency: string): Promise<number>;
+  getBalance(address: string, currency: string): Promise<number|undefined>;
 
   waitForTransaction(tid: string): Promise<SimpleTransferTransaction|undefined>;
 

@@ -7,11 +7,11 @@ import {BinanceChainAddress, CreateNewAddressFactory, EthereumAddress} from '../
 export const TEST_ACCOUNTS = {
     mainAccountSk: '3C6681B912ABEA03AB2D625759FE38E9BC7301120C13CFA3A3217112A3F2A919',
     mainAccountAddress: '0x0D959c295E36c140AB766dC12E21eBBB411Bd611',
-    mainAccountAddressBnb: '',
+    mainAccountAddressBnb: 'tbnb1mm8t4rexcz44wrhxv2ac94lpmjdsjx73jkyhzr',
 };
 
 export const TESTNET_CONFIG = {
-    binanceChainUrl: '',
+    binanceChainUrl: 'https://testnet-dex.binance.org',
     networkStage: 'test',
     contractAddresses: {
         'FRM': '0x93698a057cec27508a9157a946e03e277b46fe56',

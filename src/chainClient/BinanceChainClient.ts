@@ -17,16 +17,19 @@ export class BinanceChainClient implements ChainClient {
         return 'BNB';
     }
 
-    async getBalance(address: string, currency: string): Promise<number> {
+    async getBalance(address: string, currency: string): Promise<number|undefined> {
         const bnbClient = new BnbApiClient(this.url);
         const bal = await bnbClient.getBalance(address) || [];
         const tokenBal = bal.find((b: any) => b.symbol === currency);
-        return tokenBal ? tokenBal.free : undefined;
+        return tokenBal ? Number(tokenBal.free) : undefined;
     }
 
     async getTransactionById(tid: string): Promise<SimpleTransferTransaction|undefined> {
         const apiUrl = `${this.url}/api/v1/tx/${tid}?format=json`;
         const apiRes = await this.api(apiUrl);
+        if (!apiRes) {
+            return undefined;
+        }
         ValidationUtils.isTrue(apiRes['code'] === 0, 'API return error: ' + apiRes['log']);
         const tx = apiRes['tx']['value']['msg'][0];
         if (tx['type'] !== 'cosmos-sdk/Send' ||
@@ -121,6 +124,9 @@ export class BinanceChainClient implements ChainClient {
         const res = await fetch(api);
         if (res.status >= 400) {
             const text = await res.text();
+            if (res.status === 404) { // Not found
+                return undefined;
+            }
             throw new Error(`Error getting api ${api}: ${res.statusText} - ${text}`);
         }
         return res.json();
@@ -132,7 +138,7 @@ export class BinanceChainClient implements ChainClient {
     }
 
     async waitForTransaction(transactionId: string): Promise<SimpleTransferTransaction|undefined> {
-        return waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT);
+        return waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils.TX_FETCH_TIMEOUT);
     }
 }
 

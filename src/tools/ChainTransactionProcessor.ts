@@ -20,12 +20,12 @@ export class ChainTransactionProcessor implements Injectable {
                            currency: string,
                            amount: number) {
         const client = this.clientFactory.forNetwork(network);
-        const fromBal = await client.getBalance(fromAddress, currency);
+        const fromBal = await client.getBalance(fromAddress, currency) || 0;
         ValidationUtils.isTrue(fromBal >= amount, `Sender '${fromAddress}' does not have enough balance. Required ${amount}, available: ${fromBal}`)
         const gasPriceProvider = this.clientFactory.gasPriceProvider(network);
         const gasPrice = (await gasPriceProvider.getGasPrice()).low;
         const requiredFee = gasPriceProvider.getTransactionGas(currency, gasPrice);
-        const feeBal = await client.getBalance(fromAddress, client.feeCurrency());
+        const feeBal = await client.getBalance(fromAddress, client.feeCurrency()) || 0;
         const txs = [];
         if (feeBal < requiredFee) {
             // Transfer fee to address

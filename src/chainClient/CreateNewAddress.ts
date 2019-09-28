@@ -1,4 +1,4 @@
-import {Injectable} from 'ferrum-plumbing';
+import {HexString, Injectable} from 'ferrum-plumbing';
 import {AddressWithSecretKeys, Network} from 'ferrum-plumbing';
 // @ts-ignore
 import * as crypto from '@binance-chain/javascript-sdk/lib/crypto';
@@ -45,8 +45,8 @@ export class BinanceChainAddress implements CreateNewAddress, Injectable {
 
     async newAddress(): Promise<AddressWithSecretKeys> {
         // Create a new private key
-        const sk = crypto.generatePrivateKey() as ArrayBuffer;
-        const pk = crypto.getPublicKeyFromPrivateKey(sk) as ArrayBuffer;
+        const sk = crypto.generatePrivateKey() as HexString;
+        const pk = crypto.getPublicKeyFromPrivateKey(sk) as HexString;
         const address = crypto.getAddressFromPrivateKey(sk, this.network === 'prod' ? 'bnb' : 'tbnb') as Buffer;
         // Test
         const testData = utils.sha3(Web3.utils.toHex('TEST DATA'));
@@ -60,7 +60,7 @@ export class BinanceChainAddress implements CreateNewAddress, Injectable {
         return {
             address: address.toString('hex'),
             network: 'BINANCE' as Network,
-            privateKeyHex: ChainUtils.bufferToHex(sk),
+            privateKeyHex: sk,
         }
     }
 }
