@@ -18,7 +18,7 @@ const CURRENCY = 'FRM-410';
 
 test('send tx', async () => {
     const client = new BinanceChainClient('test', conf);
-    const privateKey = Buffer.from('e0d33c540f7eff1d20a1de049236542fd2d21a365e42e01b0a416f93aa078890', 'hex');
+    const privateKey = 'e0d33c540f7eff1d20a1de049236542fd2d21a365e42e01b0a416f93aa078890';
     const to = 'tbnb136zj94xtalc7tp6pcp73r4zx9csdh8cyn7re2d';
     const currency = 'FRM-410';
 

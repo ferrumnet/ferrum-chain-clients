@@ -31,9 +31,15 @@ class ChainUtils {
             return address;
         }
     }
+    static bufferToHex(buffer) {
+        return Array
+            .from(new Uint8Array(buffer))
+            .map(b => b.toString(16).padStart(2, "0"))
+            .join("");
+    }
 }
 exports.ChainUtils = ChainUtils;
-ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT = 20000;
+ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT = 60000;
 ChainUtils.TX_FETCH_TIMEOUT = 1000;
 ChainUtils.TX_MAXIMUM_WAIT_TIMEOUT = 3600 * 1000;
 function waitForTx(client, transactionId, waitTimeout, fetchTimeout) {
@@ -50,6 +56,7 @@ function waitForTx(client, transactionId, waitTimeout, fetchTimeout) {
             if ((Date.now() - time) > ChainUtils.TX_MAXIMUM_WAIT_TIMEOUT) {
                 throw new Error(`Timed out waiting for transaction ${transactionId} to be either approved to failed`);
             }
+            console.log('Waiting for transaction ', transactionId, !tx);
             yield ferrum_plumbing_1.sleep(fetchTimeout);
         }
     });

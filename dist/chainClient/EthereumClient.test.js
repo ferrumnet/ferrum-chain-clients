@@ -9,31 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const EthereumClient_1 = require("./EthereumClient");
-const confProd = {
-    web3Provider: 'https://mainnet.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b',
-    contractAddresses: {
-        FRM: '0xe5caef4af8780e59df925470b050fb23c43ca68c',
-    },
-    contractDecimals: {
-        FRM: 6,
-    },
-    binanceChainUrl: 'https://dex.binance.org',
-    networkStage: 'test',
-};
-const conf = {
-    web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
-    contractAddresses: {
-        FRM: '0x19fc63077e0e24598e74dfa450f536c214f6b1a4',
-    },
-    contractDecimals: {
-        FRM: 6,
-    },
-    networkStage: 'test',
-    binanceChainUrl: '',
-};
+const TestnetConfig_1 = require("../testUtils/configs/TestnetConfig");
+const clientFac = TestnetConfig_1.testChainClientFactory();
+function ethereumClientForTest() { return clientFac.forNetwork('ETHEREUM'); }
 test('send tx', () => __awaiter(void 0, void 0, void 0, function* () {
-    const client = new EthereumClient_1.EthereumClient('test', conf);
+    const client = ethereumClientForTest();
     // const privateKey = Buffer.from('54A5003FC3849EFA4823EFAE9B33EBD07EDA224C47A81219C9EDAC550C1402A9', 'hex');
     // const to = '0x467502Ef1c444f98349dacdf0223CCb5e2019f36';
     //
@@ -44,13 +24,13 @@ test('send tx', () => __awaiter(void 0, void 0, void 0, function* () {
 }));
 test('Get transaction BY ID no token transfer', () => __awaiter(void 0, void 0, void 0, function* () {
     const tid = '0x2268da5e389627122707f64b61fb9129a7cb3554117b2f07e75200833e8d7ce9';
-    const client = new EthereumClient_1.EthereumClient('prod', confProd);
+    const client = TestnetConfig_1.ethereumClientForProd();
     const tx = yield client.getTransactionById(tid);
     console.log(tx);
 }));
 test('Get transaction BY ID including token transfer', () => __awaiter(void 0, void 0, void 0, function* () {
     const tid = '0xc80881f0bcee3c53411bf8781665dbb762a0aef4780af0f8868dc7513387ebe3';
-    const client = new EthereumClient_1.EthereumClient('prod', confProd);
+    const client = TestnetConfig_1.ethereumClientForProd();
     const tx = yield client.getTransactionById(tid);
     console.log(tx);
 }));
@@ -58,7 +38,7 @@ test('Get token transactions BY address', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);
         const addr = '0xbebe7881a7253c6c0246fabf4d159d2eb2db58e1';
-        const client = new EthereumClient_1.EthereumClient('prod', confProd);
+        const client = TestnetConfig_1.ethereumClientForProd();
         const tx = yield client.getRecentTransactionsByAddress(addr);
         console.log(tx);
     });
@@ -67,7 +47,7 @@ test('Get balance', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);
         const addr = '0xbebe7881a7253c6c0246fabf4d159d2eb2db58e1';
-        const client = new EthereumClient_1.EthereumClient('prod', confProd);
+        const client = TestnetConfig_1.ethereumClientForProd();
         let bal = yield client.getBalance(addr, 'FRM');
         expect(bal).toBeTruthy();
         console.log('Balance is ', bal);

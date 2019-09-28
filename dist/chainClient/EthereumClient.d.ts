@@ -1,16 +1,15 @@
-/// <reference types="node" />
-import BN from 'bn.js';
 import { ChainClient, MultiChainConfig, NetworkStage, SimpleTransferTransaction } from "./types";
+import { HexString } from 'ferrum-plumbing';
+import { GasPriceProvider } from './GasPriceProvider';
 export declare class EthereumClient implements ChainClient {
     private networkStage;
+    private gasService;
     private readonly provider;
     private readonly contractAddresses;
     private readonly decimals;
-    private rebalanceOffsets;
-    private maxConcurrentBlocks;
     private readonly requiredConfirmations;
-    private txWaitTimeout;
-    constructor(networkStage: NetworkStage, config: MultiChainConfig);
+    private readonly txWaitTimeout;
+    constructor(networkStage: NetworkStage, config: MultiChainConfig, gasService: GasPriceProvider);
     feeCurrency(): string;
     findContractInfo(contractAddress: string): {
         name: string;
@@ -18,15 +17,13 @@ export declare class EthereumClient implements ChainClient {
         decimal: any;
     };
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
-    processPaymentFromPrivateKey(sk: Buffer, targetAddress: string, currency: string, amount: number): Promise<string>;
-    getBlocksRange(start: number, end: number): number[];
-    getBlocksToParse(startBlock: number, endBlock: number, concurrentBlocks: number): number;
-    getNumberBlocks(startBlock: number, lastBlock: number, ascending: boolean, rebalanceOffsets: number[]): number[];
+    processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, currency: string, amount: number): Promise<string>;
     /**
      * Note: This only returns incoming transactions to the given address and only works for ERC20 transactions
      */
     getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[]>;
-    sendTransaction(contractAddress: string, privateKey: Buffer, to: string, amount: BN): Promise<string>;
+    private sendTransaction;
+    private sendEth;
     getBalance(address: string, currency: string): Promise<number>;
     waitForTransaction(transactionId: string): Promise<SimpleTransferTransaction | undefined>;
     private web3;

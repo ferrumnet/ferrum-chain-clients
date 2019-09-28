@@ -70,7 +70,7 @@ class BinanceChainClient {
         return __awaiter(this, void 0, void 0, function* () {
             const binanceNetwork = this.networkStage === 'test' ? 'testnet' : 'mainnet';
             console.log('Initializing the binance chain', binanceNetwork, this.url);
-            const privateKey = sk.toString('hex');
+            const privateKey = sk;
             const bnbClient = new javascript_sdk_1.default(this.url);
             bnbClient.chooseNetwork(binanceNetwork);
             yield bnbClient.initChain();

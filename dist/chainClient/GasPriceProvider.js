@@ -13,31 +13,64 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const cross_fetch_1 = __importDefault(require("cross-fetch"));
-class GasPriceProvider {
+const web3_1 = __importDefault(require("web3"));
+const bn_js_1 = __importDefault(require("bn.js"));
+function gweiToEth(gweiNum) {
+    return Number(web3_1.default.utils.fromWei(web3_1.default.utils.toWei(new bn_js_1.default(gweiNum), 'gwei'), 'ether'));
+}
+const BINANCE_FEE = 0.000375;
+class BinanceGasPriceProvider {
+    getGasPrice() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return {
+                low: BINANCE_FEE,
+                medium: BINANCE_FEE,
+                high: BINANCE_FEE,
+            };
+        });
+    }
+    getTransactionGas(currency, _) {
+        return BINANCE_FEE;
+    }
+    __name__() {
+        return 'BinanceGasPriceProvider';
+    }
+}
+exports.BinanceGasPriceProvider = BinanceGasPriceProvider;
+class EthereumGasPriceProvider {
     constructor() {
         this.lastUpdate = 0;
     }
     getGasPrice() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.lastUpdate < (Date.now() - GasPriceProvider.GasTimeout)) {
+            if (this.lastUpdate > (Date.now() - EthereumGasPriceProvider.GasTimeout)) {
                 return this.lastPrice;
             }
-            const res = yield cross_fetch_1.default(GasPriceProvider.GasStationUrl, {});
+            const res = yield cross_fetch_1.default(EthereumGasPriceProvider.GasStationUrl, {});
             if (res.status >= 400) {
                 const txt = yield res.text();
                 throw new Error('Error getting gas price: ' + txt);
             }
             const prices = yield res.json();
             this.lastPrice = {
-                low: prices['safeLow'],
-                medium: prices['average'],
-                high: prices['fast'],
+                low: gweiToEth(prices['safeLow'] / 10),
+                medium: gweiToEth(prices['average'] / 10),
+                high: gweiToEth(prices['fast'] / 10),
             };
             return this.lastPrice;
         });
     }
+    getTransactionGas(currency, gasPrice) {
+        return currency === 'ETH' ?
+            EthereumGasPriceProvider.ETH_TX_GAS * gasPrice : EthereumGasPriceProvider.ERC_20_GAS * gasPrice;
+    }
+    __name__() {
+        return 'GasPriceProvider';
+    }
 }
-exports.GasPriceProvider = GasPriceProvider;
-GasPriceProvider.GasStationUrl = 'https://ethgasstation.info/json/ethgasAPI.json';
-GasPriceProvider.GasTimeout = 30000;
+exports.EthereumGasPriceProvider = EthereumGasPriceProvider;
+EthereumGasPriceProvider.GasStationUrl = 'https://ethgasstation.info/json/ethgasAPI.json';
+EthereumGasPriceProvider.GasTimeout = 30000;
+EthereumGasPriceProvider.ERC_20_GAS = 51424;
+EthereumGasPriceProvider.ETH_TX_GAS = 21000;
 //# sourceMappingURL=GasPriceProvider.js.map

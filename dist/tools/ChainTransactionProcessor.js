@@ -8,19 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const ferrum_plumbing_1 = require("ferrum-plumbing");
-const web3_1 = __importDefault(require("web3"));
-const bn_js_1 = __importDefault(require("bn.js"));
-const MIN_FEE = {
-    'ETHEREUM': web3_1.default.utils.toWei(web3_1.default.utils.toWei(new bn_js_1.default(1), 'gwei'), 'ether').toNumber(),
-    'BINANCE': 0.000375,
-    'BITCOIN': 0,
-    'FERRUM': 0,
-};
 class ChainTransactionProcessor {
     constructor(clientFactory) {
         this.clientFactory = clientFactory;
@@ -34,12 +23,15 @@ class ChainTransactionProcessor {
         return __awaiter(this, void 0, void 0, function* () {
             const client = this.clientFactory.forNetwork(network);
             const fromBal = yield client.getBalance(fromAddress, currency);
-            ferrum_plumbing_1.ValidationUtils.isTrue(fromBal > amount, `Sender '${fromAddress}' does not have enough balance. Required ${amount}, available: ${fromBal}`);
-            const requiredFee = MIN_FEE[network]; // TODO: Use a fee service
+            ferrum_plumbing_1.ValidationUtils.isTrue(fromBal >= amount, `Sender '${fromAddress}' does not have enough balance. Required ${amount}, available: ${fromBal}`);
+            const gasPriceProvider = this.clientFactory.gasPriceProvider(network);
+            const gasPrice = (yield gasPriceProvider.getGasPrice()).low;
+            const requiredFee = gasPriceProvider.getTransactionGas(currency, gasPrice);
             const feeBal = yield client.getBalance(fromAddress, client.feeCurrency());
             const txs = [];
             if (feeBal < requiredFee) {
                 // Transfer fee to address
+                console.log('Transferring fee to address ', toAddress, requiredFee, client.feeCurrency());
                 const feeTxId = yield client.processPaymentFromPrivateKey(feeProviderSk, fromAddress, client.feeCurrency(), requiredFee);
                 const feeTx = yield client.waitForTransaction(feeTxId);
                 if (!feeTx) {
@@ -50,6 +42,7 @@ class ChainTransactionProcessor {
                 }
                 txs.push(feeTx);
             }
+            console.log('Transferring amount to address ', toAddress, amount, currency);
             const finalTxId = yield client.processPaymentFromPrivateKey(fromSk, toAddress, currency, amount);
             const finalTx = yield client.waitForTransaction(finalTxId);
             if (!finalTx) {

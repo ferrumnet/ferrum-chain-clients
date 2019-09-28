@@ -26,6 +26,7 @@ const abi_decoder_1 = __importDefault(require("abi-decoder"));
 const abi = __importStar(require("../resources/erc20-abi.json"));
 const ferrum_plumbing_1 = require("ferrum-plumbing");
 const ChainUtils_1 = require("./ChainUtils");
+const GasPriceProvider_1 = require("./GasPriceProvider");
 const DecimalToUnit = {
     '1': 'wei',
     '3': 'kwei',
@@ -36,10 +37,9 @@ const DecimalToUnit = {
     '18': 'ether',
 };
 class EthereumClient {
-    constructor(networkStage, config) {
+    constructor(networkStage, config, gasService) {
         this.networkStage = networkStage;
-        this.rebalanceOffsets = [15];
-        this.maxConcurrentBlocks = 2;
+        this.gasService = gasService;
         this.provider = config.web3Provider;
         this.contractAddresses = config.contractAddresses;
         this.decimals = config.contractDecimals;
@@ -77,19 +77,38 @@ class EthereumClient {
             if (!transactionReceipt) {
                 console.error('EthereumClient.getTransactionById: Transaction did not have any receipt / logs', tid);
             }
+            if (!transactionReceipt.status) {
+                // Transaction failed.
+                return {
+                    network: "ETHEREUM",
+                    fee: transactionReceipt['gasUsed'],
+                    feeCurrency: "ETH",
+                    from: { address: transaction.from,
+                        currency: '',
+                        amount: 0 },
+                    to: { address: transaction.to,
+                        currency: '',
+                        amount: 0 },
+                    confirmed: false,
+                    confirmationTime: 0,
+                    failed: true,
+                    id: transactionReceipt['transactionHash']
+                };
+            }
             let logs = transactionReceipt['logs'];
             if (logs !== undefined) {
                 let len = logs.length;
-                if (len && len > 1) { // multi transfer by contract function.
+                if (len > 1) { // multi transfer by contract function.
+                    console.warn('Received a transaction with more than 1 log items. Not supported', transaction, transactionReceipt);
                     return undefined;
                 }
-                else if (len && len == 1) { // normal token to token transaction
+                else if (len === 1) { // normal token to token transaction
                     const decodedLogs = abi_decoder_1.default.decodeLogs(logs).filter((log) => log);
                     if (decodedLogs.length > 0) {
                         let decodedLog = decodedLogs[0];
                         if (decodedLog.name === "Transfer") {
                             let contractinfo = this.findContractInfo(decodedLog.address);
-                            const decimalUnit = DecimalToUnit[contractinfo.decimal.toString()];
+                            const decimalUnit = DecimalToUnit[contractinfo.decimal.toFixed()];
                             ferrum_plumbing_1.ValidationUtils.isTrue(!!decimalUnit, `Deciman ${contractinfo.decimal} does not map to a unit`);
                             let transferData = {
                                 network: "ETHEREUM",
@@ -111,7 +130,7 @@ class EthereumClient {
                     }
                     return undefined;
                 }
-                else if (len && len == 0) { // normal eth to eth transaction.
+                else { // normal eth to eth transaction.
                     let res = {
                         network: "ETHEREUM",
                         fee: transactionReceipt['gasUsed'],
@@ -129,36 +148,17 @@ class EthereumClient {
             return undefined;
         });
     }
-    processPaymentFromPrivateKey(sk, targetAddress, currency, amount) {
+    processPaymentFromPrivateKey(skHex, targetAddress, currency, amount) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (currency === this.feeCurrency()) {
+                return this.sendEth(skHex, targetAddress, amount);
+            }
             const contract = this.contractAddresses[currency];
             const decimal = this.decimals[currency];
             const amountBN = web3_1.default.utils.toBN(Math.floor(amount * Math.pow(10, decimal)));
             ferrum_plumbing_1.ValidationUtils.isTrue(!!contract, 'Unknown contract address for currency: ' + currency);
-            return this.sendTransaction(contract, sk, targetAddress, amountBN);
+            return this.sendTransaction(contract, skHex, targetAddress, amountBN);
         });
-    }
-    getBlocksRange(start, end) {
-        return Array.from(Array(end - start + 1).keys()).map((i) => i + start);
-    }
-    getBlocksToParse(startBlock, endBlock, concurrentBlocks) {
-        const blocksDiff = 1 + endBlock - startBlock;
-        return endBlock - startBlock <= 0 ? 1 : blocksDiff > concurrentBlocks ? concurrentBlocks : blocksDiff;
-    }
-    getNumberBlocks(startBlock, lastBlock, ascending, rebalanceOffsets) {
-        const blocksToProcess = this.getBlocksToParse(startBlock, lastBlock, this.maxConcurrentBlocks);
-        const startBlockRange = ascending ? startBlock : Math.max(startBlock - blocksToProcess + 1, 0);
-        const endBlockRange = startBlockRange + blocksToProcess - 1;
-        const numberBlocks = this.getBlocksRange(startBlockRange, endBlockRange);
-        if (lastBlock - startBlock < Math.min(...this.rebalanceOffsets) && ascending) {
-            rebalanceOffsets.forEach((rebalanceOffset) => {
-                const rebalanceBlock = startBlock - rebalanceOffset;
-                if (rebalanceBlock > 0) {
-                    numberBlocks.unshift(rebalanceBlock);
-                }
-            });
-        }
-        return numberBlocks;
     }
     /**
      * Note: This only returns incoming transactions to the given address and only works for ERC20 transactions
@@ -204,22 +204,50 @@ class EthereumClient {
     }
     sendTransaction(contractAddress, privateKey, to, amount) {
         return __awaiter(this, void 0, void 0, function* () {
-            const privateKeyHex = '0x' + privateKey.toString('hex');
-            var web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
+            const privateKeyHex = '0x' + privateKey;
+            const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
             const addressFrom = web3.eth.accounts.privateKeyToAccount(privateKeyHex);
             let sendAmount = amount; //web3.utils.toWei(amount, 'ether');
             const consumerContract = new web3.eth.Contract(abi.abi, contractAddress);
             const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
             const from = addressFrom.address;
+            const gasPrice = (yield this.gasService.getGasPrice()).low;
             const tx = {
                 from,
                 to: contractAddress,
                 value: '0',
-                gasPrice: web3.utils.toWei('20', 'gwei'),
-                gas: 60000,
+                gasPrice: web3.utils.toWei(gasPrice.toFixed(12), 'ether'),
+                gas: GasPriceProvider_1.EthereumGasPriceProvider.ERC_20_GAS,
                 chainId: this.networkStage === 'test' ? 4 : 1,
                 nonce: yield web3.eth.getTransactionCount(from, 'pending'),
                 data: myData
+            };
+            console.log('About to submit transaction:', tx);
+            const signed = yield web3.eth.accounts.signTransaction(tx, privateKeyHex);
+            const rawTx = signed.rawTransaction;
+            const sendRawTx = (rawTx) => new Promise((resolve, reject) => web3.eth
+                .sendSignedTransaction(rawTx)
+                .on('transactionHash', resolve)
+                .on('error', reject));
+            return yield sendRawTx(rawTx);
+        });
+    }
+    sendEth(privateKey, to, amount) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const privateKeyHex = '0x' + privateKey;
+            const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
+            const addressFrom = web3.eth.accounts.privateKeyToAccount(privateKeyHex);
+            let sendAmount = web3.utils.toWei(amount.toFixed(12), 'ether');
+            const from = addressFrom.address;
+            const gasPrice = (yield this.gasService.getGasPrice()).low;
+            const tx = {
+                from,
+                to: to,
+                value: sendAmount,
+                gasPrice: web3.utils.toWei(gasPrice.toFixed(12), 'ether'),
+                gas: GasPriceProvider_1.EthereumGasPriceProvider.ETH_TX_GAS,
+                chainId: this.networkStage === 'test' ? 4 : 1,
+                nonce: yield web3.eth.getTransactionCount(from, 'pending'),
             };
             console.log('About to submit transaction:', tx);
             const signed = yield web3.eth.accounts.signTransaction(tx, privateKeyHex);
@@ -250,7 +278,7 @@ class EthereumClient {
     }
     waitForTransaction(transactionId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return ChainUtils_1.waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils_1.ChainUtils.TX_FETCH_TIMEOUT);
+            return ChainUtils_1.waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils_1.ChainUtils.TX_FETCH_TIMEOUT * 10);
         });
     }
     web3() {

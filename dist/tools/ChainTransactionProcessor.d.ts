@@ -1,4 +1,4 @@
-import { Injectable, Network } from 'ferrum-plumbing';
+import { HexString, Injectable, Network } from 'ferrum-plumbing';
 import { ChainClientFactory } from '../chainClient/ChainClientFactory';
 export declare class ChainTransactionProcessor implements Injectable {
     private clientFactory;
@@ -8,7 +8,7 @@ export declare class ChainTransactionProcessor implements Injectable {
      * Submits a tx and transfer required fees if necessary. Returns all the created transactions.
      * @param fromSk
      */
-    sendTokenUsingSk(network: Network, feeProviderSk: ArrayBuffer, fromSk: ArrayBuffer, fromAddress: string, toAddress: string, currency: string, amount: number): Promise<import("..").SimpleTransferTransaction[]>;
+    sendTokenUsingSk(network: Network, feeProviderSk: HexString, fromSk: HexString, fromAddress: string, toAddress: string, currency: string, amount: number): Promise<import("..").SimpleTransferTransaction[]>;
     __name__(): string;
 }
 //# sourceMappingURL=ChainTransactionProcessor.d.ts.map

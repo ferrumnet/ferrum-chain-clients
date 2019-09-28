@@ -9,15 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const GasPriceProvider_1 = require("./GasPriceProvider");
-test('Can get gas price ', () => __awaiter(void 0, void 0, void 0, function* () {
-    const gpp = new GasPriceProvider_1.EthereumGasPriceProvider();
-    const price = yield gpp.getGasPrice();
-    console.log(price);
-    expect(price.high).toBeGreaterThan(0);
-    expect(price.high).toBeLessThan(1);
-    expect(price.low).toBeGreaterThan(0);
-    expect(price.low).toBeLessThan(1);
-    expect(price.low).toBeGreaterThan(0);
+const CreateNewAddress_1 = require("./CreateNewAddress");
+test('can create new binance address', () => __awaiter(void 0, void 0, void 0, function* () {
+    const bc = new CreateNewAddress_1.BinanceChainAddress({ custom: { networkStage: 'test' } });
+    const addr = yield bc.newAddress();
+    expect(addr.address.length).toBe(43);
+    expect(addr.privateKeyHex.length).toBe(64);
 }));
-//# sourceMappingURL=GasPriceProvider.test.js.map
+test('can create new eth address', () => __awaiter(void 0, void 0, void 0, function* () {
+    const bc = new CreateNewAddress_1.EthereumAddress({ custom: { networkStage: 'test' } });
+    const addr = yield bc.newAddress();
+    expect(addr.address.length).toBe(40);
+    expect(addr.privateKeyHex.length).toBe(64);
+}));
+//# sourceMappingURL=CreateNewAddress.test.js.map
