@@ -1,33 +1,13 @@
 import {EthereumClient} from "./EthereumClient";
 import {MultiChainConfig} from './types';
+import {ethereumClientForProd, testChainClientFactory} from '../testUtils/configs/TestnetConfig';
 
-const confProd = {
-    web3Provider: 'https://mainnet.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b',
-    contractAddresses: {
-        FRM: '0xe5caef4af8780e59df925470b050fb23c43ca68c',
-    },
-    contractDecimals: {
-        FRM: 6,
-    },
-    binanceChainUrl: 'https://dex.binance.org',
-    networkStage: 'test',
-} as MultiChainConfig;
+const clientFac = testChainClientFactory();
 
-
-const conf = {
-    web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
-    contractAddresses: {
-        FRM: '0x19fc63077e0e24598e74dfa450f536c214f6b1a4',
-    },
-    contractDecimals: {
-        FRM: 6,
-    },
-    networkStage: 'test',
-    binanceChainUrl: '',
-} as MultiChainConfig;
+function ethereumClientForTest() { return clientFac.forNetwork('ETHEREUM'); }
 
 test('send tx', async () => {
-    const client = new EthereumClient('test', conf);
+    const client = ethereumClientForTest();
     // const privateKey = Buffer.from('54A5003FC3849EFA4823EFAE9B33EBD07EDA224C47A81219C9EDAC550C1402A9', 'hex');
     // const to = '0x467502Ef1c444f98349dacdf0223CCb5e2019f36';
     //
@@ -40,14 +20,14 @@ test('send tx', async () => {
 
 test('Get transaction BY ID no token transfer', async () => {
     const tid = '0x2268da5e389627122707f64b61fb9129a7cb3554117b2f07e75200833e8d7ce9';
-    const client = new EthereumClient('prod', confProd);
+    const client = ethereumClientForProd();
     const tx = await client.getTransactionById(tid);
     console.log(tx);
 });
 
 test('Get transaction BY ID including token transfer', async () => {
     const tid = '0xc80881f0bcee3c53411bf8781665dbb762a0aef4780af0f8868dc7513387ebe3';
-    const client = new EthereumClient('prod', confProd);
+    const client = ethereumClientForProd();
     const tx = await client.getTransactionById(tid);
     console.log(tx);
 });
@@ -55,7 +35,7 @@ test('Get transaction BY ID including token transfer', async () => {
 test('Get token transactions BY address', async function () {
     jest.setTimeout(100000);
     const addr = '0xbebe7881a7253c6c0246fabf4d159d2eb2db58e1';
-    const client = new EthereumClient('prod', confProd);
+    const client = ethereumClientForProd();
     const tx = await client.getRecentTransactionsByAddress(addr);
     console.log(tx);
 });
@@ -63,7 +43,7 @@ test('Get token transactions BY address', async function () {
 test('Get balance', async function() {
     jest.setTimeout(100000);
     const addr = '0xbebe7881a7253c6c0246fabf4d159d2eb2db58e1';
-    const client = new EthereumClient('prod', confProd);
+    const client = ethereumClientForProd();
     let bal = await client.getBalance(addr, 'FRM');
     expect(bal).toBeTruthy();
     console.log('Balance is ', bal);

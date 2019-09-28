@@ -1,4 +1,4 @@
-import { Network } from 'ferrum-plumbing';
+import {HexString, Network} from 'ferrum-plumbing';
 
 interface IDecodedLogEvent {
   name: string;
@@ -44,7 +44,7 @@ export const NetworkNativeCurrencies = {
 export interface ChainClient {
   getTransactionById(tid: string): Promise<SimpleTransferTransaction|undefined>;
 
-  processPaymentFromPrivateKey(sk: ArrayBuffer, targetAddress: string, expectedCurrencyElement: any, amount: number): Promise<string>;
+  processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any, amount: number): Promise<string>;
 
   getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[]|undefined>;
 

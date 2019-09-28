@@ -2,7 +2,7 @@ import {Network, sleep} from 'ferrum-plumbing';
 import {ChainClient} from './types';
 
 export class ChainUtils {
-    static readonly DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT = 20000;
+    static readonly DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT = 60000;
     static readonly TX_FETCH_TIMEOUT = 1000;
     static readonly TX_MAXIMUM_WAIT_TIMEOUT = 3600 * 1000;
     static addressesAreEqual(network: Network, a1: string, a2: string): boolean {
@@ -24,6 +24,13 @@ export class ChainUtils {
             return address;
         }
     }
+
+    static bufferToHex (buffer: ArrayBuffer) {
+        return Array
+            .from (new Uint8Array (buffer))
+            .map (b => b.toString (16).padStart (2, "0"))
+            .join ("");
+    }
 }
 
 export async function waitForTx(client: ChainClient, transactionId: string, waitTimeout: number, fetchTimeout: number) {
@@ -36,9 +43,11 @@ export async function waitForTx(client: ChainClient, transactionId: string, wait
         if (tx && (tx.confirmed || tx.failed)) {
             return tx;
         }
+
         if ((Date.now() - time) > ChainUtils.TX_MAXIMUM_WAIT_TIMEOUT) {
             throw new Error(`Timed out waiting for transaction ${transactionId} to be either approved to failed`);
         }
+        console.log('Waiting for transaction ', transactionId, !tx);
         await sleep(fetchTimeout);
     }
 }

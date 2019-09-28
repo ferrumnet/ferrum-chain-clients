@@ -1,14 +1,5 @@
-import {Injectable, Network, ValidationUtils} from 'ferrum-plumbing';
+import {HexString, Injectable, Network, ValidationUtils} from 'ferrum-plumbing';
 import {ChainClientFactory} from '../chainClient/ChainClientFactory';
-import Web3 from 'web3';
-import BN from 'bn.js';
-
-const MIN_FEE = {
-    'ETHEREUM': Web3.utils.toWei(Web3.utils.toWei(new BN(1), 'gwei'), 'ether').toNumber(),
-    'BINANCE': 0.000375,
-    'BITCOIN': 0, // TODO: Support
-    'FERRUM': 0, // TODO: Support
-};
 
 export class ChainTransactionProcessor implements Injectable {
     constructor(
@@ -22,20 +13,23 @@ export class ChainTransactionProcessor implements Injectable {
      * @param fromSk
      */
     async sendTokenUsingSk(network: Network,
-                           feeProviderSk: ArrayBuffer,
-                           fromSk: ArrayBuffer,
+                           feeProviderSk: HexString,
+                           fromSk: HexString,
                            fromAddress: string,
                            toAddress: string,
                            currency: string,
                            amount: number) {
         const client = this.clientFactory.forNetwork(network);
         const fromBal = await client.getBalance(fromAddress, currency);
-        ValidationUtils.isTrue(fromBal > amount, `Sender '${fromAddress}' does not have enough balance. Required ${amount}, available: ${fromBal}`)
-        const requiredFee = MIN_FEE[network]; // TODO: Use a fee service
+        ValidationUtils.isTrue(fromBal >= amount, `Sender '${fromAddress}' does not have enough balance. Required ${amount}, available: ${fromBal}`)
+        const gasPriceProvider = this.clientFactory.gasPriceProvider(network);
+        const gasPrice = (await gasPriceProvider.getGasPrice()).low;
+        const requiredFee = gasPriceProvider.getTransactionGas(currency, gasPrice);
         const feeBal = await client.getBalance(fromAddress, client.feeCurrency());
         const txs = [];
         if (feeBal < requiredFee) {
             // Transfer fee to address
+            console.log('Transferring fee to address ', toAddress, requiredFee, client.feeCurrency());
             const feeTxId = await client.processPaymentFromPrivateKey(feeProviderSk, fromAddress, client.feeCurrency(), requiredFee);
             const feeTx = await client.waitForTransaction(feeTxId);
             if (!feeTx) {
@@ -46,6 +40,7 @@ export class ChainTransactionProcessor implements Injectable {
             }
             txs.push(feeTx);
         }
+        console.log('Transferring amount to address ', toAddress, amount, currency);
         const finalTxId = await client.processPaymentFromPrivateKey(fromSk, toAddress, currency, amount);
         const finalTx = await client.waitForTransaction(finalTxId);
         if (!finalTx) {

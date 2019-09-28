@@ -1,13 +1,13 @@
 import {ChainClient, MultiChainConfig, NetworkStage, SimpleTransferTransaction} from './types';
-import {sleep, ValidationUtils} from 'ferrum-plumbing';
+import {HexString, sleep, ValidationUtils} from 'ferrum-plumbing';
 import fetch from "cross-fetch";
 // @ts-ignore
 import BnbApiClient from '@binance-chain/javascript-sdk';
 import {ChainUtils, waitForTx} from './ChainUtils';
 
 export class BinanceChainClient implements ChainClient {
-    private url: string;
-    private txWaitTimeout: number;
+    private readonly url: string;
+    private readonly txWaitTimeout: number;
     constructor(private networkStage: NetworkStage, config: MultiChainConfig) {
         this.url = config.binanceChainUrl;
         this.txWaitTimeout = config.pendingTransactionShowTimeout || ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT;
@@ -57,11 +57,10 @@ export class BinanceChainClient implements ChainClient {
         } as SimpleTransferTransaction;
     }
 
-    async processPaymentFromPrivateKey(sk: Buffer, targetAddress: string, currency: string, amount: number): Promise<string> {
-
+    async processPaymentFromPrivateKey(sk: HexString, targetAddress: string, currency: string, amount: number): Promise<string> {
         const binanceNetwork = this.networkStage === 'test' ? 'testnet' : 'mainnet';
         console.log('Initializing the binance chain', binanceNetwork, this.url);
-        const privateKey = sk.toString('hex');
+        const privateKey = sk;
         const bnbClient = new BnbApiClient(this.url);
         bnbClient.chooseNetwork(binanceNetwork);
         await bnbClient.initChain();
