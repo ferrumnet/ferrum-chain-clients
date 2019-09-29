@@ -196,7 +196,7 @@ export class EthereumClient implements ChainClient {
         const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
         const from = addressFrom.address;
 
-        const gasPrice = (await this.gasService.getGasPrice()).low;
+        const gasPrice = (await this.gasService.getGasPrice()).medium;
         const tx = {
             from,
             to: contractAddress,
@@ -277,6 +277,7 @@ export class EthereumClient implements ChainClient {
     }
 
     private web3() {
+        console.log('Using http provider', this.provider);
         return new Web3(new Web3.providers.HttpProvider(this.provider));
     }
 }

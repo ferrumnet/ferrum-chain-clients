@@ -211,7 +211,7 @@ class EthereumClient {
             const consumerContract = new web3.eth.Contract(abi.abi, contractAddress);
             const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
             const from = addressFrom.address;
-            const gasPrice = (yield this.gasService.getGasPrice()).low;
+            const gasPrice = (yield this.gasService.getGasPrice()).medium;
             const tx = {
                 from,
                 to: contractAddress,
@@ -282,6 +282,7 @@ class EthereumClient {
         });
     }
     web3() {
+        console.log('Using http provider', this.provider);
         return new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
     }
 }
