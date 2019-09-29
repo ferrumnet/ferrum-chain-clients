@@ -15,12 +15,21 @@ export class ChainClientFactory implements Injectable {
         this.networkStage = this.localConfig.networkStage as NetworkStage;
     }
 
+    private bnbClient: BinanceChainClient | undefined;
+    private ethClient: EthereumClient | undefined;
+
     forNetwork(network: Network): ChainClient {
         switch (network) {
             case 'BINANCE':
-                return new BinanceChainClient(this.networkStage, this.localConfig);
+                if (!this.bnbClient) {
+                    this.bnbClient = new BinanceChainClient(this.networkStage, this.localConfig);
+                }
+                return this.bnbClient;
             case 'ETHEREUM':
-                return new EthereumClient(this.networkStage, this.localConfig, this.ethGasProvider);
+                if (!this.ethClient) {
+                    this.ethClient = new EthereumClient(this.networkStage, this.localConfig, this.ethGasProvider);
+                }
+                return this.ethClient;
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network)
         }

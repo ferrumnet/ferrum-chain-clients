@@ -9,6 +9,8 @@ export declare class ChainClientFactory implements Injectable {
     private newAddressFactory;
     private readonly networkStage;
     constructor(localConfig: MultiChainConfig, binanceGasProvider: BinanceGasPriceProvider, ethGasProvider: EthereumGasPriceProvider, newAddressFactory: CreateNewAddressFactory);
+    private bnbClient;
+    private ethClient;
     forNetwork(network: Network): ChainClient;
     newAddress(network: Network): import("./CreateNewAddress").CreateNewAddress;
     gasPriceProvider(network: Network): GasPriceProvider;
