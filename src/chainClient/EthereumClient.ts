@@ -28,8 +28,9 @@ export class EthereumClient implements ChainClient {
         this.provider = config.web3Provider;
         this.contractAddresses = config.contractAddresses;
         this.decimals = config.contractDecimals as any;
-        this.requiredConfirmations = config.requiredEthConfirmations || 3;
-        this.txWaitTimeout = config.pendingTransactionShowTimeout || ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT;
+        this.requiredConfirmations = config.requiredEthConfirmations || 1;
+        this.txWaitTimeout = config.pendingTransactionShowTimeout
+            || ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT * 10;
         abiDecoder.addABI(abi.abi);
     }
 
@@ -230,7 +231,7 @@ export class EthereumClient implements ChainClient {
 
         let sendAmount = web3.utils.toWei(amount.toFixed(12), 'ether');
         const from = addressFrom.address;
-        const gasPrice = (await this.gasService.getGasPrice()).low;
+        const gasPrice = (await this.gasService.getGasPrice()).medium;
         const tx = {
             from,
             to: to,

@@ -43,8 +43,9 @@ class EthereumClient {
         this.provider = config.web3Provider;
         this.contractAddresses = config.contractAddresses;
         this.decimals = config.contractDecimals;
-        this.requiredConfirmations = config.requiredEthConfirmations || 3;
-        this.txWaitTimeout = config.pendingTransactionShowTimeout || ChainUtils_1.ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT;
+        this.requiredConfirmations = config.requiredEthConfirmations || 1;
+        this.txWaitTimeout = config.pendingTransactionShowTimeout
+            || ChainUtils_1.ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT * 10;
         abi_decoder_1.default.addABI(abi.abi);
     }
     feeCurrency() {
@@ -239,7 +240,7 @@ class EthereumClient {
             const addressFrom = web3.eth.accounts.privateKeyToAccount(privateKeyHex);
             let sendAmount = web3.utils.toWei(amount.toFixed(12), 'ether');
             const from = addressFrom.address;
-            const gasPrice = (yield this.gasService.getGasPrice()).low;
+            const gasPrice = (yield this.gasService.getGasPrice()).medium;
             const tx = {
                 from,
                 to: to,
