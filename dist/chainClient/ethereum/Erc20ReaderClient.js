@@ -23,6 +23,7 @@ class Erc20ReaderClient extends ContractClientBase_1.ContractClientBase {
     constructor(client, contract) {
         super(client, contract, abi.abi);
     }
+    __name__() { return 'Erc20ReaderClient'; }
     decimals() {
         return __awaiter(this, void 0, void 0, function* () {
             return ferrum_plumbing_1.TypeUtils.meomize(this, '_decimals', () => this.call(m => m.decimals()));

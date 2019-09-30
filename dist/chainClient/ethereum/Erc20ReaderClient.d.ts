@@ -1,11 +1,13 @@
 import { EthereumClient } from '../EthereumClient';
 import { ContractClientBase } from './ContractClientBase';
-export declare class Erc20ReaderClient extends ContractClientBase {
+import { Injectable } from 'ferrum-plumbing';
+export declare class Erc20ReaderClient extends ContractClientBase implements Injectable {
     private _decimals;
     private _name;
     private _totalSupply;
     private _symbol;
     constructor(client: EthereumClient, contract: string);
+    __name__(): string;
     decimals(): Promise<number>;
     name(): Promise<string>;
     symbol(): Promise<string>;
