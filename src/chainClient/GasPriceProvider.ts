@@ -11,7 +11,7 @@ export interface EthGasPrice {
 
 export interface GasPriceProvider {
     getGasPrice(): Promise<EthGasPrice>;
-    getTransactionGas(currency: string, gasPrice: number): number;
+    getTransactionGas(currency: string, gasPrice: number, currentTargetBalance?: number): number;
 }
 
 function gweiToEth(gweiNum: number) {
@@ -28,7 +28,7 @@ export class BinanceGasPriceProvider implements GasPriceProvider, Injectable {
         };
     }
 
-    getTransactionGas(currency: string, _: number) {
+    getTransactionGas(currency: string, _: number, __?: number) {
         return BINANCE_FEE;
     }
 
@@ -44,7 +44,8 @@ export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
     private lastPrice: EthGasPrice|undefined;
     constructor() {}
 
-    public static ERC_20_GAS = 51424;
+    public static ERC_20_GAS_ZERO_ACCOUNT = 52595;
+    public static ERC_20_GAS_NON_ZERO_ACCOUNT = 36693;
     public static ETH_TX_GAS = 21000;
 
     async getGasPrice(): Promise<EthGasPrice> {
@@ -65,9 +66,12 @@ export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
         return this.lastPrice;
     }
 
-    getTransactionGas(currency: string, gasPrice: number) {
-        return currency === 'ETH' ?
-            EthereumGasPriceProvider.ETH_TX_GAS * gasPrice : EthereumGasPriceProvider.ERC_20_GAS * gasPrice;
+    getTransactionGas(currency: string, gasPrice: number, currentTargetBalance?: number) {
+        const gasAmount = currency === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
+                currentTargetBalance && currentTargetBalance > 0 ?
+                    EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
+                        EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+        return gasAmount * gasPrice;
     }
 
     __name__(): string {

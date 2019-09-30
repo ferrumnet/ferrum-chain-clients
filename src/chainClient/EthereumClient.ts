@@ -196,6 +196,7 @@ export class EthereumClient implements ChainClient {
         const consumerContract = new web3.eth.Contract(abi.abi, contractAddress);
         const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
         const from = addressFrom.address;
+        const targetBalance = await this.getBalanceForContract(web3, to, contractAddress, 1);
 
         const gasPrice = (await this.gasService.getGasPrice()).medium;
         const tx = {
@@ -203,7 +204,8 @@ export class EthereumClient implements ChainClient {
             to: contractAddress,
             value: '0',
             gasPrice: web3.utils.toWei(gasPrice.toFixed(12), 'ether'),
-            gas: EthereumGasPriceProvider.ERC_20_GAS,
+            gas: targetBalance > 0 ? EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
+                EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT,
             chainId: this.networkStage === 'test' ? 4 : 1,
             nonce: await web3.eth.getTransactionCount(from,'pending'),
             data: myData
@@ -266,18 +268,22 @@ export class EthereumClient implements ChainClient {
             ValidationUtils.isTrue(this.contractAddresses[currency],
                 `No contract address is configured for '${currency}'`);
             const contractAddress = this.contractAddresses[currency];
-            let erc20Contract = new web3.eth.Contract(abi.abi, contractAddress);
-            const bal = await erc20Contract.methods.balanceOf(address).call();
-            const bn = web3.utils.toBN(bal);
-            return bn.toNumber() / Math.pow(10, this.decimals[currency]);
+            return this.getBalanceForContract(web3, address, contractAddress, this.decimals[currency]);
         }
+    }
+
+    async getBalanceForContract(web3: Web3, address: string, contractAddress: string, decimals: number) {
+        let erc20Contract = new web3.eth.Contract(abi.abi, contractAddress);
+        const bal = await erc20Contract.methods.balanceOf(address).call();
+        const bn = web3.utils.toBN(bal);
+        return bn.toNumber() / Math.pow(10, decimals);
     }
 
     async waitForTransaction(transactionId: string): Promise<SimpleTransferTransaction|undefined> {
         return waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils.TX_FETCH_TIMEOUT * 10)
     }
 
-    private web3() {
+    web3() {
         console.log('Using http provider', this.provider);
         return new Web3(new Web3.providers.HttpProvider(this.provider));
     }

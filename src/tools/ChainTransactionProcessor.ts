@@ -8,31 +8,34 @@ export class ChainTransactionProcessor implements Injectable {
     ) {
     }
 
-    async checkAccountHasFundsForFee(network: Network, address: string, targetCurrency: string) {
+    async checkAccountRemainingFundsForFee(network: Network, address: string, targetCurrency: string, requiredFee: number) {
         const client = this.clientFactory.forNetwork(network);
-        const gasPriceProvider = this.clientFactory.gasPriceProvider(network);
-        const gasPrice = (await gasPriceProvider.getGasPrice()).low;
-        const requiredFee = gasPriceProvider.getTransactionGas(targetCurrency, gasPrice);
         const feeBal = await client.getBalance(address, client.feeCurrency()) || 0;
-        return feeBal >= requiredFee;
+        return Math.min(0, requiredFee - feeBal);
     }
 
-    async sendFeeForFutureTokenTransfer(network: Network,
-                          feeProviderSk: HexString,
-                          addressToBeFunded: string,
-                          targetCurrency: string,
-                          shouldWait: boolean,
-                          ): Promise<SimpleTransferTransaction | string | undefined> {
-        const hasFee = await this.checkAccountHasFundsForFee(network, addressToBeFunded, targetCurrency);
-        if (!hasFee) {
+    async calculateTokenTransferFee(network: Network, targetCurrnecy: string) {
+        const gasPriceProvider = this.clientFactory.gasPriceProvider(network);
+        const gasPrice = (await gasPriceProvider.getGasPrice()).low;
+        return  gasPriceProvider.getTransactionGas(targetCurrnecy, gasPrice);
+    }
+
+    async sendFeeForFutureTokenTransfer (
+        network: Network,
+        feeProviderSk: HexString,
+        addressToBeFunded: string,
+        targetCurrency: string,
+        shouldWait: boolean,
+        feeAmount: number): Promise<SimpleTransferTransaction | string | undefined> {
+        const transferFee = await this.calculateTokenTransferFee(network, targetCurrency);
+        const remainingFee = await this.checkAccountRemainingFundsForFee(
+            network, addressToBeFunded, targetCurrency, transferFee);
+        if (remainingFee > 0) {
             const client = this.clientFactory.forNetwork(network);
-            const gasPriceProvider = this.clientFactory.gasPriceProvider(network);
-            const gasPrice = (await gasPriceProvider.getGasPrice()).low;
-            const requiredFee = gasPriceProvider.getTransactionGas(targetCurrency, gasPrice);
             // Transfer fee to address
-            console.log('Transferring fee to address ', addressToBeFunded, requiredFee, client.feeCurrency());
+            console.log('Transferring fee to address ', addressToBeFunded, remainingFee, client.feeCurrency());
             const feeTxId = await client.processPaymentFromPrivateKey(feeProviderSk,
-                addressToBeFunded, client.feeCurrency(), requiredFee);
+                addressToBeFunded, client.feeCurrency(), remainingFee);
             if (shouldWait) {
                 const feeTx = await client.waitForTransaction(feeTxId);
                 if (!feeTx) {
@@ -52,10 +55,11 @@ export class ChainTransactionProcessor implements Injectable {
                         toAddress: string,
                         currency: string,
                         amount: number,
+                        requiredFee: number,
                         shouldWait: boolean): Promise<SimpleTransferTransaction|string> {
-        const hasFee = await this.checkAccountHasFundsForFee(network, fromAddress, currency);
-        ValidationUtils.isTrue(hasFee,
-            `Address ${fromAddress} does not have enough funds to cover transaction fee`);
+        const remainingFee = await this.checkAccountRemainingFundsForFee(network, fromAddress, currency, requiredFee);
+        ValidationUtils.isTrue(!remainingFee,
+            `Address ${fromAddress} does not have enough funds to cover transaction fee. ${remainingFee} more is required`);
         const client = this.clientFactory.forNetwork(network);
         console.log('Transferring amount to address ', toAddress, amount, currency);
         const finalTxId = await client.processPaymentFromPrivateKey(fromSk, toAddress, currency, amount);
@@ -88,12 +92,15 @@ export class ChainTransactionProcessor implements Injectable {
         const fromBal = await client.getBalance(fromAddress, currency) || 0;
         ValidationUtils.isTrue(fromBal >= amount, `Sender '${fromAddress}' does not have enough balance. Required ${amount}, available: ${fromBal}`)
         const txs = [];
-        const feeTx = await this.sendFeeForFutureTokenTransfer(network, feeProviderSk, fromAddress, currency, true);
+        const requiredFee = await this.calculateTokenTransferFee(network, currency);
+        const feeTx = await this.sendFeeForFutureTokenTransfer(
+            network, feeProviderSk, fromAddress, currency, true, requiredFee);
         if (feeTx) {
             txs.push(feeTx);
         }
         console.log('Transferring amount to address ', toAddress, amount, currency);
-        const tokenTx = await this.transferToken(network, fromSk, fromAddress, toAddress, currency, amount, true);
+        const tokenTx = await this.transferToken(
+            network, fromSk, fromAddress, toAddress, currency, amount, requiredFee, true);
         txs.push(tokenTx);
         return txs;
     }
