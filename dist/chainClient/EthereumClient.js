@@ -212,13 +212,15 @@ class EthereumClient {
             const consumerContract = new web3.eth.Contract(abi.abi, contractAddress);
             const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
             const from = addressFrom.address;
+            const targetBalance = yield this.getBalanceForContract(web3, to, contractAddress, 1);
             const gasPrice = (yield this.gasService.getGasPrice()).medium;
             const tx = {
                 from,
                 to: contractAddress,
                 value: '0',
                 gasPrice: web3.utils.toWei(gasPrice.toFixed(12), 'ether'),
-                gas: GasPriceProvider_1.EthereumGasPriceProvider.ERC_20_GAS,
+                gas: targetBalance > 0 ? GasPriceProvider_1.EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
+                    GasPriceProvider_1.EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT,
                 chainId: this.networkStage === 'test' ? 4 : 1,
                 nonce: yield web3.eth.getTransactionCount(from, 'pending'),
                 data: myData
@@ -270,11 +272,16 @@ class EthereumClient {
             else {
                 ferrum_plumbing_1.ValidationUtils.isTrue(this.contractAddresses[currency], `No contract address is configured for '${currency}'`);
                 const contractAddress = this.contractAddresses[currency];
-                let erc20Contract = new web3.eth.Contract(abi.abi, contractAddress);
-                const bal = yield erc20Contract.methods.balanceOf(address).call();
-                const bn = web3.utils.toBN(bal);
-                return bn.toNumber() / Math.pow(10, this.decimals[currency]);
+                return this.getBalanceForContract(web3, address, contractAddress, this.decimals[currency]);
             }
+        });
+    }
+    getBalanceForContract(web3, address, contractAddress, decimals) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let erc20Contract = new web3.eth.Contract(abi.abi, contractAddress);
+            const bal = yield erc20Contract.methods.balanceOf(address).call();
+            const bn = web3.utils.toBN(bal);
+            return bn.toNumber() / Math.pow(10, decimals);
         });
     }
     waitForTransaction(transactionId) {

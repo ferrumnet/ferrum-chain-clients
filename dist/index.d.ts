@@ -5,5 +5,7 @@ export * from './chainClient/EthereumClient';
 export * from './chainClient/GasPriceProvider';
 export * from './chainClient/CreateNewAddress';
 export * from './chainClient/BinanceChainClient';
+export * from './chainClient/ethereum/ContractClientBase';
+export * from './chainClient/ethereum/Erc20ReaderClient';
 export * from './tools/ChainTransactionProcessor';
 //# sourceMappingURL=index.d.ts.map

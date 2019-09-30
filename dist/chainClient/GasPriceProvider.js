@@ -29,7 +29,7 @@ class BinanceGasPriceProvider {
             };
         });
     }
-    getTransactionGas(currency, _) {
+    getTransactionGas(currency, _, __) {
         return BINANCE_FEE;
     }
     __name__() {
@@ -60,9 +60,12 @@ class EthereumGasPriceProvider {
             return this.lastPrice;
         });
     }
-    getTransactionGas(currency, gasPrice) {
-        return currency === 'ETH' ?
-            EthereumGasPriceProvider.ETH_TX_GAS * gasPrice : EthereumGasPriceProvider.ERC_20_GAS * gasPrice;
+    getTransactionGas(currency, gasPrice, currentTargetBalance) {
+        const gasAmount = currency === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
+            currentTargetBalance && currentTargetBalance > 0 ?
+                EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
+                EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+        return gasAmount * gasPrice;
     }
     __name__() {
         return 'GasPriceProvider';
@@ -71,6 +74,7 @@ class EthereumGasPriceProvider {
 exports.EthereumGasPriceProvider = EthereumGasPriceProvider;
 EthereumGasPriceProvider.GasStationUrl = 'https://ethgasstation.info/json/ethgasAPI.json';
 EthereumGasPriceProvider.GasTimeout = 30000;
-EthereumGasPriceProvider.ERC_20_GAS = 51424;
+EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT = 52595;
+EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT = 36693;
 EthereumGasPriceProvider.ETH_TX_GAS = 21000;
 //# sourceMappingURL=GasPriceProvider.js.map

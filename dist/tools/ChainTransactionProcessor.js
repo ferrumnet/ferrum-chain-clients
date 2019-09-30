@@ -14,27 +14,29 @@ class ChainTransactionProcessor {
     constructor(clientFactory) {
         this.clientFactory = clientFactory;
     }
-    checkAccountHasFundsForFee(network, address, targetCurrency) {
+    checkAccountRemainingFundsForFee(network, address, targetCurrency, requiredFee) {
         return __awaiter(this, void 0, void 0, function* () {
             const client = this.clientFactory.forNetwork(network);
-            const gasPriceProvider = this.clientFactory.gasPriceProvider(network);
-            const gasPrice = (yield gasPriceProvider.getGasPrice()).low;
-            const requiredFee = gasPriceProvider.getTransactionGas(targetCurrency, gasPrice);
             const feeBal = (yield client.getBalance(address, client.feeCurrency())) || 0;
-            return feeBal >= requiredFee;
+            return Math.min(0, requiredFee - feeBal);
         });
     }
-    sendFeeForFutureTokenTransfer(network, feeProviderSk, addressToBeFunded, targetCurrency, shouldWait) {
+    calculateTokenTransferFee(network, targetCurrnecy) {
         return __awaiter(this, void 0, void 0, function* () {
-            const hasFee = yield this.checkAccountHasFundsForFee(network, addressToBeFunded, targetCurrency);
-            if (!hasFee) {
+            const gasPriceProvider = this.clientFactory.gasPriceProvider(network);
+            const gasPrice = (yield gasPriceProvider.getGasPrice()).low;
+            return gasPriceProvider.getTransactionGas(targetCurrnecy, gasPrice);
+        });
+    }
+    sendFeeForFutureTokenTransfer(network, feeProviderSk, addressToBeFunded, targetCurrency, shouldWait, feeAmount) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const transferFee = yield this.calculateTokenTransferFee(network, targetCurrency);
+            const remainingFee = yield this.checkAccountRemainingFundsForFee(network, addressToBeFunded, targetCurrency, transferFee);
+            if (remainingFee > 0) {
                 const client = this.clientFactory.forNetwork(network);
-                const gasPriceProvider = this.clientFactory.gasPriceProvider(network);
-                const gasPrice = (yield gasPriceProvider.getGasPrice()).low;
-                const requiredFee = gasPriceProvider.getTransactionGas(targetCurrency, gasPrice);
                 // Transfer fee to address
-                console.log('Transferring fee to address ', addressToBeFunded, requiredFee, client.feeCurrency());
-                const feeTxId = yield client.processPaymentFromPrivateKey(feeProviderSk, addressToBeFunded, client.feeCurrency(), requiredFee);
+                console.log('Transferring fee to address ', addressToBeFunded, remainingFee, client.feeCurrency());
+                const feeTxId = yield client.processPaymentFromPrivateKey(feeProviderSk, addressToBeFunded, client.feeCurrency(), remainingFee);
                 if (shouldWait) {
                     const feeTx = yield client.waitForTransaction(feeTxId);
                     if (!feeTx) {
@@ -48,10 +50,10 @@ class ChainTransactionProcessor {
             }
         });
     }
-    transferToken(network, fromSk, fromAddress, toAddress, currency, amount, shouldWait) {
+    transferToken(network, fromSk, fromAddress, toAddress, currency, amount, requiredFee, shouldWait) {
         return __awaiter(this, void 0, void 0, function* () {
-            const hasFee = yield this.checkAccountHasFundsForFee(network, fromAddress, currency);
-            ferrum_plumbing_1.ValidationUtils.isTrue(hasFee, `Address ${fromAddress} does not have enough funds to cover transaction fee`);
+            const remainingFee = yield this.checkAccountRemainingFundsForFee(network, fromAddress, currency, requiredFee);
+            ferrum_plumbing_1.ValidationUtils.isTrue(!remainingFee, `Address ${fromAddress} does not have enough funds to cover transaction fee. ${remainingFee} more is required`);
             const client = this.clientFactory.forNetwork(network);
             console.log('Transferring amount to address ', toAddress, amount, currency);
             const finalTxId = yield client.processPaymentFromPrivateKey(fromSk, toAddress, currency, amount);
@@ -79,12 +81,13 @@ class ChainTransactionProcessor {
             const fromBal = (yield client.getBalance(fromAddress, currency)) || 0;
             ferrum_plumbing_1.ValidationUtils.isTrue(fromBal >= amount, `Sender '${fromAddress}' does not have enough balance. Required ${amount}, available: ${fromBal}`);
             const txs = [];
-            const feeTx = yield this.sendFeeForFutureTokenTransfer(network, feeProviderSk, fromAddress, currency, true);
+            const requiredFee = yield this.calculateTokenTransferFee(network, currency);
+            const feeTx = yield this.sendFeeForFutureTokenTransfer(network, feeProviderSk, fromAddress, currency, true, requiredFee);
             if (feeTx) {
                 txs.push(feeTx);
             }
             console.log('Transferring amount to address ', toAddress, amount, currency);
-            const tokenTx = yield this.transferToken(network, fromSk, fromAddress, toAddress, currency, amount, true);
+            const tokenTx = yield this.transferToken(network, fromSk, fromAddress, toAddress, currency, amount, requiredFee, true);
             txs.push(tokenTx);
             return txs;
         });

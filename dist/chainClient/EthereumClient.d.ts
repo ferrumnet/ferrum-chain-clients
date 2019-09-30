@@ -1,3 +1,4 @@
+import Web3 from 'web3';
 import { ChainClient, MultiChainConfig, NetworkStage, SimpleTransferTransaction } from "./types";
 import { HexString } from 'ferrum-plumbing';
 import { GasPriceProvider } from './GasPriceProvider';
@@ -25,7 +26,8 @@ export declare class EthereumClient implements ChainClient {
     private sendTransaction;
     private sendEth;
     getBalance(address: string, currency: string): Promise<number>;
+    getBalanceForContract(web3: Web3, address: string, contractAddress: string, decimals: number): Promise<number>;
     waitForTransaction(transactionId: string): Promise<SimpleTransferTransaction | undefined>;
-    private web3;
+    web3(): Web3;
 }
 //# sourceMappingURL=EthereumClient.d.ts.map
