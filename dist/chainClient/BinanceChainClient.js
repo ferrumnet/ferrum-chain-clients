@@ -69,6 +69,9 @@ class BinanceChainClient {
             };
         });
     }
+    processPaymentFromPrivateKeyWithGas(skHex, targetAddress, currency, amount, gasOverride) {
+        return this.processPaymentFromPrivateKey(skHex, targetAddress, currency, amount);
+    }
     processPaymentFromPrivateKey(sk, targetAddress, currency, amount) {
         return __awaiter(this, void 0, void 0, function* () {
             const binanceNetwork = this.networkStage === 'test' ? 'testnet' : 'mainnet';

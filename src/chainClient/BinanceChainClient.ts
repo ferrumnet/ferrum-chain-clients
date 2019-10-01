@@ -12,7 +12,6 @@ export class BinanceChainClient implements ChainClient {
         this.url = config.binanceChainUrl;
         this.txWaitTimeout = config.pendingTransactionShowTimeout || ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT;
     }
-
     feeCurrency(): string {
         return 'BNB';
     }
@@ -58,6 +57,11 @@ export class BinanceChainClient implements ChainClient {
 
             confirmed: true,
         } as SimpleTransferTransaction;
+    }
+
+    processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: any,
+                                        amount: number, gasOverride: number): Promise<string> {
+        return this.processPaymentFromPrivateKey(skHex, targetAddress, currency, amount);
     }
 
     async processPaymentFromPrivateKey(sk: HexString, targetAddress: string, currency: string, amount: number): Promise<string> {

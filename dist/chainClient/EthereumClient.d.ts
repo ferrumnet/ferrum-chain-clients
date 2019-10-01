@@ -19,11 +19,12 @@ export declare class EthereumClient implements ChainClient {
     };
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
     processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, currency: string, amount: number): Promise<string>;
+    processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: string, amount: number, gasOverride: number): Promise<string>;
+    private sendTransaction;
     /**
      * Note: This only returns incoming transactions to the given address and only works for ERC20 transactions
      */
     getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[]>;
-    private sendTransaction;
     private sendEth;
     getBalance(address: string, currency: string): Promise<number>;
     getBalanceForContract(web3: Web3, address: string, contractAddress: string, decimals: number): Promise<number>;

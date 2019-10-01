@@ -5,6 +5,8 @@ export declare const TEST_ACCOUNTS: {
     mainAccountSk: string;
     mainAccountAddress: string;
     mainAccountAddressBnb: string;
+    secondAccountSk: string;
+    secondAccountAddress: string;
 };
 export declare const TESTNET_CONFIG: MultiChainConfig;
 export declare function ethereumClientForProd(): EthereumClient;

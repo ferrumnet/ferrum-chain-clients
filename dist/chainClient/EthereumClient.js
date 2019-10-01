@@ -151,14 +151,53 @@ class EthereumClient {
     }
     processPaymentFromPrivateKey(skHex, targetAddress, currency, amount) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (currency === this.feeCurrency()) {
-                return this.sendEth(skHex, targetAddress, amount);
+            return this.processPaymentFromPrivateKeyWithGas(skHex, targetAddress, currency, amount, 0);
+        });
+    }
+    processPaymentFromPrivateKeyWithGas(skHex, targetAddress, currency, amount, gasOverride) {
+        if (currency === this.feeCurrency()) {
+            return this.sendEth(skHex, targetAddress, amount);
+        }
+        const contract = this.contractAddresses[currency];
+        const decimal = this.decimals[currency];
+        const amountBN = web3_1.default.utils.toBN(Math.floor(amount * Math.pow(10, decimal)));
+        ferrum_plumbing_1.ValidationUtils.isTrue(!!contract, 'Unknown contract address for currency: ' + currency);
+        return this.sendTransaction(contract, skHex, targetAddress, amountBN, gasOverride);
+    }
+    sendTransaction(contractAddress, privateKey, to, amount, gasOverride) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const privateKeyHex = '0x' + privateKey;
+            const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
+            const addressFrom = web3.eth.accounts.privateKeyToAccount(privateKeyHex);
+            let sendAmount = amount; //web3.utils.toWei(amount, 'ether');
+            const consumerContract = new web3.eth.Contract(abi.abi, contractAddress);
+            const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
+            const from = addressFrom.address;
+            const targetBalance = yield this.getBalanceForContract(web3, to, contractAddress, 1);
+            const requiredGas = targetBalance > 0 ? GasPriceProvider_1.EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
+                GasPriceProvider_1.EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+            let gasPrice = (gasOverride || 0) / requiredGas;
+            if (!gasOverride) {
+                gasPrice = (yield this.gasService.getGasPrice()).medium;
             }
-            const contract = this.contractAddresses[currency];
-            const decimal = this.decimals[currency];
-            const amountBN = web3_1.default.utils.toBN(Math.floor(amount * Math.pow(10, decimal)));
-            ferrum_plumbing_1.ValidationUtils.isTrue(!!contract, 'Unknown contract address for currency: ' + currency);
-            return this.sendTransaction(contract, skHex, targetAddress, amountBN);
+            const tx = {
+                from,
+                to: contractAddress,
+                value: '0',
+                gasPrice: web3.utils.toWei(gasPrice.toFixed(12), 'ether'),
+                gas: requiredGas,
+                chainId: this.networkStage === 'test' ? 4 : 1,
+                nonce: yield web3.eth.getTransactionCount(from, 'pending'),
+                data: myData
+            };
+            console.log('About to submit transaction:', tx);
+            const signed = yield web3.eth.accounts.signTransaction(tx, privateKeyHex);
+            const rawTx = signed.rawTransaction;
+            const sendRawTx = (rawTx) => new Promise((resolve, reject) => web3.eth
+                .sendSignedTransaction(rawTx)
+                .on('transactionHash', resolve)
+                .on('error', reject));
+            return yield sendRawTx(rawTx);
         });
     }
     /**
@@ -201,38 +240,6 @@ class EthereumClient {
                 });
             }
             return res;
-        });
-    }
-    sendTransaction(contractAddress, privateKey, to, amount) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const privateKeyHex = '0x' + privateKey;
-            const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
-            const addressFrom = web3.eth.accounts.privateKeyToAccount(privateKeyHex);
-            let sendAmount = amount; //web3.utils.toWei(amount, 'ether');
-            const consumerContract = new web3.eth.Contract(abi.abi, contractAddress);
-            const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
-            const from = addressFrom.address;
-            const targetBalance = yield this.getBalanceForContract(web3, to, contractAddress, 1);
-            const gasPrice = (yield this.gasService.getGasPrice()).medium;
-            const tx = {
-                from,
-                to: contractAddress,
-                value: '0',
-                gasPrice: web3.utils.toWei(gasPrice.toFixed(12), 'ether'),
-                gas: targetBalance > 0 ? GasPriceProvider_1.EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
-                    GasPriceProvider_1.EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT,
-                chainId: this.networkStage === 'test' ? 4 : 1,
-                nonce: yield web3.eth.getTransactionCount(from, 'pending'),
-                data: myData
-            };
-            console.log('About to submit transaction:', tx);
-            const signed = yield web3.eth.accounts.signTransaction(tx, privateKeyHex);
-            const rawTx = signed.rawTransaction;
-            const sendRawTx = (rawTx) => new Promise((resolve, reject) => web3.eth
-                .sendSignedTransaction(rawTx)
-                .on('transactionHash', resolve)
-                .on('error', reject));
-            return yield sendRawTx(rawTx);
         });
     }
     sendEth(privateKey, to, amount) {

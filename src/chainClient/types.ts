@@ -46,6 +46,9 @@ export interface ChainClient {
 
   processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any, amount: number): Promise<string>;
 
+  processPaymentFromPrivateKeyWithGas(skHex: HexString, targetAddress: string, currency: any,
+                                      amount: number, gasOverride: number): Promise<string>;
+
   getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[]|undefined>;
 
   getBalance(address: string, currency: string): Promise<number|undefined>;

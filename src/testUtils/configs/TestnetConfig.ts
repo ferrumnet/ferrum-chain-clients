@@ -8,6 +8,8 @@ export const TEST_ACCOUNTS = {
     mainAccountSk: '3C6681B912ABEA03AB2D625759FE38E9BC7301120C13CFA3A3217112A3F2A919',
     mainAccountAddress: '0x0D959c295E36c140AB766dC12E21eBBB411Bd611',
     mainAccountAddressBnb: 'tbnb1mm8t4rexcz44wrhxv2ac94lpmjdsjx73jkyhzr',
+    secondAccountSk: 'ec2a2b02f465f7e77d1b6128c564748eee8bdca22cce008dbce4e6dc1a44d993',
+    secondAccountAddress: '0x8017877A1C06efbc7f444AC709119C1e209F26Ee',
 };
 
 export const TESTNET_CONFIG = {

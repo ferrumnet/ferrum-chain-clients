@@ -22,6 +22,19 @@ test('send tx', () => __awaiter(void 0, void 0, void 0, function* () {
     var data = yield client.getTransactionById('0xcfa5be19f82278d3f5bab1cad260efa0abc57fd66ddcfff46a1b07d0b0938614');
     console.log('transaction', data);
 }));
+test('create a new address', () => __awaiter(void 0, void 0, void 0, function* () {
+    const addr = yield TestnetConfig_1.testChainClientFactory().newAddress('ETHEREUM').newAddress();
+    console.log(addr);
+}));
+test('send tx with overwritten gas', () => __awaiter(void 0, void 0, void 0, function* () {
+    jest.setTimeout(10000000);
+    const client = ethereumClientForTest();
+    const gas = 0.000333333;
+    const txId = yield client.processPaymentFromPrivateKeyWithGas(TestnetConfig_1.TEST_ACCOUNTS.mainAccountSk, TestnetConfig_1.TEST_ACCOUNTS.secondAccountAddress, 'FRM', 10, gas);
+    console.log('Submitted tx ', txId, 'with custom gas ', gas);
+    const tx = yield client.waitForTransaction(txId);
+    console.log('Tx result ', tx);
+}));
 test('Get transaction BY ID no token transfer', () => __awaiter(void 0, void 0, void 0, function* () {
     const tid = '0x2268da5e389627122707f64b61fb9129a7cb3554117b2f07e75200833e8d7ce9';
     const client = TestnetConfig_1.ethereumClientForProd();

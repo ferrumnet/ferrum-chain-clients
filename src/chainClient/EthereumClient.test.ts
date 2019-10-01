@@ -1,6 +1,9 @@
-import {EthereumClient} from "./EthereumClient";
-import {MultiChainConfig} from './types';
-import {ethereumClientForProd, testChainClientFactory} from '../testUtils/configs/TestnetConfig';
+import {
+    ethereumClientForProd,
+    TEST_ACCOUNTS,
+    testChainClientFactory,
+    TESTNET_CONFIG
+} from '../testUtils/configs/TestnetConfig';
 
 const clientFac = testChainClientFactory();
 
@@ -17,6 +20,23 @@ test('send tx', async () => {
     var data = await client.getTransactionById('0xcfa5be19f82278d3f5bab1cad260efa0abc57fd66ddcfff46a1b07d0b0938614');
     console.log('transaction', data);
 });
+
+test('create a new address', async  () => {
+    const addr = await testChainClientFactory().newAddress('ETHEREUM').newAddress();
+    console.log(addr);
+});
+
+test('send tx with overwritten gas', async () => {
+    jest.setTimeout(10000000);
+    const client = ethereumClientForTest();
+    const gas = 0.000333333;
+    const txId = await client.processPaymentFromPrivateKeyWithGas(TEST_ACCOUNTS.mainAccountSk,
+        TEST_ACCOUNTS.secondAccountAddress, 'FRM', 10, gas);
+    console.log('Submitted tx ', txId, 'with custom gas ', gas);
+    const tx = await client.waitForTransaction(txId);
+    console.log('Tx result ', tx);
+});
+
 
 test('Get transaction BY ID no token transfer', async () => {
     const tid = '0x2268da5e389627122707f64b61fb9129a7cb3554117b2f07e75200833e8d7ce9';
