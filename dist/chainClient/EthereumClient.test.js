@@ -77,4 +77,21 @@ test('Get balance', function () {
         expect(bal).toBeTruthy();
     });
 });
+test('Get block by number', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(100000);
+        const blockNo = 8825650;
+        const client = TestnetConfig_1.ethereumClientForProd();
+        const block = yield client.getBlockByNumber(blockNo);
+        console.log('res', block);
+        const ethTx = block.transactions
+            .find(t => t.id === '0xf1607bd6deaf6bfed0b15b1a34275ddd5eb65963b7a39dec7489cfb012a08498');
+        const usdcTx = block.transactions
+            .find(t => t.id === '0x20ff49c41e5f5daea28e02f694ae6a4bbef25b5ee653d2473eaac8cd959c3434');
+        console.log(ethTx, usdcTx);
+        expect(ethTx.from.amount).toBe(0.04);
+        expect(usdcTx.from.amount).toBe(100214618);
+        expect(usdcTx.from.currency).toBe('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
+    });
+});
 //# sourceMappingURL=EthereumClient.test.js.map

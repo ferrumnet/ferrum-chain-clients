@@ -1,7 +1,7 @@
 import {EthereumClient} from '../../chainClient/EthereumClient';
 import {MultiChainConfig} from '../../chainClient/types';
 import {BinanceGasPriceProvider, EthereumGasPriceProvider} from '../../chainClient/GasPriceProvider';
-import {ChainClientFactory} from '../..';
+import {ChainClientFactory, BinanceChainClient} from '../..';
 import {BinanceChainAddress, CreateNewAddressFactory, EthereumAddress} from '../../chainClient/CreateNewAddress';
 
 export const TEST_ACCOUNTS = {
@@ -38,6 +38,10 @@ const TEST_PROD_CONFIG = {
 
 export function ethereumClientForProd() {
     return new EthereumClient('prod', TEST_PROD_CONFIG, new EthereumGasPriceProvider());
+}
+
+export function binanceClientForProd() {
+    return new BinanceChainClient('prod', TEST_PROD_CONFIG);
 }
 
 export function testChainClientFactory() {

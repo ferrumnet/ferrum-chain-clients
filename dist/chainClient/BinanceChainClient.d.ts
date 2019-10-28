@@ -1,4 +1,4 @@
-import { ChainClient, MultiChainConfig, NetworkStage, SimpleTransferTransaction } from './types';
+import { BlockData, ChainClient, MultiChainConfig, NetworkStage, SimpleTransferTransaction } from './types';
 import { HexString } from 'ferrum-plumbing';
 export declare class BinanceChainClient implements ChainClient {
     private networkStage;
@@ -14,5 +14,9 @@ export declare class BinanceChainClient implements ChainClient {
     private api;
     private getSequence;
     waitForTransaction(transactionId: string): Promise<SimpleTransferTransaction | undefined>;
+    getBlockByNumber(number: number): Promise<BlockData>;
+    getBlockNumber(): Promise<number>;
+    private callApi;
+    private parseTx;
 }
 //# sourceMappingURL=BinanceChainClient.d.ts.map

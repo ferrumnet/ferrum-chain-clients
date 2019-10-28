@@ -117,23 +117,7 @@ class BinanceChainClient {
             if (!apiRes.tx || !apiRes.tx.length) {
                 return [];
             }
-            return apiRes.tx.map((tx) => tx.txType === 'TRANSFER' ? {
-                id: tx.txHash,
-                confirmationTime: new Date(tx.timeStamp).getTime(),
-                from: {
-                    address: tx.fromAddr,
-                    currency: tx.txAsset,
-                    amount: Number(tx.value),
-                },
-                to: {
-                    address: tx.toAddr,
-                    currency: tx.txAsset,
-                    amount: Number(tx.value),
-                },
-                fee: Number(tx.txFee),
-                confirmed: true,
-            } : undefined)
-                .filter(Boolean);
+            return apiRes.tx.map(this.parseTx).filter(Boolean);
         });
     }
     api(api) {
@@ -159,6 +143,56 @@ class BinanceChainClient {
         return __awaiter(this, void 0, void 0, function* () {
             return ChainUtils_1.waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils_1.ChainUtils.TX_FETCH_TIMEOUT);
         });
+    }
+    getBlockByNumber(number) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const res = yield this.callApi('v2/transactions-in-block/' + number);
+            const txs = res['tx'] || [];
+            const transactions = txs.map(this.parseTx).filter(Boolean);
+            return {
+                transactions,
+                transactionIds: transactions.map((t) => t.id),
+                timestamp: 0,
+                number: number,
+                hash: '',
+            };
+        });
+    }
+    getBlockNumber() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // api/v1/node-info
+            const res = yield this.callApi('v1/node-info');
+            return res.sync_info.latest_block_height;
+        });
+    }
+    callApi(api) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const apiUrl = `${this.url}/api/${api}?format=json`;
+            const apiRes = yield this.api(apiUrl);
+            if (!apiRes) {
+                return undefined;
+            }
+            ferrum_plumbing_1.ValidationUtils.isTrue(apiRes && Object.keys(apiRes).length > 1, 'API return error: ' + apiRes['log']);
+            return apiRes;
+        });
+    }
+    parseTx(tx) {
+        return tx.txType === 'TRANSFER' ? {
+            id: tx.txHash,
+            confirmationTime: new Date(tx.timeStamp).getTime(),
+            from: {
+                address: tx.fromAddr,
+                currency: tx.txAsset,
+                amount: Number(tx.value),
+            },
+            to: {
+                address: tx.toAddr,
+                currency: tx.txAsset,
+                amount: Number(tx.value),
+            },
+            fee: Number(tx.txFee),
+            confirmed: true,
+        } : undefined;
     }
 }
 exports.BinanceChainClient = BinanceChainClient;

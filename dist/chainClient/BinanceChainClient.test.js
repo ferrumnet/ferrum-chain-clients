@@ -75,4 +75,17 @@ test('get balance', () => __awaiter(void 0, void 0, void 0, function* () {
     expect(bal).toBeTruthy();
     console.log('Balance was ', bal);
 }));
+test('get block', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(1000000);
+        // NIH
+        const client = TestnetConfig_1.binanceClientForProd();
+        const block = yield client.getBlockByNumber(44395899);
+        console.log(block);
+        const tx = block.transactions[0];
+        expect(tx.from.amount).toBe(0.0001);
+        expect(tx.from.currency).toBe('BNB');
+        expect(tx.fee).toBe(0.000375);
+    });
+});
 //# sourceMappingURL=BinanceChainClient.test.js.map

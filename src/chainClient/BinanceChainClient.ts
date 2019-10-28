@@ -1,5 +1,5 @@
-import {ChainClient, MultiChainConfig, NetworkStage, SimpleTransferTransaction} from './types';
-import {HexString, sleep, ValidationUtils} from 'ferrum-plumbing';
+import {BlockData, ChainClient, MultiChainConfig, NetworkStage, SimpleTransferTransaction} from './types';
+import {HexString, ValidationUtils} from 'ferrum-plumbing';
 import fetch from "cross-fetch";
 // @ts-ignore
 import BnbApiClient from '@binance-chain/javascript-sdk';
@@ -105,23 +105,7 @@ export class BinanceChainClient implements ChainClient {
         const url=`${this.url}/api/v1/transactions?address=${address}&txType=TRANSFER&side=RECEIVE&limit=${limit}&offset=${offset}`;
         const apiRes = await this.api(url);
         if (!apiRes.tx || !apiRes.tx.length) { return []; }
-        return apiRes.tx.map((tx: any) => tx.txType === 'TRANSFER' ? ({
-            id: tx.txHash,
-            confirmationTime: new Date(tx.timeStamp).getTime(),
-            from: {
-                address: tx.fromAddr,
-                currency: tx.txAsset,
-                amount: Number(tx.value),
-            },
-            to: {
-                address: tx.toAddr,
-                currency: tx.txAsset,
-                amount: Number(tx.value),
-            },
-            fee: Number(tx.txFee),
-            confirmed: true, // If you see the transaction it is confirmed!
-        } as SimpleTransferTransaction) : undefined)
-            .filter(Boolean);
+        return apiRes.tx.map(this.parseTx).filter(Boolean);
     }
 
     private async api(api: string) {
@@ -143,6 +127,55 @@ export class BinanceChainClient implements ChainClient {
 
     async waitForTransaction(transactionId: string): Promise<SimpleTransferTransaction|undefined> {
         return waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils.TX_FETCH_TIMEOUT);
+    }
+
+    async getBlockByNumber(number: number): Promise<BlockData> {
+        const res = await this.callApi('v2/transactions-in-block/' + number);
+        const txs = res['tx'] || [];
+        const transactions = txs.map(this.parseTx).filter(Boolean);
+        return {
+            transactions,
+            transactionIds: transactions.map((t: SimpleTransferTransaction) => t.id),
+            timestamp: 0,
+            number: number,
+            hash: '',
+        };
+    }
+
+    async getBlockNumber(): Promise<number> {
+        // api/v1/node-info
+        const res = await this.callApi('v1/node-info');
+        return res.sync_info.latest_block_height;
+    }
+
+    private async callApi(api: string): Promise<any> {
+        const apiUrl = `${this.url}/api/${api}?format=json`;
+        const apiRes = await this.api(apiUrl);
+        if (!apiRes) {
+            return undefined;
+        }
+        ValidationUtils.isTrue(apiRes && Object.keys(apiRes).length > 1,
+            'API return error: ' + apiRes['log']);
+        return apiRes;
+    }
+
+    private parseTx(tx: any) {
+        return tx.txType === 'TRANSFER' ? ({
+            id: tx.txHash,
+            confirmationTime: new Date(tx.timeStamp).getTime(),
+            from: {
+                address: tx.fromAddr,
+                currency: tx.txAsset,
+                amount: Number(tx.value),
+            },
+            to: {
+                address: tx.toAddr,
+                currency: tx.txAsset,
+                amount: Number(tx.value),
+            },
+            fee: Number(tx.txFee),
+            confirmed: true, // If you see the transaction it is confirmed!
+        } as SimpleTransferTransaction) : undefined;
     }
 }
 

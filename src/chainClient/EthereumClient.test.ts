@@ -37,7 +37,6 @@ test('send tx with overwritten gas', async () => {
     console.log('Tx result ', tx);
 });
 
-
 test('Get transaction BY ID no token transfer', async () => {
     const tid = '0x2268da5e389627122707f64b61fb9129a7cb3554117b2f07e75200833e8d7ce9';
     const client = ethereumClientForProd();
@@ -77,4 +76,20 @@ test('Get balance', async function() {
     bal = await client.getBalance(addr, 'ETH');
     console.log('Eth balance is ', bal);
     expect(bal).toBeTruthy();
+});
+
+test('Get block by number', async function() {
+    jest.setTimeout(100000);
+    const blockNo = 8825650;
+    const client = ethereumClientForProd();
+    const block = await client.getBlockByNumber(blockNo);
+    console.log('res', block);
+    const ethTx = block.transactions!
+        .find(t => t.id === '0xf1607bd6deaf6bfed0b15b1a34275ddd5eb65963b7a39dec7489cfb012a08498');
+    const usdcTx = block.transactions!
+        .find(t => t.id === '0x20ff49c41e5f5daea28e02f694ae6a4bbef25b5ee653d2473eaac8cd959c3434');
+    console.log(ethTx, usdcTx);
+    expect(ethTx!.from.amount).toBe(0.04);
+    expect(usdcTx!.from.amount).toBe(100214618);
+    expect(usdcTx!.from.currency).toBe('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
 });

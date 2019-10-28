@@ -28,6 +28,13 @@ export interface SimpleTransferTransaction {
     confirmationTime: number;
     id: string;
 }
+export interface BlockData {
+    hash: string;
+    number: number;
+    timestamp: number;
+    transactionIds: string[];
+    transactions?: SimpleTransferTransaction[];
+}
 export declare type NetworkStage = 'test' | 'prod';
 export interface MultiChainConfig {
     web3Provider: string;
@@ -54,6 +61,8 @@ export interface ChainClient {
     getBalance(address: string, currency: string): Promise<number | undefined>;
     waitForTransaction(tid: string): Promise<SimpleTransferTransaction | undefined>;
     feeCurrency(): string;
+    getBlockByNumber(number: number): Promise<BlockData>;
+    getBlockNumber(): Promise<number>;
 }
 export {};
 //# sourceMappingURL=types.d.ts.map

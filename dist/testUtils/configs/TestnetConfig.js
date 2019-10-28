@@ -37,6 +37,10 @@ function ethereumClientForProd() {
     return new EthereumClient_1.EthereumClient('prod', TEST_PROD_CONFIG, new GasPriceProvider_1.EthereumGasPriceProvider());
 }
 exports.ethereumClientForProd = ethereumClientForProd;
+function binanceClientForProd() {
+    return new __1.BinanceChainClient('prod', TEST_PROD_CONFIG);
+}
+exports.binanceClientForProd = binanceClientForProd;
 function testChainClientFactory() {
     return new __1.ChainClientFactory(exports.TESTNET_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new GasPriceProvider_1.EthereumGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(new CreateNewAddress_1.BinanceChainAddress(exports.TESTNET_CONFIG), new CreateNewAddress_1.EthereumAddress(exports.TESTNET_CONFIG)));
 }

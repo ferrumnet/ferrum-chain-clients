@@ -2,7 +2,7 @@
 import sdk from '@binance-chain/javascript-sdk';
 import {MultiChainConfig} from './types';
 import {BinanceChainClient} from './BinanceChainClient';
-import {TEST_ACCOUNTS, testChainClientFactory} from '../testUtils/configs/TestnetConfig';
+import {binanceClientForProd, TEST_ACCOUNTS, testChainClientFactory} from '../testUtils/configs/TestnetConfig';
 
 const conf = {
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
@@ -69,4 +69,16 @@ test('get balance', async () => {
     bal = await client.getBalance(address, 'BNB');
     expect(bal).toBeTruthy();
     console.log('Balance was ', bal);
+});
+
+test('get block', async function() {
+    jest.setTimeout(1000000);
+    // NIH
+    const client = binanceClientForProd();
+    const block = await client.getBlockByNumber(44395899);
+    console.log(block);
+    const tx = block.transactions![0];
+    expect(tx.from.amount).toBe(0.0001);
+    expect(tx.from.currency).toBe('BNB');
+    expect(tx.fee).toBe(0.000375);
 });

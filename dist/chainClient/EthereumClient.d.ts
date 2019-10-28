@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-import { ChainClient, MultiChainConfig, NetworkStage, SimpleTransferTransaction } from "./types";
+import { BlockData, ChainClient, MultiChainConfig, NetworkStage, SimpleTransferTransaction } from "./types";
 import { HexString } from 'ferrum-plumbing';
 import { GasPriceProvider } from './GasPriceProvider';
 export declare class EthereumClient implements ChainClient {
@@ -17,6 +17,8 @@ export declare class EthereumClient implements ChainClient {
         address: any;
         decimal: any;
     };
+    getBlockByNumber(number: number): Promise<BlockData>;
+    getBlockNumber(): Promise<number>;
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
     processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, currency: string, amount: number): Promise<string>;
     processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: string, amount: number, gasOverride: number): Promise<string>;

@@ -24,6 +24,14 @@ export interface SimpleTransferTransaction {
   id: string;
 }
 
+export interface BlockData {
+  hash: string;
+  number: number;
+  timestamp: number;
+  transactionIds: string[];
+  transactions?: SimpleTransferTransaction[];
+}
+
 export type NetworkStage = 'test' | 'prod';
 
 export interface MultiChainConfig {
@@ -56,4 +64,8 @@ export interface ChainClient {
   waitForTransaction(tid: string): Promise<SimpleTransferTransaction|undefined>;
 
   feeCurrency(): string;
+
+  getBlockByNumber(number: number): Promise<BlockData>;
+
+  getBlockNumber(): Promise<number>;
 }
