@@ -16,12 +16,42 @@ export interface SimpleTransferTransaction {
   network: Network;
   fee: number;
   feeCurrency: string;
-  from: { address: string, currency: string, amount: number };
-  to: { address: string, currency: string, amount: number };
+  feeDecimals?: number;
+  from: { address: string, currency: string, amount: number, decimals?: number };
+  to: { address: string, currency: string, amount: number, decimals?: number };
   confirmed: boolean;
   failed: boolean;
   confirmationTime: number;
   id: string;
+}
+
+/**
+ * The transaction structure as understood by the kudi / unifyre server
+ */
+export interface ServerTransactionItem {
+  address: string;
+  addressType: string;
+  amount: string;
+  currency: string;
+  fakeAddress: boolean;
+}
+
+export interface ServerTransaction {
+  transactionType: string;
+  items: ServerTransactionItem[];
+  id: string;
+  transactionId: string;
+  creationTime: number;
+  receiveTime: number;
+  confirmationTime: number;
+  isConfirmed: boolean;
+  isFailed: boolean;
+  transactionData: string;
+  notes: string;
+  version: number;
+  externalFee: string;
+  fee: string;
+  feeCurrency: string;
 }
 
 export interface BlockData {

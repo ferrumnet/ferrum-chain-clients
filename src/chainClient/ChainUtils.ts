@@ -1,5 +1,6 @@
-import {Network, sleep} from 'ferrum-plumbing';
-import {ChainClient} from './types';
+import {Network, sleep, ValidationUtils} from 'ferrum-plumbing';
+import {ChainClient, ServerTransaction, ServerTransactionItem, SimpleTransferTransaction} from './types';
+import Web3 from 'web3';
 
 export class ChainUtils {
     static readonly DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT = 60000;
@@ -14,6 +15,33 @@ export class ChainUtils {
         } else {
             return a1 === a2;
         }
+    }
+
+    static simpleTransactionToServer(tx: SimpleTransferTransaction): ServerTransaction {
+        const item1 = {
+            address: tx.from.address,
+            currency: tx.from.currency,
+            addressType: 'ADDRESS',
+            amount: toServerAmount(-1 * tx.from.amount, tx.from.currency, tx.from.decimals),
+        } as ServerTransactionItem;
+        const item2 = {
+            address: tx.to.address,
+            currency: tx.to.currency,
+            addressType: 'ADDRESS',
+            amount: toServerAmount(tx.to.amount, tx.to.currency, tx.to.decimals),
+        } as ServerTransactionItem;
+        return {
+            id: tx.id,
+            transactionType: 'CHAIN_TRANSACTION',
+            transactionId: tx.id,
+            confirmationTime: tx.confirmationTime,
+            creationTime: 0,
+            externalFee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals),
+            isConfirmed: tx.confirmed,
+            isFailed: tx.failed,
+            version: 0,
+            items: [item1, item2],
+        } as ServerTransaction;
     }
 
     static canonicalAddress(network: Network, address: string) {
@@ -50,4 +78,16 @@ export async function waitForTx(client: ChainClient, transactionId: string, wait
         console.log('Waiting for transaction ', transactionId, !tx);
         await sleep(fetchTimeout);
     }
+}
+
+function toServerAmount(amount: number, currency: string, decimals?: number) {
+    if (currency === 'ETH') {
+        return ethToGwei(amount);
+    }
+    ValidationUtils.isTrue(!currency || !!decimals, 'decimals must be provided for currency ' + currency);
+    return (amount * (10 ** (decimals || 0))).toFixed(12);
+}
+
+function ethToGwei(eth: number): string {
+    return Web3.utils.toWei(eth.toFixed(18), 'gwei');
 }

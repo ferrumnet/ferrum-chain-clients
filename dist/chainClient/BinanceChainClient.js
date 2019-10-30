@@ -17,6 +17,7 @@ const cross_fetch_1 = __importDefault(require("cross-fetch"));
 // @ts-ignore
 const javascript_sdk_1 = __importDefault(require("@binance-chain/javascript-sdk"));
 const ChainUtils_1 = require("./ChainUtils");
+const BINANCE_DECIMALS = 8;
 class BinanceChainClient {
     constructor(networkStage, config) {
         this.networkStage = networkStage;
@@ -55,16 +56,22 @@ class BinanceChainClient {
             const output = tx['value']['outputs'][0];
             return {
                 id: apiRes['hash'],
+                confirmationTime: new Date(tx.timeStamp).getTime(),
                 from: {
                     address: input['address'],
                     amount: normalizeBnbAmount(input['coins'][0]['amount']),
                     currency: input['coins'][0]['denom'],
+                    decimals: BINANCE_DECIMALS,
                 },
                 to: {
                     address: output['address'],
                     amount: normalizeBnbAmount(output['coins'][0]['amount']),
                     currency: output['coins'][0]['denom'],
+                    decimals: BINANCE_DECIMALS,
                 },
+                fee: normalizeBnbAmount(tx.txFee),
+                feeCurrency: 'BNB',
+                feeDecimals: BINANCE_DECIMALS,
                 confirmed: true,
             };
         });
@@ -184,19 +191,23 @@ class BinanceChainClient {
                 address: tx.fromAddr,
                 currency: tx.txAsset,
                 amount: Number(tx.value),
+                decimals: BINANCE_DECIMALS,
             },
             to: {
                 address: tx.toAddr,
                 currency: tx.txAsset,
                 amount: Number(tx.value),
+                decimals: BINANCE_DECIMALS,
             },
-            fee: Number(tx.txFee),
+            fee: normalizeBnbAmount(tx.txFee),
+            feeCurrency: 'BNB',
+            feeDecimals: BINANCE_DECIMALS,
             confirmed: true,
         } : undefined;
     }
 }
 exports.BinanceChainClient = BinanceChainClient;
 function normalizeBnbAmount(amount) {
-    return Number(amount) / (Math.pow(10, 8));
+    return Number(amount) / (Math.pow(10, BINANCE_DECIMALS));
 }
 //# sourceMappingURL=BinanceChainClient.js.map

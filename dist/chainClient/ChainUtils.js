@@ -8,8 +8,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const ferrum_plumbing_1 = require("ferrum-plumbing");
+const web3_1 = __importDefault(require("web3"));
 class ChainUtils {
     static addressesAreEqual(network, a1, a2) {
         if (!a1 || !a2) {
@@ -21,6 +25,32 @@ class ChainUtils {
         else {
             return a1 === a2;
         }
+    }
+    static simpleTransactionToServer(tx) {
+        const item1 = {
+            address: tx.from.address,
+            currency: tx.from.currency,
+            addressType: 'ADDRESS',
+            amount: toServerAmount(-1 * tx.from.amount, tx.from.currency, tx.from.decimals),
+        };
+        const item2 = {
+            address: tx.to.address,
+            currency: tx.to.currency,
+            addressType: 'ADDRESS',
+            amount: toServerAmount(tx.to.amount, tx.to.currency, tx.to.decimals),
+        };
+        return {
+            id: tx.id,
+            transactionType: 'CHAIN_TRANSACTION',
+            transactionId: tx.id,
+            confirmationTime: tx.confirmationTime,
+            creationTime: 0,
+            externalFee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals),
+            isConfirmed: tx.confirmed,
+            isFailed: tx.failed,
+            version: 0,
+            items: [item1, item2],
+        };
     }
     static canonicalAddress(network, address) {
         // TODO: Turn address to byte and back instead of lowercase.
@@ -62,4 +92,14 @@ function waitForTx(client, transactionId, waitTimeout, fetchTimeout) {
     });
 }
 exports.waitForTx = waitForTx;
+function toServerAmount(amount, currency, decimals) {
+    if (currency === 'ETH') {
+        return ethToGwei(amount);
+    }
+    ferrum_plumbing_1.ValidationUtils.isTrue(!currency || !!decimals, 'decimals must be provided for currency ' + currency);
+    return (amount * (Math.pow(10, (decimals || 0)))).toFixed(12);
+}
+function ethToGwei(eth) {
+    return web3_1.default.utils.toWei(eth.toFixed(18), 'gwei');
+}
 //# sourceMappingURL=ChainUtils.js.map

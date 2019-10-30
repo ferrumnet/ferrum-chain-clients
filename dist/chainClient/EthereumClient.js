@@ -27,6 +27,7 @@ const abi = __importStar(require("../resources/erc20-abi.json"));
 const ferrum_plumbing_1 = require("ferrum-plumbing");
 const ChainUtils_1 = require("./ChainUtils");
 const GasPriceProvider_1 = require("./GasPriceProvider");
+const ETH_DECIMALS = 18;
 const DecimalToUnit = {
     '1': 'wei',
     '3': 'kwei',
@@ -114,6 +115,7 @@ class EthereumClient {
                         network: "ETHEREUM",
                         fee: transactionReceipt['gasUsed'],
                         feeCurrency: "ETH",
+                        feeDecimals: ETH_DECIMALS,
                         from: { address: transaction.from,
                             currency: '',
                             amount: 0 },
@@ -139,18 +141,24 @@ class EthereumClient {
                             let decodedLog = decodedLogs[0];
                             if (decodedLog.name === "Transfer") {
                                 let contractinfo = this.findContractInfo(decodedLog.address);
-                                const decimalUnit = DecimalToUnit[contractinfo.decimal.toFixed()];
+                                const decimals = contractinfo.decimal;
+                                const decimalUnit = DecimalToUnit[decimals.toFixed()];
                                 ferrum_plumbing_1.ValidationUtils.isTrue(!!decimalUnit, `Deciman ${contractinfo.decimal} does not map to a unit`);
                                 let transferData = {
                                     network: "ETHEREUM",
-                                    fee: transactionReceipt['gasUsed'],
+                                    fee: Number(web3.utils.fromWei(transactionReceipt['gasUsed'], decimalUnit)),
                                     feeCurrency: "ETH",
+                                    feeDecimals: ETH_DECIMALS,
                                     from: { address: decodedLog.events[0].value,
                                         currency: contractinfo.name,
-                                        amount: Number(web3.utils.fromWei(decodedLog.events[2].value, decimalUnit)) },
+                                        amount: Number(web3.utils.fromWei(decodedLog.events[2].value, decimalUnit)),
+                                        decimals,
+                                    },
                                     to: { address: decodedLog.events[1].value,
                                         currency: contractinfo.name,
-                                        amount: Number(web3.utils.fromWei(decodedLog.events[2].value, decimalUnit)) },
+                                        amount: Number(web3.utils.fromWei(decodedLog.events[2].value, decimalUnit)),
+                                        decimals,
+                                    },
                                     confirmed: is_confirmed,
                                     confirmationTime: 0,
                                     failed: false,
@@ -166,8 +174,18 @@ class EthereumClient {
                             network: "ETHEREUM",
                             fee: transactionReceipt['gasUsed'],
                             feeCurrency: "ETH",
-                            from: { address: transactionReceipt["from"], currency: "ETH", amount: Number(web3.utils.fromWei(transaction['value'], "ether")) },
-                            to: { address: transactionReceipt["to"], currency: "ETH", amount: Number(web3.utils.fromWei(transaction['value'], "ether")) },
+                            from: {
+                                address: transactionReceipt["from"],
+                                currency: "ETH",
+                                amount: Number(web3.utils.fromWei(transaction['value'], "ether")),
+                                decimals: ETH_DECIMALS,
+                            },
+                            to: {
+                                address: transactionReceipt["to"],
+                                currency: "ETH",
+                                amount: Number(web3.utils.fromWei(transaction['value'], "ether")),
+                                decimals: ETH_DECIMALS,
+                            },
                             confirmed: is_confirmed,
                             confirmationTime: 0,
                             failed: false,
@@ -247,7 +265,8 @@ class EthereumClient {
                     filter: { to: address }
                 });
                 pastEvents.forEach((event) => {
-                    const decimalUnit = DecimalToUnit[this.decimals[tok]];
+                    const decimals = this.decimals[tok];
+                    const decimalUnit = DecimalToUnit[decimals];
                     const amount = Number(web3.utils.fromWei(event.returnValues.value, decimalUnit));
                     res.push({
                         network: "ETHEREUM",
@@ -256,12 +275,14 @@ class EthereumClient {
                         from: {
                             address: event.returnValues.from,
                             currency: tok,
-                            amount: amount
+                            amount: amount,
+                            decimals
                         },
                         to: {
                             address: event.returnValues.to,
                             currency: tok,
-                            amount: amount
+                            amount: amount,
+                            decimals
                         },
                         confirmed: true,
                         confirmationTime: 0,

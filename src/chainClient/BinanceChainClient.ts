@@ -5,6 +5,8 @@ import fetch from "cross-fetch";
 import BnbApiClient from '@binance-chain/javascript-sdk';
 import {ChainUtils, waitForTx} from './ChainUtils';
 
+const BINANCE_DECIMALS = 8;
+
 export class BinanceChainClient implements ChainClient {
     private readonly url: string;
     private readonly txWaitTimeout: number;
@@ -44,17 +46,22 @@ export class BinanceChainClient implements ChainClient {
         const output = tx['value']['outputs'][0];
         return {
             id: apiRes['hash'],
+            confirmationTime: new Date(tx.timeStamp).getTime(),
             from: {
                 address: input['address'],
                 amount: normalizeBnbAmount(input['coins'][0]['amount']),
                 currency: input['coins'][0]['denom'],
+                decimals: BINANCE_DECIMALS,
             },
             to: {
                 address: output['address'],
                 amount: normalizeBnbAmount(output['coins'][0]['amount']),
                 currency: output['coins'][0]['denom'],
+                decimals: BINANCE_DECIMALS,
             },
-
+            fee: normalizeBnbAmount(tx.txFee),
+            feeCurrency: 'BNB',
+            feeDecimals: BINANCE_DECIMALS,
             confirmed: true,
         } as SimpleTransferTransaction;
     }
@@ -167,19 +174,22 @@ export class BinanceChainClient implements ChainClient {
                 address: tx.fromAddr,
                 currency: tx.txAsset,
                 amount: Number(tx.value),
+                decimals: BINANCE_DECIMALS,
             },
             to: {
                 address: tx.toAddr,
                 currency: tx.txAsset,
                 amount: Number(tx.value),
+                decimals: BINANCE_DECIMALS,
             },
-            fee: Number(tx.txFee),
+            fee: normalizeBnbAmount(tx.txFee),
+            feeCurrency: 'BNB',
+            feeDecimals: BINANCE_DECIMALS,
             confirmed: true, // If you see the transaction it is confirmed!
         } as SimpleTransferTransaction) : undefined;
     }
 }
 
 function normalizeBnbAmount(amount: string): number {
-    return Number(amount) / (10 ** 8);
+    return Number(amount) / (10 ** BINANCE_DECIMALS);
 }
-
