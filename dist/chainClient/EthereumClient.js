@@ -19,6 +19,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const bn_js_1 = __importDefault(require("bn.js"));
 const web3_1 = __importDefault(require("web3"));
 const types_1 = require("./types");
 // @ts-ignore
@@ -100,10 +101,10 @@ class EthereumClient {
                 if (!transaction) {
                     return undefined;
                 }
-                const currentBlock = yield web3.eth.getBlockNumber();
-                let confirmed = transaction.blockNumber === null ? 0 : currentBlock - transaction.blockNumber;
-                let is_confirmed = confirmed >= this.requiredConfirmations;
                 let transactionReceipt = yield web3.eth.getTransactionReceipt(tid);
+                const currentBlock = yield web3.eth.getBlockNumber();
+                let confirmed = transactionReceipt.blockNumber === null ? 0 : currentBlock - transactionReceipt.blockNumber;
+                let is_confirmed = confirmed >= this.requiredConfirmations;
                 if (!transactionReceipt) {
                     const msg = 'EthereumClient.getTransactionById: Transaction did not have any receipt / logs: ' + tid;
                     console.error(msg);
@@ -146,17 +147,17 @@ class EthereumClient {
                                 ferrum_plumbing_1.ValidationUtils.isTrue(!!decimalUnit, `Deciman ${contractinfo.decimal} does not map to a unit`);
                                 let transferData = {
                                     network: "ETHEREUM",
-                                    fee: Number(web3.utils.fromWei(transactionReceipt['gasUsed'], decimalUnit)),
+                                    fee: Number(web3.utils.fromWei(new bn_js_1.default(transactionReceipt['gasUsed']), decimalUnit)),
                                     feeCurrency: "ETH",
                                     feeDecimals: ETH_DECIMALS,
                                     from: { address: decodedLog.events[0].value,
                                         currency: contractinfo.name,
-                                        amount: Number(web3.utils.fromWei(decodedLog.events[2].value, decimalUnit)),
+                                        amount: Number(web3.utils.fromWei(new bn_js_1.default(decodedLog.events[2].value), decimalUnit)),
                                         decimals,
                                     },
                                     to: { address: decodedLog.events[1].value,
                                         currency: contractinfo.name,
-                                        amount: Number(web3.utils.fromWei(decodedLog.events[2].value, decimalUnit)),
+                                        amount: Number(web3.utils.fromWei(new bn_js_1.default(decodedLog.events[2].value), decimalUnit)),
                                         decimals,
                                     },
                                     confirmed: is_confirmed,
@@ -177,13 +178,13 @@ class EthereumClient {
                             from: {
                                 address: transactionReceipt["from"],
                                 currency: "ETH",
-                                amount: Number(web3.utils.fromWei(transaction['value'], "ether")),
+                                amount: Number(web3.utils.fromWei(new bn_js_1.default(transaction['value']), "ether")),
                                 decimals: ETH_DECIMALS,
                             },
                             to: {
                                 address: transactionReceipt["to"],
                                 currency: "ETH",
-                                amount: Number(web3.utils.fromWei(transaction['value'], "ether")),
+                                amount: Number(web3.utils.fromWei(new bn_js_1.default(transaction['value']), "ether")),
                                 decimals: ETH_DECIMALS,
                             },
                             confirmed: is_confirmed,

@@ -92,10 +92,10 @@ export class EthereumClient implements ChainClient {
             if (!transaction) {
                 return undefined;
             }
-            const currentBlock = await web3.eth.getBlockNumber();
-            let confirmed = transaction.blockNumber === null ? 0 : currentBlock - transaction.blockNumber;
-            let is_confirmed = confirmed >= this.requiredConfirmations;
             let transactionReceipt = await web3.eth.getTransactionReceipt(tid);
+            const currentBlock = await web3.eth.getBlockNumber();
+            let confirmed = transactionReceipt.blockNumber === null ? 0 : currentBlock - transactionReceipt.blockNumber;
+            let is_confirmed = confirmed >= this.requiredConfirmations;
             if (!transactionReceipt) {
                 const msg = 'EthereumClient.getTransactionById: Transaction did not have any receipt / logs: ' + tid;
                 console.error(msg);
@@ -138,17 +138,17 @@ export class EthereumClient implements ChainClient {
                             ValidationUtils.isTrue(!!decimalUnit, `Deciman ${contractinfo.decimal} does not map to a unit`);
                             let transferData = {
                                 network: "ETHEREUM",
-                                fee: Number(web3.utils.fromWei(transactionReceipt['gasUsed'], decimalUnit)),
+                                fee: Number(web3.utils.fromWei(new BN(transactionReceipt['gasUsed']), decimalUnit)),
                                 feeCurrency: "ETH",
                                 feeDecimals: ETH_DECIMALS,
                                 from: {address: decodedLog.events[0].value,
                                     currency: contractinfo.name,
-                                    amount: Number(web3.utils.fromWei(decodedLog.events[2].value, decimalUnit)),
+                                    amount: Number(web3.utils.fromWei(new BN(decodedLog.events[2].value), decimalUnit)),
                                     decimals,
                                 },
                                 to: {address: decodedLog.events[1].value,
                                     currency: contractinfo.name,
-                                    amount: Number(web3.utils.fromWei(decodedLog.events[2].value, decimalUnit)),
+                                    amount: Number(web3.utils.fromWei(new BN(decodedLog.events[2].value), decimalUnit)),
                                     decimals,
                                 },
                                 confirmed: is_confirmed,
@@ -168,13 +168,13 @@ export class EthereumClient implements ChainClient {
                         from: {
                             address: transactionReceipt["from"],
                             currency: "ETH",
-                            amount: Number(web3.utils.fromWei(transaction['value'], "ether")),
+                            amount: Number(web3.utils.fromWei(new BN(transaction['value']), "ether")),
                             decimals: ETH_DECIMALS,
                         },
                         to: {
                             address: transactionReceipt["to"],
                             currency: "ETH",
-                            amount: Number(web3.utils.fromWei(transaction['value'], "ether")),
+                            amount: Number(web3.utils.fromWei(new BN(transaction['value']), "ether")),
                             decimals: ETH_DECIMALS,
                         },
                         confirmed: is_confirmed,

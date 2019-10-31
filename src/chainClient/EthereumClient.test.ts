@@ -4,20 +4,23 @@ import {
     testChainClientFactory,
     TESTNET_CONFIG
 } from '../testUtils/configs/TestnetConfig';
+import {retry} from "ferrum-plumbing";
 
 const clientFac = testChainClientFactory();
 
 function ethereumClientForTest() { return clientFac.forNetwork('ETHEREUM'); }
 
-test('send tx', async () => {
-    const client = ethereumClientForTest();
+test('send tx', async function() {
+    jest.setTimeout(100000);
+    const client = ethereumClientForProd();
     // const privateKey = Buffer.from('54A5003FC3849EFA4823EFAE9B33EBD07EDA224C47A81219C9EDAC550C1402A9', 'hex');
     // const to = '0x467502Ef1c444f98349dacdf0223CCb5e2019f36';
     //
     // const txId = await client.processPaymentFromPrivateKey(privateKey, to, 'FRM', 0.001);
     // console.log('Sent tx', txId);
 
-    var data = await client.getTransactionById('0xcfa5be19f82278d3f5bab1cad260efa0abc57fd66ddcfff46a1b07d0b0938614');
+    var data = await client.getTransactionById('0x9213b0ae343ae6d59a5c396d92afc70c1b535365d256cd786423140f1538ba72');
+    expect(data!.confirmed).toBe(true);
     console.log('transaction', data);
 });
 
@@ -82,11 +85,11 @@ test('Get block by number', async function() {
     jest.setTimeout(100000);
     const blockNo = 8825650;
     const client = ethereumClientForProd();
-    const block = await client.getBlockByNumber(blockNo);
+    const block = await retry(async () => await client.getBlockByNumber(blockNo));
     console.log('res', block);
-    const ethTx = block.transactions!
+    const ethTx = block!.transactions!
         .find(t => t.id === '0xf1607bd6deaf6bfed0b15b1a34275ddd5eb65963b7a39dec7489cfb012a08498');
-    const usdcTx = block.transactions!
+    const usdcTx = block!.transactions!
         .find(t => t.id === '0x20ff49c41e5f5daea28e02f694ae6a4bbef25b5ee653d2473eaac8cd959c3434');
     console.log(ethTx, usdcTx);
     expect(ethTx!.from.amount).toBe(0.04);
