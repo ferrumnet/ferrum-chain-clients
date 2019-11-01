@@ -1,0 +1,1 @@
+{"version":3,"file":"ChainClientsModule.d.ts","sourceRoot":"","sources":["../src/ChainClientsModule.ts"],"names":[],"mappings":"AAAA,OAAO,EAAC,SAAS,EAAE,MAAM,EAAC,MAAM,iBAAiB,CAAC;AAMlD;;GAEG;AACH,qBAAa,kBAAmB,YAAW,MAAM;IACvC,WAAW,CAAC,SAAS,EAAE,SAAS,GAAG,OAAO,CAAC,IAAI,CAAC;CAczD"}

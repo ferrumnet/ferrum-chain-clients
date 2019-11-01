@@ -8,4 +8,5 @@ export * from './chainClient/BinanceChainClient';
 export * from './chainClient/ethereum/ContractClientBase';
 export * from './chainClient/ethereum/Erc20ReaderClient';
 export * from './tools/ChainTransactionProcessor';
+export * from './ChainClientsModule';
 //# sourceMappingURL=index.d.ts.map

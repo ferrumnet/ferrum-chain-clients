@@ -7,7 +7,7 @@ import {BinanceChainAddress, CreateNewAddressFactory, EthereumAddress} from "./c
 /**
  * You must register the MultiChainConfig outside this module
  */
-class ChainClientsModule implements Module {
+export class ChainClientsModule implements Module {
     async configAsync(container: Container): Promise<void> {
         container.register(ChainClientFactory, c => new ChainClientFactory(
             c.get('MultiChainConfig'),
