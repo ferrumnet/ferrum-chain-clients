@@ -56,7 +56,7 @@ test('Get transaction BY ID including token transfer', async () => {
 
 test('Get token transactions BY address', async function () {
     jest.setTimeout(100000);
-    const addr = '0xbebe7881a7253c6c0246fabf4d159d2eb2db58e1';
+    const addr = '0x89a39492ec912c0e3533db88672ecaad7bb92a82';
     const client = ethereumClientForProd();
     const tx = await client.getRecentTransactionsByAddress(addr);
     console.log(tx);

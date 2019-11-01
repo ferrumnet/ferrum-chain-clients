@@ -55,7 +55,7 @@ test('Get transaction BY ID including token transfer', () => __awaiter(void 0, v
 test('Get token transactions BY address', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);
-        const addr = '0xbebe7881a7253c6c0246fabf4d159d2eb2db58e1';
+        const addr = '0x89a39492ec912c0e3533db88672ecaad7bb92a82';
         const client = TestnetConfig_1.ethereumClientForProd();
         const tx = yield client.getRecentTransactionsByAddress(addr);
         console.log(tx);
