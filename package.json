@@ -1,5 +1,5 @@
 {
-  "name": "ferrum-chain-client",
+  "name": "ferrum-chain-clients",
   "version": "1.0.0",
   "description": "Chain clients",
   "main": "dist/index.js",
