@@ -25,6 +25,7 @@ const conf = {
         'FRM': 6,
     },
     binanceChainUrl: 'https://testnet-dex.binance.org',
+    binanceChainSeedNode: 'https://data-seed-pre-0-s3.binance.org',
     networkStage: 'test',
 };
 const CURRENCY = 'FRM-410';
@@ -75,7 +76,7 @@ test('get balance', () => __awaiter(void 0, void 0, void 0, function* () {
     expect(bal).toBeTruthy();
     console.log('Balance was ', bal);
 }));
-test('get block', function () {
+test('get block prod', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(1000000);
         // NIH
@@ -86,6 +87,23 @@ test('get block', function () {
         expect(tx.from.amount).toBe(0.0001);
         expect(tx.from.currency).toBe('BNB');
         expect(tx.fee).toBe(0.000375);
+    });
+});
+test('get block test', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(1000000);
+        const client = new BinanceChainClient_1.BinanceChainClient('test', conf);
+        const block = yield client.getBlockByNumber(49483308);
+        // const block = await client.getBlockByNumber(49483742);
+        console.log(block);
+        const tx = block.transactions[0];
+        expect(tx.from.address).toBe('tbnb1zqs84eg34kur74uhs6x6m0ketawgtf4nqcj27j');
+        expect(tx.to.address).toBe('tbnb189az9plcke2c00vns0zfmllfpfdw67dtv25kgx');
+        expect(tx.from.amount).toBe(0.00000001);
+        expect(tx.to.amount).toBe(0.00000001);
+        expect(tx.from.currency).toBe('BNB');
+        expect(tx.fee).toBe(0.00000000000375);
+        expect(tx.memo).toBe('Test transaction');
     });
 });
 //# sourceMappingURL=BinanceChainClient.test.js.map

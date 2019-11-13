@@ -30,6 +30,7 @@ export interface SimpleTransferTransaction {
     failed: boolean;
     confirmationTime: number;
     id: string;
+    memo?: string;
 }
 /**
  * The transaction structure as understood by the kudi / unifyre server
@@ -75,6 +76,7 @@ export interface MultiChainConfig {
         [k: string]: number;
     };
     binanceChainUrl: string;
+    binanceChainSeedNode: string;
     networkStage: NetworkStage;
     requiredEthConfirmations?: number;
     pendingTransactionShowTimeout?: number;

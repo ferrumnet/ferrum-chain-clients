@@ -8,6 +8,7 @@ export interface GasPriceProvider {
     getGasPrice(): Promise<EthGasPrice>;
     getTransactionGas(currency: string, gasPrice: number, currentTargetBalance?: number): number;
 }
+export declare const BINANCE_FEE = 0.000375;
 export declare class BinanceGasPriceProvider implements GasPriceProvider, Injectable {
     getGasPrice(): Promise<EthGasPrice>;
     getTransactionGas(currency: string, _: number, __?: number): number;

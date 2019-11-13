@@ -21,6 +21,7 @@ exports.TESTNET_CONFIG = {
         'FRM': 6,
     },
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
+    binanceChainSeedNode: 'https://data-seed-pre-0-s3.binance.org',
 };
 const TEST_PROD_CONFIG = {
     web3Provider: 'https://mainnet.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b',
@@ -31,6 +32,7 @@ const TEST_PROD_CONFIG = {
         FRM: 6,
     },
     binanceChainUrl: 'https://dex.binance.org',
+    binanceChainSeedNode: '',
     networkStage: 'test',
 };
 function ethereumClientForProd() {

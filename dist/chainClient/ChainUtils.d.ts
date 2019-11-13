@@ -10,4 +10,6 @@ export declare class ChainUtils {
     static bufferToHex(buffer: ArrayBuffer): string;
 }
 export declare function waitForTx(client: ChainClient, transactionId: string, waitTimeout: number, fetchTimeout: number): Promise<SimpleTransferTransaction | undefined>;
+export declare function normalizeBnbAmount(amount: string): number;
+export declare const BINANCE_DECIMALS = 8;
 //# sourceMappingURL=ChainUtils.d.ts.map

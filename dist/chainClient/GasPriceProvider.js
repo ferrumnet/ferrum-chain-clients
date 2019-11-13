@@ -18,19 +18,19 @@ const bn_js_1 = __importDefault(require("bn.js"));
 function gweiToEth(gweiNum) {
     return Number(web3_1.default.utils.fromWei(web3_1.default.utils.toWei(new bn_js_1.default(gweiNum), 'gwei'), 'ether'));
 }
-const BINANCE_FEE = 0.000375;
+exports.BINANCE_FEE = 0.000375;
 class BinanceGasPriceProvider {
     getGasPrice() {
         return __awaiter(this, void 0, void 0, function* () {
             return {
-                low: BINANCE_FEE,
-                medium: BINANCE_FEE,
-                high: BINANCE_FEE,
+                low: exports.BINANCE_FEE,
+                medium: exports.BINANCE_FEE,
+                high: exports.BINANCE_FEE,
             };
         });
     }
     getTransactionGas(currency, _, __) {
-        return BINANCE_FEE;
+        return exports.BINANCE_FEE;
     }
     __name__() {
         return 'BinanceGasPriceProvider';

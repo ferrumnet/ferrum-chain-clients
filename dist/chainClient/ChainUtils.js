@@ -102,4 +102,9 @@ function toServerAmount(amount, currency, decimals) {
 function ethToGwei(eth) {
     return web3_1.default.utils.toWei(eth.toFixed(18), 'gwei');
 }
+function normalizeBnbAmount(amount) {
+    return Number(amount) / (Math.pow(10, exports.BINANCE_DECIMALS));
+}
+exports.normalizeBnbAmount = normalizeBnbAmount;
+exports.BINANCE_DECIMALS = 8;
 //# sourceMappingURL=ChainUtils.js.map

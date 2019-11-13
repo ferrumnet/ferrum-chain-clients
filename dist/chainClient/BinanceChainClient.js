@@ -17,12 +17,15 @@ const cross_fetch_1 = __importDefault(require("cross-fetch"));
 // @ts-ignore
 const javascript_sdk_1 = __importDefault(require("@binance-chain/javascript-sdk"));
 const ChainUtils_1 = require("./ChainUtils");
-const BINANCE_DECIMALS = 8;
+const BinanceTxParser_1 = require("./binance/BinanceTxParser");
+const GasPriceProvider_1 = require("./GasPriceProvider");
 class BinanceChainClient {
     constructor(networkStage, config) {
         this.networkStage = networkStage;
         this.url = config.binanceChainUrl;
+        this.seedNodeUrl = config.binanceChainSeedNode;
         this.txWaitTimeout = config.pendingTransactionShowTimeout || ChainUtils_1.ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT;
+        this.addFeeToRawParsedTx = this.addFeeToRawParsedTx.bind(this);
     }
     feeCurrency() {
         return 'BNB';
@@ -59,19 +62,19 @@ class BinanceChainClient {
                 confirmationTime: new Date(tx.timeStamp).getTime(),
                 from: {
                     address: input['address'],
-                    amount: normalizeBnbAmount(input['coins'][0]['amount']),
+                    amount: ChainUtils_1.normalizeBnbAmount(input['coins'][0]['amount']),
                     currency: input['coins'][0]['denom'],
-                    decimals: BINANCE_DECIMALS,
+                    decimals: ChainUtils_1.BINANCE_DECIMALS,
                 },
                 to: {
                     address: output['address'],
-                    amount: normalizeBnbAmount(output['coins'][0]['amount']),
+                    amount: ChainUtils_1.normalizeBnbAmount(output['coins'][0]['amount']),
                     currency: output['coins'][0]['denom'],
-                    decimals: BINANCE_DECIMALS,
+                    decimals: ChainUtils_1.BINANCE_DECIMALS,
                 },
-                fee: normalizeBnbAmount(tx.txFee),
+                fee: ChainUtils_1.normalizeBnbAmount(tx.txFee),
                 feeCurrency: 'BNB',
-                feeDecimals: BINANCE_DECIMALS,
+                feeDecimals: ChainUtils_1.BINANCE_DECIMALS,
                 confirmed: true,
             };
         });
@@ -151,7 +154,42 @@ class BinanceChainClient {
             return ChainUtils_1.waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils_1.ChainUtils.TX_FETCH_TIMEOUT);
         });
     }
+    getBlockByNumberFromSeedNode(number) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const fullApi = `${this.seedNodeUrl}/block?height=${number}`;
+            const res = yield this.callFullApi(fullApi);
+            const num_txs = (((res['result'] || {})['block'] || {})['header'] || {})['num_txs'];
+            const timestamp = (((res['result'] || {})['block'] || {})['header'] || {})['time'];
+            const hash = (((res['result'] || {})['block_meta'] || {})['block_id'] || {})['hash'];
+            if (num_txs === undefined) {
+                throw new Error(`Error calling '${fullApi}'. Result has no 'num_txs': ${JSON.stringify(res)}`);
+            }
+            // Above API does not include tx hashes. Query for tx hashes using the tx_search API
+            const txsResFullApi = `${this.seedNodeUrl}/tx_search?query="tx.height=${number}"`;
+            const txRes = yield this.callFullApi(txsResFullApi);
+            const txsEncoded = (txRes['result'] || {})['txs'] || [];
+            if (Number(num_txs) !== txsEncoded.length) {
+                throw new Error(`Error calling '${fullApi}'. Expected '${num_txs}' transactions but got ${txsEncoded.length}.`);
+            }
+            const decoded = txsEncoded.map((txe) => BinanceTxParser_1.BinanceTxParser.parseFromHex(Buffer.from(txe['tx'], 'base64').toString('hex'), timestamp, txe['hash']))
+                .filter(Boolean)
+                .map(this.addFeeToRawParsedTx);
+            return {
+                transactions: decoded,
+                transactionIds: decoded.map((t) => t.id),
+                timestamp: Date.parse(timestamp),
+                number: number,
+                hash,
+            };
+        });
+    }
     getBlockByNumber(number) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return !!this.seedNodeUrl ? this.getBlockByNumberFromSeedNode(number) :
+                this.getBlockByNumberFromApi(number);
+        });
+    }
+    getBlockByNumberFromApi(number) {
         return __awaiter(this, void 0, void 0, function* () {
             const res = yield this.callApi('v2/transactions-in-block/' + number);
             const txs = res['tx'] || [];
@@ -172,9 +210,8 @@ class BinanceChainClient {
             return res.sync_info.latest_block_height;
         });
     }
-    callApi(api) {
+    callFullApi(apiUrl) {
         return __awaiter(this, void 0, void 0, function* () {
-            const apiUrl = `${this.url}/api/${api}?format=json`;
             const apiRes = yield this.api(apiUrl);
             if (!apiRes) {
                 return undefined;
@@ -182,6 +219,18 @@ class BinanceChainClient {
             ferrum_plumbing_1.ValidationUtils.isTrue(apiRes && Object.keys(apiRes).length > 1, 'API return error: ' + apiRes['log']);
             return apiRes;
         });
+    }
+    callApi(api) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const apiUrl = `${this.url}/api/${api}?format=json`;
+            return this.callFullApi(apiUrl);
+        });
+    }
+    addFeeToRawParsedTx(tx) {
+        tx.fee = ChainUtils_1.normalizeBnbAmount(GasPriceProvider_1.BINANCE_FEE.toFixed(12)); // TODO: Fix the raw parser to include the fee
+        tx.feeCurrency = this.feeCurrency();
+        tx.feeDecimals = ChainUtils_1.BINANCE_DECIMALS;
+        return tx;
     }
     parseTx(tx) {
         return tx.txType === 'TRANSFER' ? {
@@ -191,23 +240,20 @@ class BinanceChainClient {
                 address: tx.fromAddr,
                 currency: tx.txAsset,
                 amount: Number(tx.value),
-                decimals: BINANCE_DECIMALS,
+                decimals: ChainUtils_1.BINANCE_DECIMALS,
             },
             to: {
                 address: tx.toAddr,
                 currency: tx.txAsset,
                 amount: Number(tx.value),
-                decimals: BINANCE_DECIMALS,
+                decimals: ChainUtils_1.BINANCE_DECIMALS,
             },
-            fee: normalizeBnbAmount(tx.txFee),
+            fee: ChainUtils_1.normalizeBnbAmount(tx.txFee),
             feeCurrency: 'BNB',
-            feeDecimals: BINANCE_DECIMALS,
+            feeDecimals: ChainUtils_1.BINANCE_DECIMALS,
             confirmed: true,
         } : undefined;
     }
 }
 exports.BinanceChainClient = BinanceChainClient;
-function normalizeBnbAmount(amount) {
-    return Number(amount) / (Math.pow(10, BINANCE_DECIMALS));
-}
 //# sourceMappingURL=BinanceChainClient.js.map
