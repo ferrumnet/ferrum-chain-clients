@@ -91,3 +91,10 @@ function toServerAmount(amount: number, currency: string, decimals?: number) {
 function ethToGwei(eth: number): string {
     return Web3.utils.toWei(eth.toFixed(18), 'gwei');
 }
+
+
+export function normalizeBnbAmount(amount: string): number {
+    return Number(amount) / (10 ** BINANCE_DECIMALS);
+}
+
+export const BINANCE_DECIMALS = 8;

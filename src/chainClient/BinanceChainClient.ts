@@ -3,16 +3,19 @@ import {HexString, ValidationUtils} from 'ferrum-plumbing';
 import fetch from "cross-fetch";
 // @ts-ignore
 import BnbApiClient from '@binance-chain/javascript-sdk';
-import {ChainUtils, waitForTx} from './ChainUtils';
-
-const BINANCE_DECIMALS = 8;
+import {BINANCE_DECIMALS, ChainUtils, normalizeBnbAmount, waitForTx} from './ChainUtils';
+import {BinanceTxParser} from "./binance/BinanceTxParser";
+import {BINANCE_FEE} from "./GasPriceProvider";
 
 export class BinanceChainClient implements ChainClient {
     private readonly url: string;
     private readonly txWaitTimeout: number;
+    private seedNodeUrl: string;
     constructor(private networkStage: NetworkStage, config: MultiChainConfig) {
         this.url = config.binanceChainUrl;
+        this.seedNodeUrl = config.binanceChainSeedNode;
         this.txWaitTimeout = config.pendingTransactionShowTimeout || ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT;
+        this.addFeeToRawParsedTx = this.addFeeToRawParsedTx.bind(this);
     }
     feeCurrency(): string {
         return 'BNB';
@@ -136,7 +139,50 @@ export class BinanceChainClient implements ChainClient {
         return waitForTx(this, transactionId, this.txWaitTimeout, ChainUtils.TX_FETCH_TIMEOUT);
     }
 
+    async getBlockByNumberFromSeedNode(number: number): Promise<BlockData> {
+        const fullApi = `${this.seedNodeUrl}/block?height=${number}`;
+        const res = await this.callFullApi(fullApi);
+        const num_txs = (((res['result'] || {})['block'] || {})['header'] || {})['num_txs'];
+        const timestamp = (((res['result'] || {})['block'] || {})['header'] || {})['time'];
+        const hash = (((res['result'] || {})['block_meta'] || {})['block_id'] || {})['hash'];
+        if (num_txs === undefined) {
+            throw new Error(
+                `Error calling '${fullApi}'. Result has no 'num_txs': ${JSON.stringify(res)}`
+            );
+        }
+        // Above API does not include tx hashes. Query for tx hashes using the tx_search API
+        const txsResFullApi = `${this.seedNodeUrl}/tx_search?query="tx.height=${number}"`;
+        const txRes = await this.callFullApi(txsResFullApi);
+
+        const txsEncoded = (txRes['result'] || {})['txs'] || [];
+        if (Number(num_txs) !== txsEncoded.length) {
+            throw new Error(
+                `Error calling '${fullApi}'. Expected '${num_txs}' transactions but got ${txsEncoded.length}.`
+            );
+        }
+        const decoded = txsEncoded.map((txe: any) =>
+            BinanceTxParser.parseFromHex(
+                Buffer.from(txe['tx'], 'base64').toString('hex'),
+                timestamp,
+                txe['hash']
+                ))
+            .filter(Boolean)
+            .map(this.addFeeToRawParsedTx);
+        return {
+            transactions: decoded,
+            transactionIds: decoded.map((t: SimpleTransferTransaction) => t.id),
+            timestamp: Date.parse(timestamp),
+            number: number,
+            hash,
+        };
+    }
+
     async getBlockByNumber(number: number): Promise<BlockData> {
+        return !!this.seedNodeUrl ? this.getBlockByNumberFromSeedNode(number) :
+            this.getBlockByNumberFromApi(number);
+    }
+
+    async getBlockByNumberFromApi(number: number): Promise<BlockData> {
         const res = await this.callApi('v2/transactions-in-block/' + number);
         const txs = res['tx'] || [];
         const transactions = txs.map(this.parseTx).filter(Boolean);
@@ -155,8 +201,7 @@ export class BinanceChainClient implements ChainClient {
         return res.sync_info.latest_block_height;
     }
 
-    private async callApi(api: string): Promise<any> {
-        const apiUrl = `${this.url}/api/${api}?format=json`;
+    private async callFullApi(apiUrl: string): Promise<any> {
         const apiRes = await this.api(apiUrl);
         if (!apiRes) {
             return undefined;
@@ -164,6 +209,18 @@ export class BinanceChainClient implements ChainClient {
         ValidationUtils.isTrue(apiRes && Object.keys(apiRes).length > 1,
             'API return error: ' + apiRes['log']);
         return apiRes;
+    }
+
+    private async callApi(api: string): Promise<any> {
+        const apiUrl = `${this.url}/api/${api}?format=json`;
+        return this.callFullApi(apiUrl);
+    }
+
+    private addFeeToRawParsedTx(tx: SimpleTransferTransaction): SimpleTransferTransaction {
+        tx.fee = normalizeBnbAmount(BINANCE_FEE.toFixed(12)); // TODO: Fix the raw parser to include the fee
+        tx.feeCurrency = this.feeCurrency();
+        tx.feeDecimals = BINANCE_DECIMALS;
+        return tx;
     }
 
     private parseTx(tx: any) {
@@ -190,6 +247,3 @@ export class BinanceChainClient implements ChainClient {
     }
 }
 
-function normalizeBnbAmount(amount: string): number {
-    return Number(amount) / (10 ** BINANCE_DECIMALS);
-}

@@ -1493,6 +1493,14 @@ bn.js@latest:
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-5.0.0.tgz#5c3d398021b3ddb548c1296a16f857e908f35c70"
   integrity sha512-bVwDX8AF+72fIUNuARelKAlQUNtPOfG2fRxorbVvFk4zpHbqLrPdOGfVg5vrKwVzLLePqPBiATaOZNELQzmS0A==
 
+"bnb-tx-decoder@git+https://github.com/ferrumnet/bnb-tx-decoder.git":
+  version "1.0.0"
+  resolved "git+https://github.com/ferrumnet/bnb-tx-decoder.git#636c97406f44928b07ae2cd8782b7feafe41fdf2"
+  dependencies:
+    is_js "^0.9.0"
+    protocol-buffers-encodings "^1.1.0"
+    safe-buffer "^5.1.2"
+
 body-parser@1.19.0, body-parser@^1.16.0:
   version "1.19.0"
   resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-1.19.0.tgz#96b2709e57c9c4e09a6fd66a8fd979844f69f08a"

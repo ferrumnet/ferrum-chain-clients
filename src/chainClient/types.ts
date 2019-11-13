@@ -23,6 +23,7 @@ export interface SimpleTransferTransaction {
   failed: boolean;
   confirmationTime: number;
   id: string;
+  memo?: string;
 }
 
 /**
@@ -69,6 +70,7 @@ export interface MultiChainConfig {
   contractAddresses: { [ k: string ]: string };
   contractDecimals: { [k:string]: number };
   binanceChainUrl: string;
+  binanceChainSeedNode: string;
   networkStage: NetworkStage;
   requiredEthConfirmations?: number;
   pendingTransactionShowTimeout?: number;

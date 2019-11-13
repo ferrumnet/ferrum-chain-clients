@@ -32,6 +32,7 @@
     "abi-decoder": "latest",
     "babel-jest": "^24.8.0",
     "bn.js": "latest",
+    "bnb-tx-decoder": "git+https://github.com/ferrumnet/bnb-tx-decoder.git",
     "ferrum-plumbing": "git+https://github.com/ferrumnet/ferrum-plumbing.git",
     "jest": "^24.8.0",
     "web3": "latest"

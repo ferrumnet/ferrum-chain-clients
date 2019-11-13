@@ -18,7 +18,8 @@ function gweiToEth(gweiNum: number) {
     return Number(Web3.utils.fromWei(Web3.utils.toWei(new BN(gweiNum), 'gwei'), 'ether'));
 }
 
-const BINANCE_FEE = 0.000375;
+export const BINANCE_FEE = 0.000375;
+
 export class BinanceGasPriceProvider implements GasPriceProvider, Injectable {
     async getGasPrice(): Promise<EthGasPrice> {
         return {
