@@ -160,10 +160,11 @@ export class BinanceChainClient implements ChainClient {
                 `Error calling '${fullApi}'. Expected '${num_txs}' transactions but got ${txsEncoded.length}.`
             );
         }
+        const confTime = Date.parse(timestamp);
         const decoded = txsEncoded.map((txe: any) =>
             BinanceTxParser.parseFromHex(
                 Buffer.from(txe['tx'], 'base64').toString('hex'),
-                timestamp,
+                confTime,
                 txe['hash']
                 ))
             .filter(Boolean)
@@ -171,7 +172,7 @@ export class BinanceChainClient implements ChainClient {
         return {
             transactions: decoded,
             transactionIds: decoded.map((t: SimpleTransferTransaction) => t.id),
-            timestamp: Date.parse(timestamp),
+            timestamp: confTime,
             number: number,
             hash,
         };

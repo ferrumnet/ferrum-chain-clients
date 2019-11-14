@@ -35,7 +35,7 @@ export class ChainUtils {
             transactionType: 'CHAIN_TRANSACTION',
             transactionId: tx.id,
             confirmationTime: tx.confirmationTime,
-            creationTime: 0,
+            creationTime: tx.creationTime,
             externalFee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals),
             isConfirmed: tx.confirmed,
             isFailed: tx.failed,
@@ -85,7 +85,7 @@ function toServerAmount(amount: number, currency: string, decimals?: number) {
         return ethToGwei(amount);
     }
     ValidationUtils.isTrue(!currency || !!decimals, 'decimals must be provided for currency ' + currency);
-    return (amount * (10 ** (decimals || 0))).toFixed(12);
+    return (amount / (10 ** (decimals || 0))).toFixed(12);
 }
 
 function ethToGwei(eth: number): string {
