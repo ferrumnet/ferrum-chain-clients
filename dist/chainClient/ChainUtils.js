@@ -44,7 +44,7 @@ class ChainUtils {
             transactionType: 'CHAIN_TRANSACTION',
             transactionId: tx.id,
             confirmationTime: tx.confirmationTime,
-            creationTime: 0,
+            creationTime: tx.creationTime,
             externalFee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals),
             isConfirmed: tx.confirmed,
             isFailed: tx.failed,
@@ -97,7 +97,7 @@ function toServerAmount(amount, currency, decimals) {
         return ethToGwei(amount);
     }
     ferrum_plumbing_1.ValidationUtils.isTrue(!currency || !!decimals, 'decimals must be provided for currency ' + currency);
-    return (amount * (Math.pow(10, (decimals || 0)))).toFixed(12);
+    return (amount / (Math.pow(10, (decimals || 0)))).toFixed(12);
 }
 function ethToGwei(eth) {
     return web3_1.default.utils.toWei(eth.toFixed(18), 'gwei');

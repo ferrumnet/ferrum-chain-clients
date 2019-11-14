@@ -29,6 +29,7 @@ export interface SimpleTransferTransaction {
     confirmed: boolean;
     failed: boolean;
     confirmationTime: number;
+    creationTime: number;
     id: string;
     memo?: string;
 }

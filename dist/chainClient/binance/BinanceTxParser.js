@@ -50,6 +50,7 @@ class BinanceTxParser {
         res.network = 'BINANCE';
         res.confirmed = true;
         res.confirmationTime = blockTime;
+        res.creationTime = blockTime;
         res.id = hash;
         return res;
     }

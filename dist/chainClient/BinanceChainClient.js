@@ -171,13 +171,14 @@ class BinanceChainClient {
             if (Number(num_txs) !== txsEncoded.length) {
                 throw new Error(`Error calling '${fullApi}'. Expected '${num_txs}' transactions but got ${txsEncoded.length}.`);
             }
-            const decoded = txsEncoded.map((txe) => BinanceTxParser_1.BinanceTxParser.parseFromHex(Buffer.from(txe['tx'], 'base64').toString('hex'), timestamp, txe['hash']))
+            const confTime = Date.parse(timestamp);
+            const decoded = txsEncoded.map((txe) => BinanceTxParser_1.BinanceTxParser.parseFromHex(Buffer.from(txe['tx'], 'base64').toString('hex'), confTime, txe['hash']))
                 .filter(Boolean)
                 .map(this.addFeeToRawParsedTx);
             return {
                 transactions: decoded,
                 transactionIds: decoded.map((t) => t.id),
-                timestamp: Date.parse(timestamp),
+                timestamp: confTime,
                 number: number,
                 hash,
             };
