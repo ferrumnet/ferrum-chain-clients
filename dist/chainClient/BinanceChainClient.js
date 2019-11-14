@@ -228,7 +228,7 @@ class BinanceChainClient {
         });
     }
     addFeeToRawParsedTx(tx) {
-        tx.fee = ChainUtils_1.normalizeBnbAmount(GasPriceProvider_1.BINANCE_FEE.toFixed(12)); // TODO: Fix the raw parser to include the fee
+        tx.fee = GasPriceProvider_1.BINANCE_FEE; // TODO: Fix the raw parser to include the fee
         tx.feeCurrency = this.feeCurrency();
         tx.feeDecimals = ChainUtils_1.BINANCE_DECIMALS;
         return tx;

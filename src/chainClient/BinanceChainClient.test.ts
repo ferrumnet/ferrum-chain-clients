@@ -96,6 +96,6 @@ test('get block test', async function() {
     expect(tx.from.amount).toBe(0.00000001);
     expect(tx.to.amount).toBe(0.00000001);
     expect(tx.from.currency).toBe('BNB');
-    expect(tx.fee).toBe(0.00000000000375);
+    expect(tx.fee).toBe(0.000375);
     expect(tx.memo).toBe('Test transaction');
 });

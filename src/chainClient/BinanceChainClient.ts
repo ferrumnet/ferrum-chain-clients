@@ -218,7 +218,7 @@ export class BinanceChainClient implements ChainClient {
     }
 
     private addFeeToRawParsedTx(tx: SimpleTransferTransaction): SimpleTransferTransaction {
-        tx.fee = normalizeBnbAmount(BINANCE_FEE.toFixed(12)); // TODO: Fix the raw parser to include the fee
+        tx.fee = BINANCE_FEE; // TODO: Fix the raw parser to include the fee
         tx.feeCurrency = this.feeCurrency();
         tx.feeDecimals = BINANCE_DECIMALS;
         return tx;
