@@ -25,6 +25,7 @@ export interface SimpleTransferTransaction {
   creationTime: number;
   id: string;
   memo?: string;
+  reason?: string;
 }
 
 /**
@@ -82,6 +83,24 @@ export const NetworkNativeCurrencies = {
   'BINANCE': 'BNB',
 };
 
+export interface EcSignature {
+  r: HexString;
+  s: HexString;
+  v: number;
+}
+
+/**
+ * Represents a signable or signed transaction. If signed, signatureHex will have a value, otherwise signableHex will
+ * have value.
+ */
+export interface SignableTransaction {
+  transaction: any;
+  serializedTransaction: HexString;
+  signableHex?: HexString;
+  signature?: EcSignature;
+  publicKeyHex?: HexString;
+}
+
 export interface ChainClient {
   getTransactionById(tid: string): Promise<SimpleTransferTransaction|undefined>;
 
@@ -90,9 +109,19 @@ export interface ChainClient {
   processPaymentFromPrivateKeyWithGas(skHex: HexString, targetAddress: string, currency: any,
                                       amount: number, gasOverride: number): Promise<string>;
 
+  createPaymentTransaction(fromAddress: string, targetAddress: string,
+                           currency: any, amount: number,
+                           gasOverride?: number, memo?: string): Promise<SignableTransaction>;
+
+  signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
+
+  sign(skHex: HexString, data: HexString, forceLow: boolean): Promise<EcSignature>;
+
   getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[]|undefined>;
 
   getBalance(address: string, currency: string): Promise<number|undefined>;
+
+  broadcastTransaction<T>(transaction: SignableTransaction): Promise<string>;
 
   waitForTransaction(tid: string): Promise<SimpleTransferTransaction|undefined>;
 

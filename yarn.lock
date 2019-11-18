@@ -1013,12 +1013,31 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
-"@types/bn.js@*", "@types/bn.js@^4.11.5":
+"@types/big.js@^4.0.5":
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/@types/big.js/-/big.js-4.0.5.tgz#62c61697646269e39191f24e55e8272f05f21fc0"
+  integrity sha512-D9KFrAt05FDSqLo7PU9TDHfDgkarlwdkuwFsg7Zm4xl62tTNaz+zN+Tkcdx2wGLBbSMf8BnoMhOVeUGUaJfLKg==
+
+"@types/bn.js@*", "@types/bn.js@^4.11.3", "@types/bn.js@^4.11.5":
   version "4.11.5"
   resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-4.11.5.tgz#40e36197433f78f807524ec623afcf0169ac81dc"
   integrity sha512-AEAZcIZga0JgVMHNtl1CprA/hXX7/wPt79AgR4XqaDt7jyj3QWYw6LPoOiznPtugDmlubUnAahMs2PFxGcQrng==
   dependencies:
     "@types/node" "*"
+
+"@types/elliptic@^6.4.10":
+  version "6.4.10"
+  resolved "https://registry.yarnpkg.com/@types/elliptic/-/elliptic-6.4.10.tgz#352078ebc911484e30fc0d1eca3e3c865bf0e8f8"
+  integrity sha512-9h+Bw+aNiLzcq9DGstHccNxSsJ5iNId7mzruid7+kwm7F1IGvb4rBOOPo3+twt9ZPhI3y+JJ2m1UfgU8cOEJuQ==
+  dependencies:
+    "@types/bn.js" "*"
+
+"@types/ethereumjs-tx@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@types/ethereumjs-tx/-/ethereumjs-tx-2.0.0.tgz#4a0671f9169e09b853fc08f39ad96c26aaec361e"
+  integrity sha512-98So26BLWAJ38SBx78SzLqhGKTFdM6iQlPKOL2gF/netwcZkq3cmUfod6XeKKZ/rBlQYrW2G84zZFrZSl0FqcA==
+  dependencies:
+    ethereumjs-tx "*"
 
 "@types/istanbul-lib-coverage@*", "@types/istanbul-lib-coverage@^2.0.0":
   version "2.0.1"
@@ -1071,6 +1090,13 @@
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-1.0.1.tgz#0a851d3bd96498fa25c33ab7278ed3bd65f06c3e"
   integrity sha512-l42BggppR6zLmpfU6fq9HEa2oGPEI8yrSPL3GITjfRInppYFahObbIQOQK3UGxEnyQpltZLaPe75046NOZQikw==
+
+"@types/tiny-secp256k1@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@types/tiny-secp256k1/-/tiny-secp256k1-1.0.0.tgz#0c8fde0dfd320c9d089907e37805d67a346ad991"
+  integrity sha512-IW3dFGNyVkVLC1MCMogVWQaKH/ZtjPQdOW9c3X128o5lVpFYNsq/l3Qo1pV7sfTmvDzWEXR3QTxg1TMy1pyaAQ==
+  dependencies:
+    "@types/node" "*"
 
 "@types/underscore@*":
   version "1.9.3"
@@ -1429,7 +1455,7 @@ big.js@^5.2.2:
   resolved "https://registry.yarnpkg.com/big.js/-/big.js-5.2.2.tgz#65f0af382f578bcdc742bd9c281e9cb2d7768328"
   integrity sha512-vyL2OymJxmarO8gxMr0mhChsO9QGwhynfuu4+MHTAW6czfq9humCB7rKpUjDd9YUiDPU4mzpyupFSvOClAwbmQ==
 
-bindings@^1.3.0, bindings@^1.4.0, bindings@^1.5.0:
+bindings@^1.2.1, bindings@^1.3.0, bindings@^1.4.0, bindings@^1.5.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/bindings/-/bindings-1.5.0.tgz#10353c9e945334bc0511a6d90b38fbc7c9c504df"
   integrity sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==
@@ -1458,6 +1484,13 @@ bip39@^3.0.2:
     pbkdf2 "^3.0.9"
     randombytes "^2.0.1"
 
+bip66@^1.1.5:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/bip66/-/bip66-1.1.5.tgz#01fa8748785ca70955d5011217d1b3139969ca22"
+  integrity sha1-AfqHSHhcpwlV1QESF9GzE5lpyiI=
+  dependencies:
+    safe-buffer "^5.0.1"
+
 bl@^1.0.0:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/bl/-/bl-1.2.2.tgz#a160911717103c07410cef63ef51b397c025af9c"
@@ -1483,7 +1516,7 @@ bn.js@4.11.6:
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.11.6.tgz#53344adb14617a13f6e8dd2ce28905d1c0ba3215"
   integrity sha1-UzRK2xRhehP26N0s4okF0cC6MhU=
 
-bn.js@4.11.8, bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.1.1, bn.js@^4.11.6, bn.js@^4.11.8, bn.js@^4.4.0:
+bn.js@4.11.8, bn.js@^4.0.0, bn.js@^4.1.0, bn.js@^4.1.1, bn.js@^4.11.0, bn.js@^4.11.1, bn.js@^4.11.6, bn.js@^4.11.8, bn.js@^4.4.0:
   version "4.11.8"
   resolved "https://registry.yarnpkg.com/bn.js/-/bn.js-4.11.8.tgz#2cde09eb5ee341f484746bb0309b3253b1b1442f"
   integrity sha512-ItfYfPLkWHUjckQCk8xC+LwxgK8NYcXywGigJgSwOP8Y2iyWT4f2vsZnoOXTTbo+o5yXmIUJ4gn5538SO5S3gA==
@@ -1565,7 +1598,7 @@ browser-resolve@^1.11.3:
   dependencies:
     resolve "1.1.7"
 
-browserify-aes@^1.0.0, browserify-aes@^1.0.4:
+browserify-aes@^1.0.0, browserify-aes@^1.0.4, browserify-aes@^1.0.6:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/browserify-aes/-/browserify-aes-1.2.0.tgz#326734642f403dabc3003209853bb70ad428ef48"
   integrity sha512-+7CHXqGuspUn/Sl5aO7Ea0xWGAtETPXNSAjHo48JfLdPWcMng33Xe4znFvQweqc/uzk5zSOI3H52CYnjCfb5hA==
@@ -1634,7 +1667,7 @@ browserslist@^4.6.0, browserslist@^4.6.6:
     electron-to-chromium "^1.3.247"
     node-releases "^1.1.29"
 
-bs58@^4.0.0:
+bs58@^4.0.0, bs58@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/bs58/-/bs58-4.0.1.tgz#be161e76c354f6f788ae4071f63f34e8c4f0a42a"
   integrity sha1-vhYedsNU9veIrkBx9j806MTwpCo=
@@ -2299,6 +2332,15 @@ domexception@^1.0.1:
   dependencies:
     webidl-conversions "^4.0.2"
 
+drbg.js@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/drbg.js/-/drbg.js-1.0.1.tgz#3e36b6c42b37043823cdbc332d58f31e2445480b"
+  integrity sha1-Pja2xCs3BDgjzbwzLVjzHiRFSAs=
+  dependencies:
+    browserify-aes "^1.0.6"
+    create-hash "^1.1.2"
+    create-hmac "^1.1.4"
+
 duplexer3@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2"
@@ -2342,7 +2384,7 @@ elliptic@6.3.3:
     hash.js "^1.0.0"
     inherits "^2.0.1"
 
-elliptic@^6.0.0, elliptic@^6.4.0:
+elliptic@^6.0.0, elliptic@^6.4.0, elliptic@^6.4.1, elliptic@^6.5.1:
   version "6.5.1"
   resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.5.1.tgz#c380f5f909bf1b9b4428d028cd18d3b0efd6b52b"
   integrity sha512-xvJINNLbTeWQjrl6X+7eQCrIy/YPv5XCpKW6kB5mKvtnGILoLDcySuwomfdzt0BMdLNVnuRNTuzKNHj0bva1Cg==
@@ -2528,6 +2570,45 @@ eth-lib@^0.1.26:
     ws "^3.0.0"
     xhr-request-promise "^0.1.2"
 
+ethereumjs-common@^1.3.1:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/ethereumjs-common/-/ethereumjs-common-1.4.0.tgz#a940685f88f3c2587e4061630fe720b089c965b8"
+  integrity sha512-ser2SAplX/YI5W2AnzU8wmSjKRy4KQd4uxInJ36BzjS3m18E/B9QedPUIresZN1CSEQb/RgNQ2gN7C/XbpTafA==
+
+ethereumjs-tx@*, ethereumjs-tx@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/ethereumjs-tx/-/ethereumjs-tx-2.1.1.tgz#7d204e2b319156c9bc6cec67e9529424a26e8ccc"
+  integrity sha512-QtVriNqowCFA19X9BCRPMgdVNJ0/gMBS91TQb1DfrhsbR748g4STwxZptFAwfqehMyrF8rDwB23w87PQwru0wA==
+  dependencies:
+    ethereumjs-common "^1.3.1"
+    ethereumjs-util "^6.0.0"
+
+ethereumjs-util@^6.0.0:
+  version "6.2.0"
+  resolved "https://registry.yarnpkg.com/ethereumjs-util/-/ethereumjs-util-6.2.0.tgz#23ec79b2488a7d041242f01e25f24e5ad0357960"
+  integrity sha512-vb0XN9J2QGdZGIEKG2vXM+kUdEivUfU6Wmi5y0cg+LRhDYKnXIZ/Lz7XjFbHRR9VIKq2lVGLzGBkA++y2nOdOQ==
+  dependencies:
+    "@types/bn.js" "^4.11.3"
+    bn.js "^4.11.0"
+    create-hash "^1.1.2"
+    ethjs-util "0.1.6"
+    keccak "^2.0.0"
+    rlp "^2.2.3"
+    secp256k1 "^3.0.1"
+
+ethereumjs-utils@^5.2.5:
+  version "5.2.5"
+  resolved "https://registry.yarnpkg.com/ethereumjs-utils/-/ethereumjs-utils-5.2.5.tgz#76db76d021beb00f7d3f2fa9708a080444f079ea"
+  integrity sha512-IkXL26c21kUKT5NQO4NFgeuYwXtqCD4dmiSWc/vivGNGwfYhEn2lYwmVIcbqVKS9yJfVEmrolWnQBuxEmTinIg==
+  dependencies:
+    bn.js "^4.11.0"
+    create-hash "^1.1.2"
+    ethjs-util "^0.1.3"
+    keccak "^1.0.2"
+    rlp "^2.0.0"
+    safe-buffer "^5.1.1"
+    secp256k1 "^3.0.1"
+
 ethers@4.0.0-beta.3:
   version "4.0.0-beta.3"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-4.0.0-beta.3.tgz#15bef14e57e94ecbeb7f9b39dd0a4bd435bc9066"
@@ -2551,6 +2632,14 @@ ethjs-unit@0.1.6:
   dependencies:
     bn.js "4.11.6"
     number-to-bn "1.7.0"
+
+ethjs-util@0.1.6, ethjs-util@^0.1.3:
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/ethjs-util/-/ethjs-util-0.1.6.tgz#f308b62f185f9fe6237132fb2a9818866a5cd536"
+  integrity sha512-CUnVOQq7gSpDHZVVrQW8ExxUETWrnrvXYvYz55wOU8Uj4VCgw56XC2B/fVqQN+f7gmrnRHSLVnFAwsCuNwji8w==
+  dependencies:
+    is-hex-prefixed "1.0.0"
+    strip-hex-prefix "1.0.0"
 
 eventemitter3@3.1.2:
   version "3.1.2"
@@ -2736,6 +2825,17 @@ fd-slicer@~1.1.0:
   integrity sha1-JcfInLH5B3+IkbvmHY85Dq4lbx4=
   dependencies:
     pend "~1.2.0"
+
+"ferrum-crypto@git+https://github.com/ferrumnet/ferrum-crypto.git":
+  version "0.0.1"
+  resolved "git+https://github.com/ferrumnet/ferrum-crypto.git#32745801b8dcf12eb6e543db180953ebcd919cdb"
+  dependencies:
+    bech32 "^1.1.3"
+    bs58 "^4.0.1"
+    cross-fetch "^3.0.4"
+    crypto-js "^3.1.9-1"
+    ferrum-plumbing "git+https://github.com/ferrumnet/ferrum-plumbing.git"
+    tweetnacl "git+https://github.com/ferrumnet/tweetnacl-js.git"
 
 "ferrum-plumbing@git+https://github.com/ferrumnet/ferrum-plumbing.git":
   version "1.0.0"
@@ -4080,6 +4180,26 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
+keccak@^1.0.2:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/keccak/-/keccak-1.4.0.tgz#572f8a6dbee8e7b3aa421550f9e6408ca2186f80"
+  integrity sha512-eZVaCpblK5formjPjeTBik7TAg+pqnDrMHIffSvi9Lh7PQgM1+hSzakUeZFCk9DVVG0dacZJuaz2ntwlzZUIBw==
+  dependencies:
+    bindings "^1.2.1"
+    inherits "^2.0.3"
+    nan "^2.2.1"
+    safe-buffer "^5.1.0"
+
+keccak@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/keccak/-/keccak-2.0.0.tgz#7456ea5023284271e6f362b4397e8df4d2bb994c"
+  integrity sha512-rKe/lRr0KGhjoz97cwg+oeT1Rj/Y4cjae6glArioUC8JBF9ROGZctwIaaruM7d7naovME4Q8WcQSO908A8qcyQ==
+  dependencies:
+    bindings "^1.2.1"
+    inherits "^2.0.3"
+    nan "^2.2.1"
+    safe-buffer "^5.1.0"
+
 keccakjs@^0.2.1:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/keccakjs/-/keccakjs-0.2.3.tgz#5e4e969ce39689a3861f445d7752ee3477f9fe72"
@@ -4438,7 +4558,7 @@ nan@2.13.2:
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.13.2.tgz#f51dc7ae66ba7d5d55e1e6d4d8092e802c9aefe7"
   integrity sha512-TghvYc72wlMGMVMluVo9WRJc0mB8KxxF/gZ4YYFy7V2ZQX9l7rgbPg7vjS9mt6U5HXODVFVI2bOduCzwOMv/lw==
 
-nan@^2.12.1, nan@^2.13.2, nan@^2.14.0:
+nan@^2.12.1, nan@^2.13.2, nan@^2.14.0, nan@^2.2.1:
   version "2.14.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.14.0.tgz#7818f722027b2459a86f0295d434d1fc2336c52c"
   integrity sha512-INOFj37C7k3AfaNTtX8RhsTw7qRy7eLET14cROi9+5HAVbbHuIWUHEauBv5qT4Av2tWasiTY1Jw6puUNqRJXQg==
@@ -5443,6 +5563,13 @@ ripemd160@^2.0.0, ripemd160@^2.0.1:
     hash-base "^3.0.0"
     inherits "^2.0.1"
 
+rlp@^2.0.0, rlp@^2.2.3:
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/rlp/-/rlp-2.2.4.tgz#d6b0e1659e9285fc509a5d169a9bd06f704951c1"
+  integrity sha512-fdq2yYCWpAQBhwkZv+Z8o/Z4sPmYm1CUq6P7n6lVTOdb949CnqA0sndXal5C1NleSVSZm6q5F3iEbauyVln/iw==
+  dependencies:
+    bn.js "^4.11.1"
+
 rsvp@^4.8.4:
   version "4.8.5"
   resolved "https://registry.yarnpkg.com/rsvp/-/rsvp-4.8.5.tgz#c8f155311d167f68f21e168df71ec5b083113734"
@@ -5511,6 +5638,20 @@ scryptsy@2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/scryptsy/-/scryptsy-2.1.0.tgz#8d1e8d0c025b58fdd25b6fa9a0dc905ee8faa790"
   integrity sha512-1CdSqHQowJBnMAFyPEBRfqag/YP9OF394FV+4YREIJX4ljD7OxvQRDayyoyyCk+senRjSkP6VnUNQmVQqB6g7w==
+
+secp256k1@^3.0.1:
+  version "3.7.1"
+  resolved "https://registry.yarnpkg.com/secp256k1/-/secp256k1-3.7.1.tgz#12e473e0e9a7c2f2d4d4818e722ad0e14cc1e2f1"
+  integrity sha512-1cf8sbnRreXrQFdH6qsg2H71Xw91fCCS9Yp021GnUNJzWJS/py96fS4lHbnTnouLp08Xj6jBoBB6V78Tdbdu5g==
+  dependencies:
+    bindings "^1.5.0"
+    bip66 "^1.1.5"
+    bn.js "^4.11.8"
+    create-hash "^1.2.0"
+    drbg.js "^1.0.1"
+    elliptic "^6.4.1"
+    nan "^2.14.0"
+    safe-buffer "^5.1.2"
 
 secure-random@^1.1.2:
   version "1.1.2"
@@ -6270,6 +6411,12 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   version "0.14.5"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
   integrity sha1-WuaBd/GS1EViadEIr6k/+HQ/T2Q=
+
+"tweetnacl@git+https://github.com/ferrumnet/tweetnacl-js.git":
+  version "1.0.1"
+  resolved "git+https://github.com/ferrumnet/tweetnacl-js.git#50d064e80b4104dece1b14b2a38ede5438319f4d"
+  dependencies:
+    crypto-js "^3.1.9-1"
 
 type-check@~0.3.2:
   version "0.3.2"

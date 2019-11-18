@@ -1,11 +1,39 @@
-import {Network, sleep, ValidationUtils} from 'ferrum-plumbing';
-import {ChainClient, ServerTransaction, ServerTransactionItem, SimpleTransferTransaction} from './types';
+import {HexString, Network, sleep, ValidationUtils} from 'ferrum-plumbing';
+import {ChainClient, ServerTransaction, ServerTransactionItem, SimpleTransferTransaction, EcSignature} from './types';
 import Web3 from 'web3';
+import ecc from 'tiny-secp256k1';
+// @ts-ignore
+import {ecsign} from 'ethereumjs-utils';
 
 export class ChainUtils {
     static readonly DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT = 60000;
     static readonly TX_FETCH_TIMEOUT = 1000;
     static readonly TX_MAXIMUM_WAIT_TIMEOUT = 3600 * 1000;
+
+    /**
+     * Signs data
+     * @return Formatter
+     */
+    static sign(data: HexString, sk: HexString, forceLow: boolean): EcSignature {
+        const dataBuffer = Buffer.from(data, 'hex');
+        const skBuffer = Buffer.from(sk, 'hex');
+        if (forceLow) {
+            const res = ecc.sign(dataBuffer, skBuffer);
+            return {
+                r: res.slice(0, 32).toString('hex'),
+                s: res.slice(32, 64).toString('hex'),
+                v: 0,
+            }
+        } else {
+            const sig = ecsign(dataBuffer, skBuffer);
+            return {
+                r: sig.r.toString('hex'),
+                s: sig.s.toString('hex'),
+                v: sig.v,
+            }
+        }
+    }
+
     static addressesAreEqual(network: Network, a1: string, a2: string): boolean {
         if (!a1 || !a2) {
             return false;
@@ -85,7 +113,7 @@ function toServerAmount(amount: number, currency: string, decimals?: number) {
         return ethToGwei(amount);
     }
     ValidationUtils.isTrue(!currency || !!decimals, 'decimals must be provided for currency ' + currency);
-    return (amount / (10 ** (decimals || 0))).toFixed(12);
+    return (amount * (10 ** (decimals || 0))).toFixed(12);
 }
 
 function ethToGwei(eth: number): string {

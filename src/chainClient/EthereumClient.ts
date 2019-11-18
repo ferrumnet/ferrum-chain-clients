@@ -2,10 +2,10 @@ import BN from 'bn.js';
 import Web3 from 'web3';
 import {
     BlockData,
-    ChainClient,
+    ChainClient, EcSignature,
     MultiChainConfig,
     NetworkNativeCurrencies,
-    NetworkStage,
+    NetworkStage, SignableTransaction,
     SimpleTransferTransaction
 } from "./types";
 // @ts-ignore
@@ -14,6 +14,10 @@ import * as abi from '../resources/erc20-abi.json';
 import {ValidationUtils, HexString, retry, RetryableError} from 'ferrum-plumbing';
 import {ChainUtils, waitForTx} from './ChainUtils';
 import {EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
+import {Transaction} from "ethereumjs-tx";
+// @ts-ignore
+import {ecsign} from 'ethereumjs-utils';
+import {hexToUtf8} from "ferrum-crypto";
 
 const ETH_DECIMALS = 18;
 
@@ -93,6 +97,9 @@ export class EthereumClient implements ChainClient {
                 return undefined;
             }
             let transactionReceipt = await web3.eth.getTransactionReceipt(tid);
+            if (!transactionReceipt) {
+                return undefined;
+            }
             const currentBlock = await web3.eth.getBlockNumber();
             let confirmed = transactionReceipt.blockNumber === null ? 0 : currentBlock - transactionReceipt.blockNumber;
             let is_confirmed = confirmed >= this.requiredConfirmations;
@@ -101,11 +108,15 @@ export class EthereumClient implements ChainClient {
                 console.error(msg);
                 throw new RetryableError(msg);
             }
+            const gasUsed = Number(web3.utils.fromWei(new BN(transactionReceipt['gasUsed']), 'ether'));
+            const gasPrice = Number(transaction.gasPrice);
+            const fee = gasUsed * gasPrice;
             if (!transactionReceipt.status) {
                 // Transaction failed.
+                const reason = await this.getTransactionError(web3, transaction);
                 return  {
                     network: "ETHEREUM",
-                    fee: transactionReceipt['gasUsed'],
+                    fee: fee,
                     feeCurrency: "ETH",
                     feeDecimals: ETH_DECIMALS,
                     from: {address: transaction.from,
@@ -117,7 +128,8 @@ export class EthereumClient implements ChainClient {
                     confirmed: false,
                     confirmationTime: 0,
                     failed: true,
-                    id: transactionReceipt['transactionHash']
+                    id: transactionReceipt['transactionHash'],
+                    reason,
                 } as SimpleTransferTransaction;
             }
             let logs = transactionReceipt['logs'];
@@ -135,10 +147,10 @@ export class EthereumClient implements ChainClient {
                             let contractinfo = this.findContractInfo(decodedLog.address);
                             const decimals = contractinfo.decimal;
                             const decimalUnit: any = DecimalToUnit[decimals.toFixed()];
-                            ValidationUtils.isTrue(!!decimalUnit, `Deciman ${contractinfo.decimal} does not map to a unit`);
+                            ValidationUtils.isTrue(!!decimalUnit, `Decimal ${contractinfo.decimal} does not map to a unit`);
                             let transferData = {
                                 network: "ETHEREUM",
-                                fee: Number(web3.utils.fromWei(new BN(transactionReceipt['gasUsed']), decimalUnit)),
+                                fee: fee,
                                 feeCurrency: "ETH",
                                 feeDecimals: ETH_DECIMALS,
                                 from: {address: decodedLog.events[0].value,
@@ -194,28 +206,32 @@ export class EthereumClient implements ChainClient {
         return this.processPaymentFromPrivateKeyWithGas(skHex, targetAddress, currency, amount, 0);
     }
 
-    processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: string,
+    async processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: string,
                                         amount: number, gasOverride: number): Promise<string> {
+        let tx: SignableTransaction|undefined = undefined;
+        const web3 = this.web3();
+        const privateKeyHex = '0x' + skHex;
+        const addressFrom = web3.eth.accounts.privateKeyToAccount(privateKeyHex);
         if (currency === this.feeCurrency()) {
-            return this.sendEth(skHex, targetAddress, amount);
+            tx = await this.createSendEth(skHex, targetAddress, amount);
+        } else {
+            const contract = this.contractAddresses[currency];
+            const decimal = this.decimals[currency];
+            const amountBN = Web3.utils.toBN(Math.floor(amount * 10 ** decimal));
+            ValidationUtils.isTrue(!!contract, 'Unknown contract address for currency: ' + currency);
+            tx = await this.createSendTransaction(contract, addressFrom.address, targetAddress, amountBN, gasOverride);
         }
-        const contract = this.contractAddresses[currency];
-        const decimal = this.decimals[currency];
-        const amountBN = Web3.utils.toBN(Math.floor(amount * 10 ** decimal));
-        ValidationUtils.isTrue(!!contract, 'Unknown contract address for currency: ' + currency);
-        return this.sendTransaction(contract, skHex, targetAddress, amountBN, gasOverride);
+        const signed = await this.signTransaction(skHex, tx);
+        return this.broadcastTransaction(signed);
     }
 
-    private async sendTransaction(contractAddress: string, privateKey: HexString, to: string, amount: BN,
-                                  gasOverride: number) {
-        const privateKeyHex = '0x' + privateKey;
+    private async createSendTransaction(
+        contractAddress: string, from: string,
+        to: string, amount: BN, gasOverride: number): Promise<SignableTransaction> {
         const web3 = this.web3();
-        const addressFrom = web3.eth.accounts.privateKeyToAccount(privateKeyHex);
-
         let sendAmount = amount; //web3.utils.toWei(amount, 'ether');
         const consumerContract = new web3.eth.Contract(abi.abi, contractAddress);
         const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
-        const from = addressFrom.address;
         const targetBalance = await this.getBalanceForContract(web3, to, contractAddress, 1);
 
         const requiredGas = targetBalance > 0 ? EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
@@ -224,21 +240,83 @@ export class EthereumClient implements ChainClient {
         if (!gasOverride) {
             gasPrice = (await this.gasService.getGasPrice()).medium;
         }
-        const tx = {
-            from,
-            to: contractAddress,
-            value: '0',
-            gasPrice: web3.utils.toWei(gasPrice.toFixed(12), 'ether'),
-            gas: requiredGas,
-            chainId: this.networkStage === 'test' ? 4 : 1,
+        const params = {
             nonce: await web3.eth.getTransactionCount(from,'pending'),
-            data: myData
+            gasPrice: Number(web3.utils.toWei(gasPrice.toFixed(12), 'ether')),
+            gasLimit: requiredGas,
+            to: contractAddress,
+            value: 0,
+            data: myData,
         };
+        const tx = new Transaction(params,
+            this.getChainOptions());
+
+        const serialized = tx.serialize().toString('hex');
+        console.log('About to submit transaction:', tx);
+        return {
+            serializedTransaction: serialized,
+            signableHex: tx.hash(false).toString('hex'),
+            transaction: params,
+        } as SignableTransaction;
+    }
+
+    async signTransaction(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction> {
+        ValidationUtils.isTrue(!!transaction.signableHex, 'transaction has no signable hex');
+        const sigHex = await this.sign(skHex, transaction.signableHex!);
+        const tx = new Transaction('0x' + transaction.serializedTransaction, this.getChainOptions());
+        // if (tx._implementsEIP155()) {
+        //     sig.v += this.getChainId() * 2 + 8;
+        // }
+        Object.assign(tx, this.decodeSignature(sigHex));
+        return {...transaction, serializedTransaction: tx.serialize().toString('hex')};
+    }
+
+    decodeSignature(sig: EcSignature): any {
+        return {
+            r: Buffer.from(sig.r, 'hex'),
+            s: Buffer.from(sig.s, 'hex'),
+            v: sig.v,
+        };
+    }
+
+    async sign(skHex: HexString, data: HexString): Promise<EcSignature> {
+        const sig = ecsign(Buffer.from(data, 'hex'), Buffer.from(skHex, 'hex'));
+        sig.v += this.getChainId() * 2 + 8;
+        return {r: sig.r.toString('hex'), s: sig.s.toString('hex'), v: sig.v};
+    }
+
+    private async createSendEth(from: string, to: string, amount: number): Promise<SignableTransaction> {
+        const web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
+        let sendAmount = web3.utils.toWei(amount.toFixed(12), 'ether');
+        const gasPrice = (await this.gasService.getGasPrice()).medium;
+        const params = {
+            nonce: await web3.eth.getTransactionCount(from,'pending'),
+            gasPrice: web3.utils.toWei(gasPrice.toFixed(12), 'ether'),
+            gasLimit: EthereumGasPriceProvider.ETH_TX_GAS,
+            to: to,
+            value: sendAmount,
+            data: '',
+        };
+        const tx = new Transaction(params, this.getChainOptions());
         console.log('About to submit transaction:', tx);
 
-        const signed = await web3.eth.accounts.signTransaction(tx, privateKeyHex);
-        const rawTx = signed.rawTransaction;
+        const serialized = tx.serialize().toString('hex');
+        console.log('About to submit transaction:', tx);
+        ValidationUtils.isTrue(tx.validate(), 'Ivalid transaction generated');
+        return {
+            serializedTransaction: serialized,
+            signableHex: tx.hash(false).toString('hex'),
+            transaction: params,
+        } as SignableTransaction;
+    }
 
+    async broadcastTransaction<T>(transaction: SignableTransaction): Promise<HexString> {
+        const web3 = this.web3();
+        const tx = new Transaction('0x' + transaction.serializedTransaction, this.getChainOptions());
+        ValidationUtils.isTrue(tx.validate(), 'Provided transaction is invalid');
+        ValidationUtils.isTrue(tx.verifySignature(), 'Signature cannot be verified');
+        var rawTransaction = '0x' + transaction.serializedTransaction;
+        // var transactionHash = utils.keccak256(rawTransaction);
         const sendRawTx = (rawTx: any) =>
             new Promise<string>((resolve, reject) =>
                 web3.eth
@@ -247,7 +325,19 @@ export class EthereumClient implements ChainClient {
                     .on('error', reject)
             );
 
-        return await sendRawTx(rawTx);
+        return await sendRawTx(rawTransaction);
+    }
+
+    async createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string,
+                                currency: any, amount: number, gasOverride?: number): Promise<SignableTransaction> {
+        if (currency === this.feeCurrency()) {
+            return this.createSendEth(fromAddress, targetAddress, amount);
+        }
+        const contract = this.contractAddresses[currency];
+        const decimal = this.decimals[currency];
+        const amountBN = Web3.utils.toBN(Math.floor(amount * 10 ** decimal));
+        ValidationUtils.isTrue(!!contract, 'Unknown contract address for currency: ' + currency);
+        return this.createSendTransaction(contract, fromAddress, targetAddress, amountBN, gasOverride || 0);
     }
 
     /**
@@ -293,39 +383,6 @@ export class EthereumClient implements ChainClient {
         return res;
     }
 
-    private async sendEth(privateKey: HexString, to: string, amount: number) {
-        const privateKeyHex = '0x' + privateKey;
-        const web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
-        const addressFrom = web3.eth.accounts.privateKeyToAccount(privateKeyHex);
-
-        let sendAmount = web3.utils.toWei(amount.toFixed(12), 'ether');
-        const from = addressFrom.address;
-        const gasPrice = (await this.gasService.getGasPrice()).medium;
-        const tx = {
-            from,
-            to: to,
-            value: sendAmount,
-            gasPrice: web3.utils.toWei(gasPrice.toFixed(12), 'ether'),
-            gas: EthereumGasPriceProvider.ETH_TX_GAS,
-            chainId: this.networkStage === 'test' ? 4 : 1,
-            nonce: await web3.eth.getTransactionCount(from,'pending'),
-        };
-        console.log('About to submit transaction:', tx);
-
-        const signed = await web3.eth.accounts.signTransaction(tx, privateKeyHex);
-        const rawTx = signed.rawTransaction;
-
-        const sendRawTx = (rawTx: any) =>
-            new Promise<string>((resolve, reject) =>
-                web3.eth
-                    .sendSignedTransaction(rawTx)
-                    .on('transactionHash', resolve)
-                    .on('error', reject)
-            );
-
-        return await sendRawTx(rawTx);
-    }
-
     async getBalance(address: string, currency: string) {
         const web3 = this.web3();
         if (currency === NetworkNativeCurrencies.ETHEREUM) {
@@ -353,5 +410,18 @@ export class EthereumClient implements ChainClient {
     web3() {
         console.log('Using http provider', this.provider);
         return new Web3(new Web3.providers.HttpProvider(this.provider));
+    }
+
+    private getChainId() {
+        return this.networkStage === 'test' ? 4 : 1;
+    }
+
+    private getChainOptions() {
+        return { chain: this.networkStage === 'test' ? 'rinkeby' : 'mainnet', hardfork: 'petersburg' };
+    }
+
+    private async getTransactionError(web3: Web3, transaction: any) {
+        const code = await web3.eth.call(transaction);
+        return hexToUtf8(code.substr(138)).replace(/\0/g,'');
     }
 }

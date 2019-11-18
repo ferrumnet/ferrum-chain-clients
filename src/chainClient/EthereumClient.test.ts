@@ -52,6 +52,29 @@ test('Get transaction BY ID including token transfer', async () => {
     const client = ethereumClientForProd();
     const tx = await client.getTransactionById(tid);
     console.log(tx);
+    expect(tx).toBeTruthy();
+    expect(tx!.confirmed).toBe(true);
+});
+
+test('Get transaction BY ID including token transfer on testnet', async function() {
+    jest.setTimeout(1000000);
+    const tid = '0xd6bb804504d747508f41e3d3e0e0182714e1937a6eeadaac649e92e073aeb9be';
+    const client = ethereumClientForTest();
+    const tx = await client.getTransactionById(tid);
+    console.log(tx);
+    expect(tx).toBeTruthy();
+    expect(tx!.confirmed).toBe(true);
+});
+
+test('Get failed transaction BY ID including token transfer on testnet', async function() {
+    jest.setTimeout(1000000);
+    const tid = '0x7262ab02ce718d963723be48f6bb10d8507db898f71d751360f64493f219985f';
+    const client = ethereumClientForTest();
+    const tx = await client.getTransactionById(tid);
+    console.log(tx);
+    expect(tx).toBeTruthy();
+    expect(tx!.confirmed).toBe(false);
+    expect(tx!.reason).toBeTruthy();
 });
 
 test('Get token transactions BY address', async function () {
