@@ -14,7 +14,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const ferrum_plumbing_1 = require("ferrum-plumbing");
 const web3_1 = __importDefault(require("web3"));
+const tiny_secp256k1_1 = __importDefault(require("tiny-secp256k1"));
+// @ts-ignore
+const ethereumjs_utils_1 = require("ethereumjs-utils");
 class ChainUtils {
+    /**
+     * Signs data
+     * @return Formatter
+     */
+    static sign(data, sk, forceLow) {
+        const dataBuffer = Buffer.from(data, 'hex');
+        const skBuffer = Buffer.from(sk, 'hex');
+        if (forceLow) {
+            const res = tiny_secp256k1_1.default.sign(dataBuffer, skBuffer);
+            return {
+                r: res.slice(0, 32).toString('hex'),
+                s: res.slice(32, 64).toString('hex'),
+                v: 0,
+            };
+        }
+        else {
+            const sig = ethereumjs_utils_1.ecsign(dataBuffer, skBuffer);
+            return {
+                r: sig.r.toString('hex'),
+                s: sig.s.toString('hex'),
+                v: sig.v,
+            };
+        }
+    }
     static addressesAreEqual(network, a1, a2) {
         if (!a1 || !a2) {
             return false;
@@ -97,7 +124,7 @@ function toServerAmount(amount, currency, decimals) {
         return ethToGwei(amount);
     }
     ferrum_plumbing_1.ValidationUtils.isTrue(!currency || !!decimals, 'decimals must be provided for currency ' + currency);
-    return (amount / (Math.pow(10, (decimals || 0)))).toFixed(12);
+    return (amount * (Math.pow(10, (decimals || 0)))).toFixed(12);
 }
 function ethToGwei(eth) {
     return web3_1.default.utils.toWei(eth.toFixed(18), 'gwei');

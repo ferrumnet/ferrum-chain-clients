@@ -2,13 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const EthereumClient_1 = require("./EthereumClient");
 const BinanceChainClient_1 = require("./BinanceChainClient");
+const RemoteClientWrapper_1 = require("./remote/RemoteClientWrapper");
 class ChainClientFactory {
-    constructor(localConfig, binanceGasProvider, ethGasProvider, newAddressFactory) {
+    constructor(localConfig, binanceGasProvider, ethGasProvider, newAddressFactory, remoteSigner) {
         this.localConfig = localConfig;
         this.binanceGasProvider = binanceGasProvider;
         this.ethGasProvider = ethGasProvider;
         this.newAddressFactory = newAddressFactory;
+        this.remoteSigner = remoteSigner;
         this.networkStage = this.localConfig.networkStage;
+    }
+    wrap(client) {
+        return this.remoteSigner ? new RemoteClientWrapper_1.RemoteClientWrapper(client, this.remoteSigner) : client;
     }
     forNetwork(network) {
         switch (network) {
@@ -16,12 +21,12 @@ class ChainClientFactory {
                 if (!this.bnbClient) {
                     this.bnbClient = new BinanceChainClient_1.BinanceChainClient(this.networkStage, this.localConfig);
                 }
-                return this.bnbClient;
+                return this.wrap(this.bnbClient);
             case 'ETHEREUM':
                 if (!this.ethClient) {
                     this.ethClient = new EthereumClient_1.EthereumClient(this.networkStage, this.localConfig, this.ethGasProvider);
                 }
-                return this.ethClient;
+                return this.wrap(this.ethClient);
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);
         }

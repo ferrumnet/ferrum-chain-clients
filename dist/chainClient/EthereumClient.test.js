@@ -51,7 +51,32 @@ test('Get transaction BY ID including token transfer', () => __awaiter(void 0, v
     const client = TestnetConfig_1.ethereumClientForProd();
     const tx = yield client.getTransactionById(tid);
     console.log(tx);
+    expect(tx).toBeTruthy();
+    expect(tx.confirmed).toBe(true);
 }));
+test('Get transaction BY ID including token transfer on testnet', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(1000000);
+        const tid = '0xd6bb804504d747508f41e3d3e0e0182714e1937a6eeadaac649e92e073aeb9be';
+        const client = ethereumClientForTest();
+        const tx = yield client.getTransactionById(tid);
+        console.log(tx);
+        expect(tx).toBeTruthy();
+        expect(tx.confirmed).toBe(true);
+    });
+});
+test('Get failed transaction BY ID including token transfer on testnet', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(1000000);
+        const tid = '0x7262ab02ce718d963723be48f6bb10d8507db898f71d751360f64493f219985f';
+        const client = ethereumClientForTest();
+        const tx = yield client.getTransactionById(tid);
+        console.log(tx);
+        expect(tx).toBeTruthy();
+        expect(tx.confirmed).toBe(false);
+        expect(tx.reason).toBeTruthy();
+    });
+});
 test('Get token transactions BY address', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);

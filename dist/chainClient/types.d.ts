@@ -32,6 +32,7 @@ export interface SimpleTransferTransaction {
     creationTime: number;
     id: string;
     memo?: string;
+    reason?: string;
 }
 /**
  * The transaction structure as understood by the kudi / unifyre server
@@ -86,12 +87,34 @@ export declare const NetworkNativeCurrencies: {
     'ETHEREUM': string;
     'BINANCE': string;
 };
-export interface ChainClient {
+export interface EcSignature {
+    r: HexString;
+    s: HexString;
+    v: number;
+}
+/**
+ * Represents a signable or signed transaction. If signed, signatureHex will have a value, otherwise signableHex will
+ * have value.
+ */
+export interface SignableTransaction {
+    transaction: any;
+    serializedTransaction: HexString;
+    signableHex?: HexString;
+    signature?: EcSignature;
+    publicKeyHex?: HexString;
+}
+export interface ChainTransactionSigner {
+    sign(skHex: HexString, data: HexString, forceLow: boolean): Promise<EcSignature>;
+}
+export interface ChainClient extends ChainTransactionSigner {
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
     processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any, amount: number): Promise<string>;
     processPaymentFromPrivateKeyWithGas(skHex: HexString, targetAddress: string, currency: any, amount: number, gasOverride: number): Promise<string>;
+    createPaymentTransaction(fromAddress: string, targetAddress: string, currency: any, amount: number, gasOverride?: number, memo?: string): Promise<SignableTransaction>;
+    signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
     getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[] | undefined>;
     getBalance(address: string, currency: string): Promise<number | undefined>;
+    broadcastTransaction<T>(transaction: SignableTransaction): Promise<string>;
     waitForTransaction(tid: string): Promise<SimpleTransferTransaction | undefined>;
     feeCurrency(): string;
     getBlockByNumber(number: number): Promise<BlockData>;

@@ -4,6 +4,8 @@ import {ChainClient, MultiChainConfig, NetworkStage} from "./types";
 import {BinanceChainClient} from './BinanceChainClient';
 import {BinanceGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
 import {CreateNewAddressFactory} from './CreateNewAddress';
+import {RemoteSignerClient} from "./remote/RemoteSignerClient";
+import {RemoteClientWrapper} from "./remote/RemoteClientWrapper";
 
 export class ChainClientFactory implements Injectable {
     private readonly networkStage: NetworkStage;
@@ -11,6 +13,7 @@ export class ChainClientFactory implements Injectable {
                 private binanceGasProvider: BinanceGasPriceProvider,
                 private ethGasProvider: EthereumGasPriceProvider,
                 private newAddressFactory: CreateNewAddressFactory,
+                private remoteSigner?: RemoteSignerClient,
                 ) {
         this.networkStage = this.localConfig.networkStage as NetworkStage;
     }
@@ -18,18 +21,22 @@ export class ChainClientFactory implements Injectable {
     private bnbClient: BinanceChainClient | undefined;
     private ethClient: EthereumClient | undefined;
 
+    private wrap(client: ChainClient) {
+        return this.remoteSigner ? new RemoteClientWrapper(client, this.remoteSigner) : client;
+    }
+
     forNetwork(network: Network): ChainClient {
         switch (network) {
             case 'BINANCE':
                 if (!this.bnbClient) {
                     this.bnbClient = new BinanceChainClient(this.networkStage, this.localConfig);
                 }
-                return this.bnbClient;
+                return this.wrap(this.bnbClient);
             case 'ETHEREUM':
                 if (!this.ethClient) {
                     this.ethClient = new EthereumClient(this.networkStage, this.localConfig, this.ethGasProvider);
                 }
-                return this.ethClient;
+                return this.wrap(this.ethClient);
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network)
         }

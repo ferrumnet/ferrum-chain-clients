@@ -12,6 +12,8 @@ __export(require("./chainClient/CreateNewAddress"));
 __export(require("./chainClient/BinanceChainClient"));
 __export(require("./chainClient/ethereum/ContractClientBase"));
 __export(require("./chainClient/ethereum/Erc20ReaderClient"));
+__export(require("./chainClient/remote/RemoteSignerClient"));
+__export(require("./chainClient/remote/RemoteClientWrapper"));
 __export(require("./tools/ChainTransactionProcessor"));
 __export(require("./ChainClientsModule"));
 //# sourceMappingURL=index.js.map

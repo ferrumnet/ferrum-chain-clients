@@ -11,14 +11,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const ferrum_plumbing_1 = require("ferrum-plumbing");
 const cross_fetch_1 = __importDefault(require("cross-fetch"));
 // @ts-ignore
-const javascript_sdk_1 = __importDefault(require("@binance-chain/javascript-sdk"));
+const javascript_sdk_1 = __importStar(require("@binance-chain/javascript-sdk"));
 const ChainUtils_1 = require("./ChainUtils");
 const BinanceTxParser_1 = require("./binance/BinanceTxParser");
 const GasPriceProvider_1 = require("./GasPriceProvider");
+const big_js_1 = __importDefault(require("big.js"));
+const elliptic_1 = require("elliptic");
+const ferrum_crypto_1 = require("ferrum-crypto");
+const BASENUMBER = Math.pow(10, 8);
 class BinanceChainClient {
     constructor(networkStage, config) {
         this.networkStage = networkStage;
@@ -82,7 +93,107 @@ class BinanceChainClient {
     processPaymentFromPrivateKeyWithGas(skHex, targetAddress, currency, amount, gasOverride) {
         return this.processPaymentFromPrivateKey(skHex, targetAddress, currency, amount);
     }
+    createPaymentTransaction(fromAddress, targetAddress, asset, payAmount, gasOverride, memo) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const bigAmount = new big_js_1.default(payAmount);
+            const amount = Number(bigAmount.mul(BASENUMBER).toString());
+            const signMsg = {
+                inputs: [{
+                        address: fromAddress,
+                        coins: [{
+                                amount: amount,
+                                denom: asset
+                            }]
+                    }],
+                outputs: [{
+                        address: targetAddress,
+                        coins: [{
+                                amount: amount,
+                                denom: asset
+                            }]
+                    }]
+            };
+            const msg = this.getMsgFromSignMsg(signMsg);
+            const sequenceURL = `${this.url}/api/v1/account/${fromAddress}`;
+            let [sequence, accountNumber] = yield this.getSequence(sequenceURL);
+            const client = yield this.getBnbClient();
+            const options = {
+                account_number: parseInt(accountNumber),
+                chain_id: client.chainId,
+                memo: memo || '',
+                msg,
+                sequence: parseInt(sequence),
+                source: client._source,
+                type: msg.msgType,
+            };
+            const tx = new javascript_sdk_1.Transaction(options);
+            const signableHex = ferrum_crypto_1.sha256sync(tx.getSignBytes(signMsg).toString('hex'));
+            const serializedTransaction = this.serializeTx(options, signMsg);
+            return {
+                signableHex,
+                transaction: options,
+                serializedTransaction,
+            };
+        });
+    }
+    signTransaction(skHex, transaction) {
+        return __awaiter(this, void 0, void 0, function* () {
+            ferrum_plumbing_1.ValidationUtils.isTrue(!!transaction.signableHex, 'transaction.signableHex must be provided');
+            const signature = yield this.sign(skHex, transaction.signableHex);
+            const publicKey = javascript_sdk_1.crypto.generatePubKey(Buffer.from(skHex, 'hex'));
+            const publicKeyHex = publicKey.encode('hex');
+            return Object.assign(Object.assign({}, transaction), { signature, publicKeyHex });
+        });
+    }
+    broadcastTransaction(transaction) {
+        return __awaiter(this, void 0, void 0, function* () {
+            ferrum_plumbing_1.ValidationUtils.isTrue(!!transaction.signature, 'transaction.signature must be provided');
+            ferrum_plumbing_1.ValidationUtils.isTrue(!!transaction.publicKeyHex, 'transaction.publicKeyHex must be provided');
+            ferrum_plumbing_1.ValidationUtils.isTrue(!!transaction.serializedTransaction, 'transaction.serializedTransaction must be provided');
+            const curve = new elliptic_1.ec('secp256k1');
+            const publicKey = curve.keyFromPublic(Buffer.from(transaction.publicKeyHex, 'hex'));
+            const txOptions = this.deserializeTx(transaction.serializedTransaction);
+            const r = Buffer.from(transaction.signature.r, 'hex');
+            const s = Buffer.from(transaction.signature.s, 'hex');
+            const signature = Buffer.allocUnsafe(64);
+            r.copy(signature, 0);
+            s.copy(signature, 32);
+            const tx = new javascript_sdk_1.Transaction(txOptions);
+            tx.addSignature(publicKey.getPublic(), signature);
+            try {
+                console.log(`About to execute transaction: `, transaction.serializedTransaction);
+                const res = yield this.bnbClient._broadcastDelegate(tx);
+                if (res.status !== 200) {
+                    console.error('Error executing transaction', transaction.serializedTransaction, res);
+                    throw new Error('Error executing transaction: ' + JSON.stringify(res));
+                }
+                else {
+                    const txId = res.result[0].hash;
+                    console.log(`Executed transfer with txid: ${txId}`);
+                    return txId;
+                }
+            }
+            catch (e) {
+                console.error('Error submitting Binance transaction.', e);
+                throw e;
+            }
+        });
+    }
+    sign(skHex, data, forceLow = true) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return ChainUtils_1.ChainUtils.sign(data, skHex, true);
+        });
+    }
     processPaymentFromPrivateKey(sk, targetAddress, currency, amount) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const bnbClient = yield this.getBnbClient();
+            const addressFrom = javascript_sdk_1.crypto.getAddressFromPrivateKey(sk, this.networkStage === 'test' ? 'tbnb' : 'bnb');
+            const tx = yield this.createPaymentTransaction(addressFrom, targetAddress, currency, amount);
+            const signedTx = yield this.signTransaction(sk, tx);
+            return yield this.broadcastTransaction(signedTx);
+        });
+    }
+    _processPaymentFromPrivateKey(sk, targetAddress, currency, amount) {
         return __awaiter(this, void 0, void 0, function* () {
             const binanceNetwork = this.networkStage === 'test' ? 'testnet' : 'mainnet';
             console.log('Initializing the binance chain', binanceNetwork, this.url);
@@ -94,8 +205,8 @@ class BinanceChainClient {
             bnbClient.setPrivateKey(privateKey);
             const addressFrom = bnbClient.getClientKeyAddress();
             console.log('Chain initialized', binanceNetwork, 'using address ', addressFrom);
-            const sequenceURL = `${this.url}/api/v1/account/${addressFrom}/sequence`;
-            let sequence = yield this.getSequence(sequenceURL);
+            const sequenceURL = `${this.url}/api/v1/account/${addressFrom}`;
+            let [sequence, accountNumber] = yield this.getSequence(sequenceURL);
             try {
                 console.log(`About to execute payment from: ${addressFrom}, to: ${targetAddress}, amount: ${amount} ${currency}`);
                 const res = yield bnbClient.transfer(addressFrom, targetAddress, amount, currency, '', sequence);
@@ -145,8 +256,8 @@ class BinanceChainClient {
     }
     getSequence(sequenceURL) {
         return __awaiter(this, void 0, void 0, function* () {
-            const res = this.api(sequenceURL);
-            return res.sequence || 0;
+            const res = yield this.api(sequenceURL);
+            return [res.sequence || '0', res.account_number || '0'];
         });
     }
     waitForTransaction(transactionId) {
@@ -254,6 +365,47 @@ class BinanceChainClient {
             feeDecimals: ChainUtils_1.BINANCE_DECIMALS,
             confirmed: true,
         } : undefined;
+    }
+    getBnbClient() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.bnbClient) {
+                const binanceNetwork = this.networkStage === 'test' ? 'testnet' : 'mainnet';
+                console.log('Initializing the binance chain', binanceNetwork, this.url);
+                this.bnbClient = new javascript_sdk_1.default(this.url);
+                this.bnbClient.chooseNetwork(binanceNetwork);
+                yield this.bnbClient.initChain();
+                // await sleep(3000);
+                console.log('Chain initialized', binanceNetwork);
+            }
+            return this.bnbClient;
+        });
+    }
+    serializeTx(options, signMsg) {
+        return Object.assign(Object.assign({}, options), { msg: signMsg });
+    }
+    deserializeTx(tx) {
+        return Object.assign(Object.assign({}, tx), { msg: this.getMsgFromSignMsg(tx['msg']) });
+    }
+    getMsgFromSignMsg(signMsg) {
+        const accCode = javascript_sdk_1.crypto.decodeAddress(signMsg.inputs[0].address);
+        const toAccCode = javascript_sdk_1.crypto.decodeAddress(signMsg.outputs[0].address);
+        const amount = signMsg.inputs[0].coins[0].amount;
+        const asset = signMsg.inputs[0].coins[0].denom;
+        const coin = {
+            denom: asset,
+            amount: amount,
+        };
+        return {
+            inputs: [{
+                    address: accCode,
+                    coins: [coin]
+                }],
+            outputs: [{
+                    address: toAccCode,
+                    coins: [coin]
+                }],
+            msgType: "MsgSend"
+        };
     }
 }
 exports.BinanceChainClient = BinanceChainClient;

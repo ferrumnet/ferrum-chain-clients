@@ -101,7 +101,11 @@ export interface SignableTransaction {
   publicKeyHex?: HexString;
 }
 
-export interface ChainClient {
+export interface ChainTransactionSigner {
+  sign(skHex: HexString, data: HexString, forceLow: boolean): Promise<EcSignature>;
+}
+
+export interface ChainClient extends ChainTransactionSigner {
   getTransactionById(tid: string): Promise<SimpleTransferTransaction|undefined>;
 
   processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any, amount: number): Promise<string>;
@@ -114,8 +118,6 @@ export interface ChainClient {
                            gasOverride?: number, memo?: string): Promise<SignableTransaction>;
 
   signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
-
-  sign(skHex: HexString, data: HexString, forceLow: boolean): Promise<EcSignature>;
 
   getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[]|undefined>;
 

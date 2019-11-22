@@ -29,14 +29,17 @@ const conf = {
     networkStage: 'test',
 };
 const CURRENCY = 'FRM-410';
-test('send tx', () => __awaiter(void 0, void 0, void 0, function* () {
-    const client = new BinanceChainClient_1.BinanceChainClient('test', conf);
-    const privateKey = 'e0d33c540f7eff1d20a1de049236542fd2d21a365e42e01b0a416f93aa078890';
-    const to = 'tbnb136zj94xtalc7tp6pcp73r4zx9csdh8cyn7re2d';
-    const currency = 'FRM-410';
-    const txId = yield client.processPaymentFromPrivateKey(privateKey, to, currency, 0.001);
-    console.log('Sent tx', txId);
-}));
+test('send tx', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(1000000);
+        const client = new BinanceChainClient_1.BinanceChainClient('test', conf);
+        const privateKey = 'e0d33c540f7eff1d20a1de049236542fd2d21a365e42e01b0a416f93aa078890';
+        const to = 'tbnb136zj94xtalc7tp6pcp73r4zx9csdh8cyn7re2d';
+        const currency = 'FRM-410';
+        const txId = yield client.processPaymentFromPrivateKey(privateKey, to, currency, 0.001);
+        console.log('Sent tx', txId);
+    });
+});
 test('get tx', () => __awaiter(void 0, void 0, void 0, function* () {
     const txId = 'BFB88A41EB45A657D204FC34660B95DF0B70E3BD2D4CE6E120CA4DF6D87C50F3';
     const client = new BinanceChainClient_1.BinanceChainClient('test', conf);
