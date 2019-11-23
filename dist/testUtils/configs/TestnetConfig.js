@@ -66,7 +66,7 @@ class DummyGasPriceProvider extends GasPriceProvider_1.EthereumGasPriceProvider 
         });
     }
     getTransactionGas(currency, gasPrice, currentTargetBalance) {
-        return 1;
+        return gasPrice;
     }
 }
 function testGanacheClientFactory() {

@@ -76,7 +76,7 @@ class DummyGasPriceProvider extends EthereumGasPriceProvider {
     }
 
     getTransactionGas(currency: string, gasPrice: number, currentTargetBalance?: number): number {
-        return 1;
+        return gasPrice;
     }
 }
 
