@@ -61,7 +61,8 @@ exports.testChainClientFactory = testChainClientFactory;
 class DummyGasPriceProvider extends GasPriceProvider_1.EthereumGasPriceProvider {
     getGasPrice() {
         return __awaiter(this, void 0, void 0, function* () {
-            return { high: 1, low: 1, medium: 1 };
+            const gwei = 0.000000001;
+            return { high: gwei, low: gwei, medium: gwei };
         });
     }
     getTransactionGas(currency, gasPrice, currentTargetBalance) {

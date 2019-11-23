@@ -71,7 +71,8 @@ export function testChainClientFactory() {
 
 class DummyGasPriceProvider extends EthereumGasPriceProvider {
     async getGasPrice(): Promise<EthGasPrice> {
-        return { high: 1, low: 1, medium: 1} as EthGasPrice;
+        const gwei = 0.000000001;
+        return { high: gwei, low: gwei, medium: gwei} as EthGasPrice;
     }
 
     getTransactionGas(currency: string, gasPrice: number, currentTargetBalance?: number): number {
