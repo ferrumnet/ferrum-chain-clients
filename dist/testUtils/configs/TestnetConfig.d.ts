@@ -9,7 +9,9 @@ export declare const TEST_ACCOUNTS: {
     secondAccountAddress: string;
 };
 export declare const TESTNET_CONFIG: MultiChainConfig;
+export declare const GANACHE_CONFIG: MultiChainConfig;
 export declare function ethereumClientForProd(): EthereumClient;
 export declare function binanceClientForProd(): BinanceChainClient;
 export declare function testChainClientFactory(): ChainClientFactory;
+export declare function testGanacheClientFactory(): ChainClientFactory;
 //# sourceMappingURL=TestnetConfig.d.ts.map

@@ -1,6 +1,10 @@
 import {EthereumClient} from '../../chainClient/EthereumClient';
 import {MultiChainConfig} from '../../chainClient/types';
-import {BinanceGasPriceProvider, EthereumGasPriceProvider} from '../../chainClient/GasPriceProvider';
+import {
+    BinanceGasPriceProvider,
+    EthereumGasPriceProvider,
+    EthGasPrice,
+} from '../../chainClient/GasPriceProvider';
 import {ChainClientFactory, BinanceChainClient} from '../..';
 import {BinanceChainAddress, CreateNewAddressFactory, EthereumAddress} from '../../chainClient/CreateNewAddress';
 
@@ -24,6 +28,12 @@ export const TESTNET_CONFIG = {
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
     binanceChainSeedNode: 'https://data-seed-pre-0-s3.binance.org',
 } as MultiChainConfig;
+
+export const GANACHE_CONFIG = {
+    ...TESTNET_CONFIG,
+    web3Provider: 'http://localhost:7545',
+} as MultiChainConfig;
+
 
 const TEST_PROD_CONFIG = {
     web3Provider: 'https://mainnet.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b',
@@ -51,6 +61,28 @@ export function testChainClientFactory() {
         TESTNET_CONFIG,
         new BinanceGasPriceProvider(),
         new EthereumGasPriceProvider(),
+        new CreateNewAddressFactory(
+            new BinanceChainAddress(TESTNET_CONFIG),
+            new EthereumAddress(TESTNET_CONFIG),
+        )
+    )
+}
+
+class DummyGasPriceProvider extends EthereumGasPriceProvider {
+    async getGasPrice(): Promise<EthGasPrice> {
+        return { high: 1, low: 1, medium: 1} as EthGasPrice;
+    }
+
+    getTransactionGas(currency: string, gasPrice: number, currentTargetBalance?: number): number {
+        return 1;
+    }
+}
+
+export function testGanacheClientFactory() {
+    return new ChainClientFactory(
+        GANACHE_CONFIG,
+        new BinanceGasPriceProvider(),
+        new DummyGasPriceProvider(),
         new CreateNewAddressFactory(
             new BinanceChainAddress(TESTNET_CONFIG),
             new EthereumAddress(TESTNET_CONFIG),
