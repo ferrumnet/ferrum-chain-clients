@@ -31,6 +31,7 @@ exports.TESTNET_CONFIG = {
     },
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
     binanceChainSeedNode: 'https://data-seed-pre-0-s3.binance.org',
+    requiredEthConfirmations: 0,
 };
 exports.GANACHE_CONFIG = Object.assign(Object.assign({}, exports.TESTNET_CONFIG), { web3Provider: 'http://localhost:7545' });
 const TEST_PROD_CONFIG = {
@@ -68,7 +69,7 @@ class DummyGasPriceProvider extends GasPriceProvider_1.EthereumGasPriceProvider 
     }
 }
 function testGanacheClientFactory() {
-    return new __1.ChainClientFactory(exports.GANACHE_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new DummyGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(new CreateNewAddress_1.BinanceChainAddress(exports.TESTNET_CONFIG), new CreateNewAddress_1.EthereumAddress(exports.TESTNET_CONFIG)));
+    return new __1.ChainClientFactory(exports.GANACHE_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new DummyGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(new CreateNewAddress_1.BinanceChainAddress(exports.TESTNET_CONFIG), new CreateNewAddress_1.EthereumAddress(exports.GANACHE_CONFIG)));
 }
 exports.testGanacheClientFactory = testGanacheClientFactory;
 //# sourceMappingURL=TestnetConfig.js.map

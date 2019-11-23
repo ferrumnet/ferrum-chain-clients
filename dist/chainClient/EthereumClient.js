@@ -49,7 +49,7 @@ class EthereumClient {
         this.provider = config.web3Provider;
         this.contractAddresses = config.contractAddresses;
         this.decimals = config.contractDecimals;
-        this.requiredConfirmations = config.requiredEthConfirmations || 1;
+        this.requiredConfirmations = config.requiredEthConfirmations !== undefined ? config.requiredEthConfirmations : 1;
         this.txWaitTimeout = config.pendingTransactionShowTimeout
             || ChainUtils_1.ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT * 10;
         abi_decoder_1.default.addABI(abi.abi);
@@ -100,114 +100,127 @@ class EthereumClient {
     getTransactionById(tid) {
         return __awaiter(this, void 0, void 0, function* () {
             return ferrum_plumbing_1.retry(() => __awaiter(this, void 0, void 0, function* () {
-                const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
-                const transaction = yield web3.eth.getTransaction(tid);
-                if (!transaction) {
-                    return undefined;
-                }
-                let transactionReceipt = yield web3.eth.getTransactionReceipt(tid);
-                if (!transactionReceipt) {
-                    return undefined;
-                }
-                const currentBlock = yield web3.eth.getBlockNumber();
-                let confirmed = transactionReceipt.blockNumber === null ? 0 : currentBlock - transactionReceipt.blockNumber;
-                let is_confirmed = confirmed >= this.requiredConfirmations;
-                if (!transactionReceipt) {
-                    const msg = 'EthereumClient.getTransactionById: Transaction did not have any receipt / logs: ' + tid;
-                    console.error(msg);
-                    throw new ferrum_plumbing_1.RetryableError(msg);
-                }
-                const gasUsed = Number(web3.utils.fromWei(new bn_js_1.default(transactionReceipt['gasUsed']), 'ether'));
-                const gasPrice = Number(transaction.gasPrice);
-                const fee = gasUsed * gasPrice;
-                if (!transactionReceipt.status) {
-                    // Transaction failed.
-                    const reason = yield this.getTransactionError(web3, transaction);
-                    return {
-                        network: "ETHEREUM",
-                        fee: fee,
-                        feeCurrency: "ETH",
-                        feeDecimals: ETH_DECIMALS,
-                        from: { address: transaction.from,
-                            currency: '',
-                            amount: 0 },
-                        to: { address: transaction.to,
-                            currency: '',
-                            amount: 0 },
-                        confirmed: false,
-                        confirmationTime: 0,
-                        failed: true,
-                        id: transactionReceipt['transactionHash'],
-                        reason,
-                    };
-                }
-                let logs = transactionReceipt['logs'];
-                if (logs !== undefined) {
-                    let len = logs.length;
-                    if (len > 1) { // multi transfer by contract function.
-                        console.warn('Received a transaction with more than 1 log items. Not supported', transaction, transactionReceipt);
+                try {
+                    const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
+                    const transaction = yield web3.eth.getTransaction(tid);
+                    if (!transaction) {
                         return undefined;
                     }
-                    else if (len === 1) { // normal token to token transaction
-                        const decodedLogs = abi_decoder_1.default.decodeLogs(logs).filter((log) => log);
-                        if (decodedLogs.length > 0) {
-                            let decodedLog = decodedLogs[0];
-                            if (decodedLog.name === "Transfer") {
-                                let contractinfo = this.findContractInfo(decodedLog.address);
-                                const decimals = contractinfo.decimal;
-                                const decimalUnit = DecimalToUnit[decimals.toFixed()];
-                                ferrum_plumbing_1.ValidationUtils.isTrue(!!decimalUnit, `Decimal ${contractinfo.decimal} does not map to a unit`);
-                                let transferData = {
-                                    network: "ETHEREUM",
-                                    fee: fee,
-                                    feeCurrency: "ETH",
-                                    feeDecimals: ETH_DECIMALS,
-                                    from: { address: decodedLog.events[0].value,
-                                        currency: contractinfo.name,
-                                        amount: Number(web3.utils.fromWei(new bn_js_1.default(decodedLog.events[2].value), decimalUnit)),
-                                        decimals,
-                                    },
-                                    to: { address: decodedLog.events[1].value,
-                                        currency: contractinfo.name,
-                                        amount: Number(web3.utils.fromWei(new bn_js_1.default(decodedLog.events[2].value), decimalUnit)),
-                                        decimals,
-                                    },
-                                    confirmed: is_confirmed,
-                                    confirmationTime: 0,
-                                    failed: false,
-                                    id: transactionReceipt['transactionHash']
-                                };
-                                return transferData;
-                            }
-                        }
+                    let transactionReceipt = yield web3.eth.getTransactionReceipt(tid);
+                    if (!transactionReceipt) {
                         return undefined;
                     }
-                    else { // normal eth to eth transaction.
-                        let res = {
+                    const currentBlock = yield web3.eth.getBlockNumber();
+                    let confirmed = transactionReceipt.blockNumber === null ? 0 : currentBlock - transactionReceipt.blockNumber;
+                    let is_confirmed = confirmed >= this.requiredConfirmations;
+                    if (!transactionReceipt) {
+                        const msg = 'EthereumClient.getTransactionById: Transaction did not have any receipt / logs: ' + tid;
+                        console.error(msg);
+                        throw new ferrum_plumbing_1.RetryableError(msg);
+                    }
+                    const gasUsed = Number(web3.utils.fromWei(new bn_js_1.default(transactionReceipt['gasUsed']), 'ether'));
+                    const gasPrice = Number(transaction.gasPrice);
+                    const fee = gasUsed * gasPrice;
+                    if (!transactionReceipt.status) {
+                        // Transaction failed.
+                        const reason = yield this.getTransactionError(web3, transaction);
+                        return {
                             network: "ETHEREUM",
-                            fee: transactionReceipt['gasUsed'],
+                            fee: fee,
                             feeCurrency: "ETH",
+                            feeDecimals: ETH_DECIMALS,
                             from: {
-                                address: transactionReceipt["from"],
-                                currency: "ETH",
-                                amount: Number(web3.utils.fromWei(new bn_js_1.default(transaction['value']), "ether")),
-                                decimals: ETH_DECIMALS,
+                                address: transaction.from,
+                                currency: '',
+                                amount: 0
                             },
                             to: {
-                                address: transactionReceipt["to"],
-                                currency: "ETH",
-                                amount: Number(web3.utils.fromWei(new bn_js_1.default(transaction['value']), "ether")),
-                                decimals: ETH_DECIMALS,
+                                address: transaction.to,
+                                currency: '',
+                                amount: 0
                             },
-                            confirmed: is_confirmed,
+                            confirmed: false,
                             confirmationTime: 0,
-                            failed: false,
-                            id: transactionReceipt['transactionHash']
+                            failed: true,
+                            id: transactionReceipt['transactionHash'],
+                            reason,
                         };
-                        return res;
+                    }
+                    let logs = transactionReceipt['logs'];
+                    if (logs !== undefined) {
+                        let len = logs.length;
+                        if (len > 1) { // multi transfer by contract function.
+                            console.warn('Received a transaction with more than 1 log items. Not supported', transaction, transactionReceipt);
+                            return undefined;
+                        }
+                        else if (len === 1) { // normal token to token transaction
+                            const decodedLogs = abi_decoder_1.default.decodeLogs(logs).filter((log) => log);
+                            if (decodedLogs.length > 0) {
+                                let decodedLog = decodedLogs[0];
+                                if (decodedLog.name === "Transfer") {
+                                    let contractinfo = this.findContractInfo(decodedLog.address);
+                                    const decimals = contractinfo.decimal;
+                                    const decimalUnit = DecimalToUnit[decimals.toFixed()];
+                                    ferrum_plumbing_1.ValidationUtils.isTrue(!!decimalUnit, `Decimal ${contractinfo.decimal} does not map to a unit`);
+                                    let transferData = {
+                                        network: "ETHEREUM",
+                                        fee: fee,
+                                        feeCurrency: "ETH",
+                                        feeDecimals: ETH_DECIMALS,
+                                        from: {
+                                            address: decodedLog.events[0].value,
+                                            currency: contractinfo.name,
+                                            amount: Number(web3.utils.fromWei(new bn_js_1.default(decodedLog.events[2].value), decimalUnit)),
+                                            decimals,
+                                        },
+                                        to: {
+                                            address: decodedLog.events[1].value,
+                                            currency: contractinfo.name,
+                                            amount: Number(web3.utils.fromWei(new bn_js_1.default(decodedLog.events[2].value), decimalUnit)),
+                                            decimals,
+                                        },
+                                        confirmed: is_confirmed,
+                                        confirmationTime: 0,
+                                        failed: false,
+                                        id: transactionReceipt['transactionHash']
+                                    };
+                                    return transferData;
+                                }
+                            }
+                            return undefined;
+                        }
+                        else { // normal eth to eth transaction.
+                            let res = {
+                                network: "ETHEREUM",
+                                fee: transactionReceipt['gasUsed'],
+                                feeCurrency: "ETH",
+                                from: {
+                                    address: transactionReceipt["from"],
+                                    currency: "ETH",
+                                    amount: Number(web3.utils.fromWei(new bn_js_1.default(transaction['value']), "ether")),
+                                    decimals: ETH_DECIMALS,
+                                },
+                                to: {
+                                    address: transactionReceipt["to"],
+                                    currency: "ETH",
+                                    amount: Number(web3.utils.fromWei(new bn_js_1.default(transaction['value']), "ether")),
+                                    decimals: ETH_DECIMALS,
+                                },
+                                confirmed: is_confirmed,
+                                confirmationTime: 0,
+                                failed: false,
+                                id: transactionReceipt['transactionHash']
+                            };
+                            return res;
+                        }
+                    }
+                    return undefined;
+                }
+                catch (e) {
+                    if (e.toString().indexOf('JSON RPC') >= 0) {
+                        throw new ferrum_plumbing_1.RetryableError(e.message);
                     }
                 }
-                return undefined;
             }));
         });
     }
@@ -223,7 +236,7 @@ class EthereumClient {
             const privateKeyHex = '0x' + skHex;
             const addressFrom = web3.eth.accounts.privateKeyToAccount(privateKeyHex);
             if (currency === this.feeCurrency()) {
-                tx = yield this.createSendEth(skHex, targetAddress, amount);
+                tx = yield this.createSendEth(addressFrom.address, targetAddress, amount);
             }
             else {
                 const contract = this.contractAddresses[currency];
@@ -259,7 +272,6 @@ class EthereumClient {
             };
             const tx = new ethereumjs_tx_1.Transaction(params, this.getChainOptions());
             const serialized = tx.serialize().toString('hex');
-            console.log('About to submit transaction:', tx);
             return {
                 serializedTransaction: serialized,
                 signableHex: tx.hash(false).toString('hex'),
@@ -300,17 +312,15 @@ class EthereumClient {
             const gasPrice = (yield this.gasService.getGasPrice()).medium;
             const params = {
                 nonce: yield web3.eth.getTransactionCount(from, 'pending'),
-                gasPrice: web3.utils.toWei(gasPrice.toFixed(12), 'ether'),
+                gasPrice: '0x' + new bn_js_1.default(web3.utils.toWei(gasPrice.toFixed(6), 'gwei')).toString('hex'),
                 gasLimit: GasPriceProvider_1.EthereumGasPriceProvider.ETH_TX_GAS,
                 to: to,
-                value: sendAmount,
-                data: '',
+                value: '0x' + new bn_js_1.default(sendAmount).toString('hex'),
+                data: '0x',
             };
             const tx = new ethereumjs_tx_1.Transaction(params, this.getChainOptions());
-            console.log('About to submit transaction:', tx);
             const serialized = tx.serialize().toString('hex');
-            console.log('About to submit transaction:', tx);
-            ferrum_plumbing_1.ValidationUtils.isTrue(tx.validate(), 'Ivalid transaction generated');
+            // ValidationUtils.isTrue(tx.validate(), 'Ivalid transaction generated');
             return {
                 serializedTransaction: serialized,
                 signableHex: tx.hash(false).toString('hex'),
@@ -418,7 +428,7 @@ class EthereumClient {
         });
     }
     web3() {
-        console.log('Using http provider', this.provider);
+        // console.log('Using http provider', this.provider);
         return new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
     }
     getChainId() {

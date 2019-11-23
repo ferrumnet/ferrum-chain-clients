@@ -124,4 +124,22 @@ test('Get block by number', function () {
         expect(usdcTx.from.currency).toBe('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
     });
 });
+test('sen eth using ganache', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(100000);
+        const clientFact = TestnetConfig_1.testGanacheClientFactory();
+        const client = clientFact.forNetwork('ETHEREUM');
+        const sk = '6af7f508641153dedc1599547b681ad5770381de8be6bfa1d6f623db6918f49e';
+        const fromAddr = '0x0933Ccf2b714008a7F7FE3C227E3435e1682511f';
+        const addr = yield clientFact.newAddress('ETHEREUM').newAddress();
+        const tid = yield client.processPaymentFromPrivateKey(sk, addr.address, 'ETH', 0.1);
+        ferrum_plumbing_1.sleep(1000);
+        const tx = yield client.waitForTransaction(tid);
+        expect(tx.confirmed).toBe(true);
+        // Return the money
+        const tid2 = yield client.processPaymentFromPrivateKey(addr.privateKeyHex, fromAddr, 'ETH', 0.0991);
+        const tx2 = yield client.waitForTransaction(tid2);
+        expect(tx2.confirmed).toBe(true);
+    });
+});
 //# sourceMappingURL=EthereumClient.test.js.map
