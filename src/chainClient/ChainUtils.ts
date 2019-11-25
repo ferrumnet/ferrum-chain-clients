@@ -117,7 +117,7 @@ function toServerAmount(amount: number, currency: string, decimals?: number) {
 }
 
 function ethToGwei(eth: number): string {
-    return Web3.utils.toWei(eth.toFixed(10), 'gwei');
+    return Web3.utils.toWei(eth.toFixed(9), 'gwei');
 }
 
 export function normalizeBnbAmount(amount: string): number {
