@@ -148,13 +148,14 @@ class EthereumClient {
                     }
                     let logs = transactionReceipt['logs'];
                     if (logs !== undefined) {
-                        let len = logs.length;
+                        const decodedLogs = abi_decoder_1.default.decodeLogs(logs)
+                            .filter((log) => log && log.name === "Transfer");
+                        const len = decodedLogs.length;
                         if (len > 1) { // multi transfer by contract function.
                             console.warn('Received a transaction with more than 1 log items. Not supported', transaction, transactionReceipt);
                             return undefined;
                         }
                         else if (len === 1) { // normal token to token transaction
-                            const decodedLogs = abi_decoder_1.default.decodeLogs(logs).filter((log) => log);
                             if (decodedLogs.length > 0) {
                                 let decodedLog = decodedLogs[0];
                                 if (decodedLog.name === "Transfer") {
