@@ -16,6 +16,6 @@ export declare class RemoteClientWrapper implements ChainClient {
     processPaymentFromPrivateKeyWithGas: (skHex: string, targetAddress: string, currency: any, amount: number, gasOverride: number) => Promise<string>;
     signTransaction: <T>(skHex: string, transaction: import("../types").SignableTransaction) => Promise<import("../types").SignableTransaction>;
     waitForTransaction: (tid: string) => Promise<import("../types").SimpleTransferTransaction | undefined>;
-    sign: (skHex: string, data: string, forceLow: boolean) => Promise<import("../types").EcSignature>;
+    sign: (address: string, data: string, forceLow: boolean) => Promise<import("../types").EcSignature>;
 }
 //# sourceMappingURL=RemoteClientWrapper.d.ts.map

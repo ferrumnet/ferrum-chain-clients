@@ -59,7 +59,8 @@ export class BinanceChainAddress implements CreateNewAddress, Injectable {
             address: address.toString('hex'),
             network: 'BINANCE' as Network,
             privateKeyHex: sk,
-        }
+            createdAt: Date.now(),
+        } as AddressWithSecretKeys;
     }
 
     async newAddress(): Promise<AddressWithSecretKeys> {
@@ -97,6 +98,7 @@ export class EthereumAddress implements CreateNewAddress, Injectable {
             address: account.address,
             network: 'ETHEREUM' as Network,
             privateKeyHex: account.privateKey.substr(2),
+            createdAt: Date.now(),
         }
     }
 

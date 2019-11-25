@@ -69,6 +69,7 @@ class BinanceChainAddress {
                 address: address.toString('hex'),
                 network: 'BINANCE',
                 privateKeyHex: sk,
+                createdAt: Date.now(),
             };
         });
     }
@@ -105,6 +106,7 @@ class EthereumAddress {
                 address: account.address,
                 network: 'ETHEREUM',
                 privateKeyHex: account.privateKey.substr(2),
+                createdAt: Date.now(),
             };
         });
     }

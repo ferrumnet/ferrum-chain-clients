@@ -11,21 +11,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const ferrum_plumbing_1 = require("ferrum-plumbing");
 class RemoteSignerClient {
-    constructor(api) {
+    constructor(api, network) {
         this.api = api;
+        this.network = network;
     }
     /**
      * Remotely signs a transaction.
-     * @param skHex Must be empty string
+     * @param address This is the signer address, not the private key
      * @param data Data to sign as Hex
      * @param forceLow Force low
      */
-    sign(skHex, data, forceLow) {
+    sign(address, data, forceLow) {
         return __awaiter(this, void 0, void 0, function* () {
-            ferrum_plumbing_1.ValidationUtils.isTrue(!skHex || skHex === RemoteSignerClient.DUMMY_PRIVATE_KEY, 'skHex must be empty. We are signing remotely');
+            ferrum_plumbing_1.ValidationUtils.isTrue(!!address, '"address" must be provided');
+            // ValidationUtils.isTrue(!skHex || skHex === RemoteSignerClient.DUMMY_PRIVATE_KEY,
+            //     'skHex must be empty. We are signing remotely');
             const res = yield this.api.call({
                 command: 'sign',
-                params: [data, forceLow],
+                params: [this.network, address, data, forceLow],
             });
             return res.data;
         });

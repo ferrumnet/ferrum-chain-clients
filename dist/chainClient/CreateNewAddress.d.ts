@@ -19,11 +19,7 @@ export declare class BinanceChainAddress implements CreateNewAddress, Injectable
     private readonly network;
     constructor(config: MultiChainConfig);
     __name__(): string;
-    addressFromSk(sk: HexString): Promise<{
-        address: string;
-        network: Network;
-        privateKeyHex: string;
-    }>;
+    addressFromSk(sk: HexString): Promise<AddressWithSecretKeys>;
     newAddress(): Promise<AddressWithSecretKeys>;
 }
 export declare class EthereumAddress implements CreateNewAddress, Injectable {
@@ -36,6 +32,7 @@ export declare class EthereumAddress implements CreateNewAddress, Injectable {
         address: string;
         network: Network;
         privateKeyHex: string;
+        createdAt: number;
     }>;
     newAddress(): Promise<AddressWithSecretKeys>;
 }
