@@ -27,9 +27,10 @@ class RemoteClientWrapper {
         this.getTransactionById = this.client.getTransactionById.bind(this.client);
         this.processPaymentFromPrivateKey = this.client.processPaymentFromPrivateKey.bind(this.client);
         this.processPaymentFromPrivateKeyWithGas = this.client.processPaymentFromPrivateKeyWithGas.bind(this.client);
-        this.signTransaction = this.client.signTransaction.bind(this.client);
         this.waitForTransaction = this.client.waitForTransaction.bind(this.client);
+        this.signTransaction = this.client.signTransaction.bind(this.client);
         this.sign = this.signer.sign.bind(this.signer);
+        client.sign = this.signer.sign.bind(this.signer);
     }
 }
 exports.RemoteClientWrapper = RemoteClientWrapper;
