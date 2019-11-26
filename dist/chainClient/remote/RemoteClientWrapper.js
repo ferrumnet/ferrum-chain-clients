@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class RemoteClientWrapper {
-    constructor(client, signer) {
+    constructor(client, signer, network) {
         this.client = client;
         this.signer = signer;
+        this.network = network;
         this.broadcastTransaction = this.client.broadcastTransaction;
         this.createPaymentTransaction = this.client.createPaymentTransaction;
         this.feeCurrency = this.client.feeCurrency;
@@ -16,7 +17,6 @@ class RemoteClientWrapper {
         this.processPaymentFromPrivateKeyWithGas = this.client.processPaymentFromPrivateKeyWithGas;
         this.signTransaction = this.client.signTransaction;
         this.waitForTransaction = this.client.waitForTransaction;
-        this.sign = this.signer.sign;
         this.broadcastTransaction = this.client.broadcastTransaction.bind(this.client);
         this.createPaymentTransaction = this.client.createPaymentTransaction.bind(this.client);
         this.feeCurrency = this.client.feeCurrency.bind(this.client);
@@ -29,8 +29,10 @@ class RemoteClientWrapper {
         this.processPaymentFromPrivateKeyWithGas = this.client.processPaymentFromPrivateKeyWithGas.bind(this.client);
         this.waitForTransaction = this.client.waitForTransaction.bind(this.client);
         this.signTransaction = this.client.signTransaction.bind(this.client);
-        this.sign = this.signer.sign.bind(this.signer);
-        client.sign = this.signer.sign.bind(this.signer);
+        client.sign = this.sign.bind(this);
+    }
+    sign(address, data, forceLow) {
+        return this.signer.sign(this.network, address, data, forceLow);
     }
 }
 exports.RemoteClientWrapper = RemoteClientWrapper;

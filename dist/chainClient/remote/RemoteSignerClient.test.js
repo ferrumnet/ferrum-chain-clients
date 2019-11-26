@@ -16,9 +16,9 @@ test('can sign remotely', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(1000000);
         const rpc = new ferrum_plumbing_1.JsonRpcClient(process.env.TEST_SIGNER_ENDPOINT, '', '', new ferrum_plumbing_1.SecretAuthProvider('TEST_SECRET'));
-        const signer = new RemoteSignerClient_1.RemoteSignerClient(rpc, 'ETHEREUM');
+        const signer = new RemoteSignerClient_1.RemoteSignerClient(rpc);
         const data = ferrum_crypto_1.sha256sync(Buffer.from('Some data to sign', 'utf-8').toString('hex'));
-        const res = yield signer.sign(process.env.TEST_SIGNER_ADDRESS, data, false);
+        const res = yield signer.sign('ETHEREUM', process.env.TEST_SIGNER_ADDRESS, data, false);
         console.log(res);
         expect(res.r).toBeTruthy();
         expect(res.s).toBeTruthy();

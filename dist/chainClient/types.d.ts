@@ -104,7 +104,7 @@ export interface SignableTransaction {
     publicKeyHex?: HexString;
 }
 export interface ChainTransactionSigner {
-    sign(skHex: HexString, data: HexString, forceLow: boolean): Promise<EcSignature>;
+    sign(skHexOrAddress: HexString, data: HexString, forceLow: boolean): Promise<EcSignature>;
 }
 export interface ChainClient extends ChainTransactionSigner {
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;

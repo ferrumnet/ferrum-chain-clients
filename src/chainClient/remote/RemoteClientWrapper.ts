@@ -1,8 +1,9 @@
-import {ChainClient} from "../types";
+import {ChainClient, EcSignature} from "../types";
 import {RemoteSignerClient} from "./RemoteSignerClient";
+import {Network} from "ferrum-plumbing";
 
 export class RemoteClientWrapper implements ChainClient {
-    constructor(private client: ChainClient, private signer: RemoteSignerClient) {
+    constructor(private client: ChainClient, private signer: RemoteSignerClient, private network: Network) {
         this.broadcastTransaction = this.client.broadcastTransaction.bind(this.client);
         this.createPaymentTransaction = this.client.createPaymentTransaction.bind(this.client);
         this.feeCurrency = this.client.feeCurrency.bind(this.client);
@@ -15,8 +16,7 @@ export class RemoteClientWrapper implements ChainClient {
         this.processPaymentFromPrivateKeyWithGas = this.client.processPaymentFromPrivateKeyWithGas.bind(this.client);
         this.waitForTransaction = this.client.waitForTransaction.bind(this.client);
         this.signTransaction = this.client.signTransaction.bind(this.client);
-        this.sign = this.signer.sign.bind(this.signer);
-        client.sign = this.signer.sign.bind(this.signer);
+        client.sign = this.sign.bind(this);
     }
 
     broadcastTransaction = this.client.broadcastTransaction;
@@ -32,5 +32,7 @@ export class RemoteClientWrapper implements ChainClient {
     signTransaction = this.client.signTransaction;
     waitForTransaction = this.client.waitForTransaction;
 
-    sign = this.signer.sign;
+    sign(address: string, data: string, forceLow: boolean): Promise<EcSignature> {
+        return this.signer.sign(this.network, address, data, forceLow);
+    }
 }

@@ -12,8 +12,8 @@ class ChainClientFactory {
         this.remoteSigner = remoteSigner;
         this.networkStage = this.localConfig.networkStage;
     }
-    wrap(client) {
-        return this.remoteSigner ? new RemoteClientWrapper_1.RemoteClientWrapper(client, this.remoteSigner) : client;
+    wrap(client, network) {
+        return this.remoteSigner ? new RemoteClientWrapper_1.RemoteClientWrapper(client, this.remoteSigner, network) : client;
     }
     forNetwork(network) {
         switch (network) {
@@ -21,12 +21,12 @@ class ChainClientFactory {
                 if (!this.bnbClient) {
                     this.bnbClient = new BinanceChainClient_1.BinanceChainClient(this.networkStage, this.localConfig);
                 }
-                return this.wrap(this.bnbClient);
+                return this.wrap(this.bnbClient, 'BINANCE');
             case 'ETHEREUM':
                 if (!this.ethClient) {
                     this.ethClient = new EthereumClient_1.EthereumClient(this.networkStage, this.localConfig, this.ethGasProvider);
                 }
-                return this.wrap(this.ethClient);
+                return this.wrap(this.ethClient, 'ETHEREUM');
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);
         }
