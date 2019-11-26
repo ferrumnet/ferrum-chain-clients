@@ -23,10 +23,10 @@ export declare class EthereumClient implements ChainClient {
     processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, currency: string, amount: number): Promise<string>;
     processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: string, amount: number, gasOverride: number): Promise<string>;
     private createSendTransaction;
+    private createSendEth;
     signTransaction(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
     decodeSignature(sig: EcSignature): any;
     sign(skHex: HexString, data: HexString): Promise<EcSignature>;
-    private createSendEth;
     broadcastTransaction<T>(transaction: SignableTransaction): Promise<HexString>;
     createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string, currency: any, amount: number, gasOverride?: number): Promise<SignableTransaction>;
     /**

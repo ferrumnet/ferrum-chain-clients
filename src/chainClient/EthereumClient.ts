@@ -272,6 +272,33 @@ export class EthereumClient implements ChainClient {
         } as SignableTransaction;
     }
 
+    private async createSendEth(from: string, to: string, amount: number, gasOverride?: number): Promise<SignableTransaction> {
+        const web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
+        let sendAmount = web3.utils.toWei(amount.toFixed(12), 'ether');
+        const requiredGas = EthereumGasPriceProvider.ETH_TX_GAS;
+        let gasPrice = (gasOverride || 0) / requiredGas;
+        if (!gasOverride) {
+            gasPrice = (await this.gasService.getGasPrice()).medium;
+        }
+        const params = {
+            nonce: await web3.eth.getTransactionCount(from,'pending'),
+            gasPrice: Number(web3.utils.toWei(gasPrice.toFixed(12), 'ether')),
+            gasLimit: EthereumGasPriceProvider.ETH_TX_GAS,
+            to: to,
+            value: '0x' + new BN(sendAmount).toString('hex'),
+            data: '0x',
+        };
+        const tx = new Transaction(params, this.getChainOptions());
+
+        const serialized = tx.serialize().toString('hex');
+        // ValidationUtils.isTrue(tx.validate(), 'Ivalid transaction generated');
+        return {
+            serializedTransaction: serialized,
+            signableHex: tx.hash(false).toString('hex'),
+            transaction: params,
+        } as SignableTransaction;
+    }
+
     async signTransaction(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction> {
         ValidationUtils.isTrue(!!transaction.signableHex, 'transaction has no signable hex');
         const sigHex = await this.sign(skHex, transaction.signableHex!);
@@ -297,29 +324,6 @@ export class EthereumClient implements ChainClient {
         return {r: sig.r.toString('hex'), s: sig.s.toString('hex'), v: sig.v};
     }
 
-    private async createSendEth(from: string, to: string, amount: number): Promise<SignableTransaction> {
-        const web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
-        let sendAmount = web3.utils.toWei(amount.toFixed(12), 'ether');
-        const gasPrice = (await this.gasService.getGasPrice()).medium;
-        const params = {
-            nonce: await web3.eth.getTransactionCount(from,'pending'),
-            gasPrice: '0x' + new BN(web3.utils.toWei(gasPrice.toFixed(6), 'gwei')).toString('hex'),
-            gasLimit: EthereumGasPriceProvider.ETH_TX_GAS,
-            to: to,
-            value: '0x' + new BN(sendAmount).toString('hex'),
-            data: '0x',
-        };
-        const tx = new Transaction(params, this.getChainOptions());
-
-        const serialized = tx.serialize().toString('hex');
-        // ValidationUtils.isTrue(tx.validate(), 'Ivalid transaction generated');
-        return {
-            serializedTransaction: serialized,
-            signableHex: tx.hash(false).toString('hex'),
-            transaction: params,
-        } as SignableTransaction;
-    }
-
     async broadcastTransaction<T>(transaction: SignableTransaction): Promise<HexString> {
         const web3 = this.web3();
         const tx = new Transaction('0x' + transaction.serializedTransaction, this.getChainOptions());
@@ -341,7 +345,7 @@ export class EthereumClient implements ChainClient {
     async createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string,
                                 currency: any, amount: number, gasOverride?: number): Promise<SignableTransaction> {
         if (currency === this.feeCurrency()) {
-            return this.createSendEth(fromAddress, targetAddress, amount);
+            return this.createSendEth(fromAddress, targetAddress, amount, gasOverride);
         }
         const contract = this.contractAddresses[currency];
         const decimal = this.decimals[currency];

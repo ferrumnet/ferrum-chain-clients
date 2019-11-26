@@ -280,6 +280,33 @@ class EthereumClient {
             };
         });
     }
+    createSendEth(from, to, amount, gasOverride) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
+            let sendAmount = web3.utils.toWei(amount.toFixed(12), 'ether');
+            const requiredGas = GasPriceProvider_1.EthereumGasPriceProvider.ETH_TX_GAS;
+            let gasPrice = (gasOverride || 0) / requiredGas;
+            if (!gasOverride) {
+                gasPrice = (yield this.gasService.getGasPrice()).medium;
+            }
+            const params = {
+                nonce: yield web3.eth.getTransactionCount(from, 'pending'),
+                gasPrice: Number(web3.utils.toWei(gasPrice.toFixed(12), 'ether')),
+                gasLimit: GasPriceProvider_1.EthereumGasPriceProvider.ETH_TX_GAS,
+                to: to,
+                value: '0x' + new bn_js_1.default(sendAmount).toString('hex'),
+                data: '0x',
+            };
+            const tx = new ethereumjs_tx_1.Transaction(params, this.getChainOptions());
+            const serialized = tx.serialize().toString('hex');
+            // ValidationUtils.isTrue(tx.validate(), 'Ivalid transaction generated');
+            return {
+                serializedTransaction: serialized,
+                signableHex: tx.hash(false).toString('hex'),
+                transaction: params,
+            };
+        });
+    }
     signTransaction(skHex, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
             ferrum_plumbing_1.ValidationUtils.isTrue(!!transaction.signableHex, 'transaction has no signable hex');
@@ -306,29 +333,6 @@ class EthereumClient {
             return { r: sig.r.toString('hex'), s: sig.s.toString('hex'), v: sig.v };
         });
     }
-    createSendEth(from, to, amount) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
-            let sendAmount = web3.utils.toWei(amount.toFixed(12), 'ether');
-            const gasPrice = (yield this.gasService.getGasPrice()).medium;
-            const params = {
-                nonce: yield web3.eth.getTransactionCount(from, 'pending'),
-                gasPrice: '0x' + new bn_js_1.default(web3.utils.toWei(gasPrice.toFixed(6), 'gwei')).toString('hex'),
-                gasLimit: GasPriceProvider_1.EthereumGasPriceProvider.ETH_TX_GAS,
-                to: to,
-                value: '0x' + new bn_js_1.default(sendAmount).toString('hex'),
-                data: '0x',
-            };
-            const tx = new ethereumjs_tx_1.Transaction(params, this.getChainOptions());
-            const serialized = tx.serialize().toString('hex');
-            // ValidationUtils.isTrue(tx.validate(), 'Ivalid transaction generated');
-            return {
-                serializedTransaction: serialized,
-                signableHex: tx.hash(false).toString('hex'),
-                transaction: params,
-            };
-        });
-    }
     broadcastTransaction(transaction) {
         return __awaiter(this, void 0, void 0, function* () {
             const web3 = this.web3();
@@ -347,7 +351,7 @@ class EthereumClient {
     createPaymentTransaction(fromAddress, targetAddress, currency, amount, gasOverride) {
         return __awaiter(this, void 0, void 0, function* () {
             if (currency === this.feeCurrency()) {
-                return this.createSendEth(fromAddress, targetAddress, amount);
+                return this.createSendEth(fromAddress, targetAddress, amount, gasOverride);
             }
             const contract = this.contractAddresses[currency];
             const decimal = this.decimals[currency];
