@@ -127,7 +127,7 @@ function toServerAmount(amount, currency, decimals) {
     return (amount * (Math.pow(10, (decimals || 0)))).toFixed(12);
 }
 function ethToGwei(eth) {
-    return web3_1.default.utils.toWei(eth.toFixed(9), 'gwei');
+    return web3_1.default.utils.toWei(eth.toFixed(9), 'gwei'); // Kudi server uses gwei as the smaller unit
 }
 function normalizeBnbAmount(amount) {
     return Number(amount) / (Math.pow(10, exports.BINANCE_DECIMALS));
