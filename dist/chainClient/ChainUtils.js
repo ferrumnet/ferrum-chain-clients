@@ -54,6 +54,12 @@ class ChainUtils {
         }
     }
     static simpleTransactionToServer(tx) {
+        const feeItem = {
+            address: tx.from.address,
+            currency: tx.feeCurrency,
+            addressType: 'ADDRESS',
+            amount: toServerAmount(-1 * tx.fee, tx.feeCurrency, tx.feeDecimals),
+        };
         const item1 = {
             address: tx.from.address,
             currency: tx.from.currency,
@@ -68,15 +74,17 @@ class ChainUtils {
         };
         return {
             id: tx.id,
+            network: tx.network,
             transactionType: 'CHAIN_TRANSACTION',
             transactionId: tx.id,
             confirmationTime: tx.confirmationTime,
             creationTime: tx.creationTime,
-            externalFee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals),
+            fee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals),
+            feeCurrency: tx.feeCurrency,
             isConfirmed: tx.confirmed,
             isFailed: tx.failed,
             version: 0,
-            items: [item1, item2],
+            items: [feeItem, item1, item2],
         };
     }
     static canonicalAddress(network, address) {

@@ -78,6 +78,7 @@ export class EthereumClient implements ChainClient {
         } as BlockData;
         allTransactions.forEach((v) => {
             if (!!v) {
+                v.confirmationTime = block.timestamp * 1000;
                 rv.transactionIds.push(v.id);
                 rv.transactions!.push(v);
             }
@@ -183,7 +184,7 @@ export class EthereumClient implements ChainClient {
                     } else { // normal eth to eth transaction.
                         let res = {
                             network: "ETHEREUM",
-                            fee: transactionReceipt['gasUsed'],
+                            fee: fee,
                             feeCurrency: "ETH",
                             from: {
                                 address: transactionReceipt["from"],
@@ -226,7 +227,7 @@ export class EthereumClient implements ChainClient {
         const privateKeyHex = '0x' + skHex;
         const addressFrom = web3.eth.accounts.privateKeyToAccount(privateKeyHex);
         if (currency === this.feeCurrency()) {
-            tx = await this.createSendEth(addressFrom.address, targetAddress, amount);
+            tx = await this.createSendEth(addressFrom.address, targetAddress, amount, gasOverride);
         } else {
             const contract = this.contractAddresses[currency];
             const decimal = this.decimals[currency];
@@ -274,7 +275,7 @@ export class EthereumClient implements ChainClient {
 
     private async createSendEth(from: string, to: string, amount: number, gasOverride?: number): Promise<SignableTransaction> {
         const web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
-        let sendAmount = web3.utils.toWei(amount.toFixed(12), 'ether');
+        let sendAmount = web3.utils.toWei(amount.toFixed(18), 'ether');
         const requiredGas = EthereumGasPriceProvider.ETH_TX_GAS;
         let gasPrice = (gasOverride || 0) / requiredGas;
         if (!gasOverride) {
@@ -282,7 +283,7 @@ export class EthereumClient implements ChainClient {
         }
         const params = {
             nonce: await web3.eth.getTransactionCount(from,'pending'),
-            gasPrice: Number(web3.utils.toWei(gasPrice.toFixed(12), 'ether')),
+            gasPrice: Number(web3.utils.toWei(gasPrice.toFixed(18), 'ether')),
             gasLimit: EthereumGasPriceProvider.ETH_TX_GAS,
             to: to,
             value: '0x' + new BN(sendAmount).toString('hex'),

@@ -48,6 +48,7 @@ export interface ServerTransaction {
     transactionType: string;
     items: ServerTransactionItem[];
     id: string;
+    network: string;
     transactionId: string;
     creationTime: number;
     receiveTime: number;

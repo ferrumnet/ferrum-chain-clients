@@ -2,9 +2,9 @@ import {
     ethereumClientForProd,
     TEST_ACCOUNTS,
     testChainClientFactory, testGanacheClientFactory,
-    TESTNET_CONFIG
 } from '../testUtils/configs/TestnetConfig';
 import {retry, sleep} from "ferrum-plumbing";
+import {ChainUtils} from "./ChainUtils";
 
 const clientFac = testChainClientFactory();
 
@@ -19,7 +19,7 @@ test('send tx', async function() {
     // const txId = await client.processPaymentFromPrivateKey(privateKey, to, 'FRM', 0.001);
     // console.log('Sent tx', txId);
 
-    var data = await client.getTransactionById('0x9213b0ae343ae6d59a5c396d92afc70c1b535365d256cd786423140f1538ba72');
+    const data = await client.getTransactionById('0x9213b0ae343ae6d59a5c396d92afc70c1b535365d256cd786423140f1538ba72');
     expect(data!.confirmed).toBe(true);
     console.log('transaction', data);
 });
@@ -128,7 +128,7 @@ test('sen eth using ganache', async function() {
     const fromAddr = '0x0933Ccf2b714008a7F7FE3C227E3435e1682511f';
     const addr = await clientFact.newAddress('ETHEREUM').newAddress();
     const tid = await client.processPaymentFromPrivateKey(sk, addr.address, 'ETH', 0.1);
-    sleep(1000);
+    await sleep(1000);
     const tx = await client.waitForTransaction(tid);
     expect(tx!.confirmed).toBe(true);
     // Return the money
@@ -137,3 +137,30 @@ test('sen eth using ganache', async function() {
     const tx2 = await client.waitForTransaction(tid2);
     expect(tx2!.confirmed).toBe(true);
 });
+
+test('Check transaction fee', async function() {
+    jest.setTimeout(100000);
+    const eth = 0.001;
+    const gas = 0.0000001;
+    const txId = await sendEth(eth, gas);
+
+    const clientFact = testGanacheClientFactory();
+    const client = clientFact.forNetwork('ETHEREUM');
+    const tx = await client.getTransactionById(txId);
+    const serverTx = ChainUtils.simpleTransactionToServer(tx!);
+    console.log(tx);
+    console.log(serverTx);
+    console.log(JSON.stringify(serverTx));
+});
+
+async function sendEth(eth: number, gas: number) {
+    const clientFact = testGanacheClientFactory();
+    const client = clientFact.forNetwork('ETHEREUM');
+    const sk = '6af7f508641153dedc1599547b681ad5770381de8be6bfa1d6f623db6918f49e';
+    const addr = await clientFact.newAddress('ETHEREUM').newAddress();
+    const tid = await client.processPaymentFromPrivateKeyWithGas(sk, addr.address, 'ETH', eth, gas);
+    await sleep(1000);
+    const tx = await client.waitForTransaction(tid);
+    expect(tx!.confirmed).toBe(true);
+    return tid;
+}
