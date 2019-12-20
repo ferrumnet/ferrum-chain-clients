@@ -144,8 +144,7 @@ export class EthereumClient implements ChainClient {
                         .filter((log: any) => log && log.name === "Transfer");
                     const len = decodedLogs.length;
                     if (len > 1) { // multi transfer by contract function.
-                        console.warn('Received a transaction with more than 1 log items. Not supported', transaction,
-                            transactionReceipt);
+                        console.warn('Received a transaction with more than 1 log items. Not supported', transaction.hash);
                         return undefined;
                     } else if (len === 1) {  // normal token to token transaction
                         if (decodedLogs.length > 0) {
@@ -283,8 +282,8 @@ export class EthereumClient implements ChainClient {
         }
         const params = {
             nonce: await web3.eth.getTransactionCount(from,'pending'),
-            gasPrice: Number(web3.utils.toWei(gasPrice.toFixed(18), 'ether')),
-            gasLimit: EthereumGasPriceProvider.ETH_TX_GAS,
+            gasPrice: '0x' + new BN(web3.utils.toWei(gasPrice.toFixed(18), 'ether')).toString('hex'),
+            gasLimit: '0x' + new BN(EthereumGasPriceProvider.ETH_TX_GAS),
             to: to,
             value: '0x' + new BN(sendAmount).toString('hex'),
             data: '0x',
