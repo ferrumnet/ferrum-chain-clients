@@ -283,7 +283,7 @@ export class EthereumClient implements ChainClient {
         const params = {
             nonce: await web3.eth.getTransactionCount(from,'pending'),
             gasPrice: '0x' + new BN(web3.utils.toWei(gasPrice.toFixed(18), 'ether')).toString('hex'),
-            gasLimit: '0x' + new BN(EthereumGasPriceProvider.ETH_TX_GAS),
+            gasLimit: '0x' + new BN(EthereumGasPriceProvider.ETH_TX_GAS).toString('hex'),
             to: to,
             value: '0x' + new BN(sendAmount).toString('hex'),
             data: '0x',
