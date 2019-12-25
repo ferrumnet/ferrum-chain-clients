@@ -56,6 +56,15 @@ test('Get transaction BY ID including token transfer', async () => {
     expect(tx!.confirmed).toBe(true);
 });
 
+test('Get transaction BY ID including GUSD transfer', async () => {
+    const tid = '0xccd420c0661162d95ced859a686a31bc0ae83b03c31d552af1318dbcabc7fc1c';
+    const client = ethereumClientForProd();
+    const tx = await client.getTransactionById(tid);
+    console.log(tx);
+    expect(tx).toBeTruthy();
+    expect(tx!.confirmed).toBe(true);
+});
+
 test('Get transaction BY ID including token transfer on testnet', async function() {
     jest.setTimeout(1000000);
     const tid = '0xd6bb804504d747508f41e3d3e0e0182714e1937a6eeadaac649e92e073aeb9be';

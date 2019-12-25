@@ -144,7 +144,7 @@ export class EthereumClient implements ChainClient {
                         .filter((log: any) => log && log.name === "Transfer");
                     const len = decodedLogs.length;
                     if (len > 1) { // multi transfer by contract function.
-                        console.warn('Received a transaction with more than 1 log items. Not supported', transaction.hash);
+                        // console.warn('Received a transaction with more than 1 log items. Not supported', transaction.hash);
                         return undefined;
                     } else if (len === 1) {  // normal token to token transaction
                         if (decodedLogs.length > 0) {
