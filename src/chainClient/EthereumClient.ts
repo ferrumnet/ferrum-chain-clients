@@ -21,15 +21,9 @@ import {hexToUtf8} from "ferrum-crypto";
 
 const ETH_DECIMALS = 18;
 
-const DecimalToUnit: { [k: string]: string } = {
-    '1': 'wei',
-    '3': 'kwei',
-    '6': 'mwei',
-    '9': 'gwei',
-    '12': 'szabo',
-    '15': 'finney',
-    '18': 'ether',
-};
+function toDecimal(amount: any, decimals: number): number {
+    return Number(ChainUtils.toDecimalStr(amount, decimals));
+}
 
 export class EthereumClient implements ChainClient {
     private readonly provider: string;
@@ -57,7 +51,7 @@ export class EthereumClient implements ChainClient {
             return {
                 name: selectedCoin,
                 address: this.contractAddresses[selectedCoin],
-                decimal: this.decimals[selectedCoin] || 1,
+                decimal: this.decimals[selectedCoin] || 0,
             }
         }
 
@@ -152,8 +146,6 @@ export class EthereumClient implements ChainClient {
                             if (decodedLog.name === "Transfer") {
                                 let contractinfo = this.findContractInfo(decodedLog.address);
                                 const decimals = contractinfo.decimal;
-                                const decimalUnit: any = DecimalToUnit[decimals.toFixed()];
-                                ValidationUtils.isTrue(!!decimalUnit, `Decimal ${contractinfo.decimal} does not map to a unit`);
                                 let transferData = {
                                     network: "ETHEREUM",
                                     fee: fee,
@@ -162,13 +154,13 @@ export class EthereumClient implements ChainClient {
                                     from: {
                                         address: decodedLog.events[0].value,
                                         currency: contractinfo.name,
-                                        amount: Number(web3.utils.fromWei(new BN(decodedLog.events[2].value), decimalUnit)),
+                                        amount: toDecimal(decodedLog.events[2].value, decimals),
                                         decimals,
                                     },
                                     to: {
                                         address: decodedLog.events[1].value,
                                         currency: contractinfo.name,
-                                        amount: Number(web3.utils.fromWei(new BN(decodedLog.events[2].value), decimalUnit)),
+                                        amount: toDecimal(decodedLog.events[2].value, decimals),
                                         decimals,
                                     },
                                     confirmed: is_confirmed,
@@ -371,8 +363,7 @@ export class EthereumClient implements ChainClient {
 
             pastEvents.forEach((event: any) => {
                 const decimals = this.decimals[tok];
-                const decimalUnit: any = DecimalToUnit[decimals];
-                const amount = Number(web3.utils.fromWei(event.returnValues.value, decimalUnit));
+                const amount = toDecimal(event.returnValues.value, decimals);
                 res.push({
                     network: "ETHEREUM",
                     fee: 0,

@@ -33,15 +33,9 @@ const ethereumjs_tx_1 = require("ethereumjs-tx");
 const ethereumjs_utils_1 = require("ethereumjs-utils");
 const ferrum_crypto_1 = require("ferrum-crypto");
 const ETH_DECIMALS = 18;
-const DecimalToUnit = {
-    '1': 'wei',
-    '3': 'kwei',
-    '6': 'mwei',
-    '9': 'gwei',
-    '12': 'szabo',
-    '15': 'finney',
-    '18': 'ether',
-};
+function toDecimal(amount, decimals) {
+    return Number(ChainUtils_1.ChainUtils.toDecimalStr(amount, decimals));
+}
 class EthereumClient {
     constructor(networkStage, config, gasService) {
         this.networkStage = networkStage;
@@ -65,7 +59,7 @@ class EthereumClient {
             return {
                 name: selectedCoin,
                 address: this.contractAddresses[selectedCoin],
-                decimal: this.decimals[selectedCoin] || 1,
+                decimal: this.decimals[selectedCoin] || 0,
             };
         }
         return { name: contractAddress.toLowerCase(), address: contractAddress, decimal: 1 };
@@ -153,7 +147,7 @@ class EthereumClient {
                             .filter((log) => log && log.name === "Transfer");
                         const len = decodedLogs.length;
                         if (len > 1) { // multi transfer by contract function.
-                            console.warn('Received a transaction with more than 1 log items. Not supported', transaction.hash);
+                            // console.warn('Received a transaction with more than 1 log items. Not supported', transaction.hash);
                             return undefined;
                         }
                         else if (len === 1) { // normal token to token transaction
@@ -162,8 +156,6 @@ class EthereumClient {
                                 if (decodedLog.name === "Transfer") {
                                     let contractinfo = this.findContractInfo(decodedLog.address);
                                     const decimals = contractinfo.decimal;
-                                    const decimalUnit = DecimalToUnit[decimals.toFixed()];
-                                    ferrum_plumbing_1.ValidationUtils.isTrue(!!decimalUnit, `Decimal ${contractinfo.decimal} does not map to a unit`);
                                     let transferData = {
                                         network: "ETHEREUM",
                                         fee: fee,
@@ -172,13 +164,13 @@ class EthereumClient {
                                         from: {
                                             address: decodedLog.events[0].value,
                                             currency: contractinfo.name,
-                                            amount: Number(web3.utils.fromWei(new bn_js_1.default(decodedLog.events[2].value), decimalUnit)),
+                                            amount: toDecimal(decodedLog.events[2].value, decimals),
                                             decimals,
                                         },
                                         to: {
                                             address: decodedLog.events[1].value,
                                             currency: contractinfo.name,
-                                            amount: Number(web3.utils.fromWei(new bn_js_1.default(decodedLog.events[2].value), decimalUnit)),
+                                            amount: toDecimal(decodedLog.events[2].value, decimals),
                                             decimals,
                                         },
                                         confirmed: is_confirmed,
@@ -378,8 +370,7 @@ class EthereumClient {
                 });
                 pastEvents.forEach((event) => {
                     const decimals = this.decimals[tok];
-                    const decimalUnit = DecimalToUnit[decimals];
-                    const amount = Number(web3.utils.fromWei(event.returnValues.value, decimalUnit));
+                    const amount = toDecimal(event.returnValues.value, decimals);
                     res.push({
                         network: "ETHEREUM",
                         fee: 0,

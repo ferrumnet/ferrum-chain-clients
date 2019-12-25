@@ -4,6 +4,7 @@ import Web3 from 'web3';
 import ecc from 'tiny-secp256k1';
 // @ts-ignore
 import {ecsign} from 'ethereumjs-utils';
+import BN from "bn.js";
 
 export class ChainUtils {
     static readonly DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT = 60000;
@@ -95,6 +96,16 @@ export class ChainUtils {
             .map (b => b.toString (16).padStart (2, "0"))
             .join ("");
     }
+
+    static toDecimalStr(amount: any, decimals: number): string {
+        const bn = new BN(amount).toString();
+        if (bn.length <= decimals) {
+            const zeros = decimals - bn.length;
+            return '0.' + '0'.repeat(zeros) + bn;
+        }
+        return bn.substr(0, bn.length - decimals) + '.' + (bn.substr(bn.length - decimals) || '0');
+    }
+
 }
 
 export async function waitForTx(client: ChainClient, transactionId: string, waitTimeout: number, fetchTimeout: number) {
@@ -120,7 +131,7 @@ function toServerAmount(amount: number, currency: string, decimals?: number) {
     if (currency === 'ETH') {
         return ethToGwei(amount);
     }
-    ValidationUtils.isTrue(!currency || !!decimals, 'decimals must be provided for currency ' + currency);
+    ValidationUtils.isTrue(decimals !== undefined, 'decimals must be provided for currency ' + currency);
     return (amount * (10 ** (decimals || 0))).toFixed(12);
 }
 

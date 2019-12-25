@@ -44,7 +44,7 @@ const TEST_PROD_CONFIG = {
     },
     contractDecimals: {
         FRM: 6,
-        GUSD: 1,
+        GUSD: 2,
     },
     binanceChainUrl: 'https://dex.binance.org',
     binanceChainSeedNode: '',

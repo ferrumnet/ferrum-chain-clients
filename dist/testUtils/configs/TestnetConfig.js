@@ -38,9 +38,11 @@ const TEST_PROD_CONFIG = {
     web3Provider: 'https://mainnet.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b',
     contractAddresses: {
         FRM: '0xe5caef4af8780e59df925470b050fb23c43ca68c',
+        GUSD: '0x056fd409e1d7a124bd7017459dfea2f387b6d5cd',
     },
     contractDecimals: {
         FRM: 6,
+        GUSD: 2,
     },
     binanceChainUrl: 'https://dex.binance.org',
     binanceChainSeedNode: '',

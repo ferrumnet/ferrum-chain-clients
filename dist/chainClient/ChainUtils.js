@@ -17,6 +17,7 @@ const web3_1 = __importDefault(require("web3"));
 const tiny_secp256k1_1 = __importDefault(require("tiny-secp256k1"));
 // @ts-ignore
 const ethereumjs_utils_1 = require("ethereumjs-utils");
+const bn_js_1 = __importDefault(require("bn.js"));
 class ChainUtils {
     /**
      * Signs data
@@ -102,6 +103,14 @@ class ChainUtils {
             .map(b => b.toString(16).padStart(2, "0"))
             .join("");
     }
+    static toDecimalStr(amount, decimals) {
+        const bn = new bn_js_1.default(amount).toString();
+        if (bn.length <= decimals) {
+            const zeros = decimals - bn.length;
+            return '0.' + '0'.repeat(zeros) + bn;
+        }
+        return bn.substr(0, bn.length - decimals) + '.' + (bn.substr(bn.length - decimals) || '0');
+    }
 }
 exports.ChainUtils = ChainUtils;
 ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT = 60000;
@@ -131,7 +140,7 @@ function toServerAmount(amount, currency, decimals) {
     if (currency === 'ETH') {
         return ethToGwei(amount);
     }
-    ferrum_plumbing_1.ValidationUtils.isTrue(!currency || !!decimals, 'decimals must be provided for currency ' + currency);
+    ferrum_plumbing_1.ValidationUtils.isTrue(decimals !== undefined, 'decimals must be provided for currency ' + currency);
     return (amount * (Math.pow(10, (decimals || 0)))).toFixed(12);
 }
 function ethToGwei(eth) {

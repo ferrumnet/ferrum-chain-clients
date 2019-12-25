@@ -28,6 +28,18 @@ test('send tx', function () {
         console.log('transaction', data);
     });
 });
+test('toDecimal', () => {
+    let v = ChainUtils_1.ChainUtils.toDecimalStr(122020, 0);
+    expect(v).toBe('122020.0');
+    v = ChainUtils_1.ChainUtils.toDecimalStr(12, 18); // eth
+    expect(v).toBe('0.000000000000000012');
+    v = ChainUtils_1.ChainUtils.toDecimalStr(12, 18 - 9); // gwei
+    expect(v).toBe('0.000000012');
+    v = ChainUtils_1.ChainUtils.toDecimalStr(122020, 2);
+    expect(v).toBe('1220.20');
+    v = ChainUtils_1.ChainUtils.toDecimalStr(122020, 1);
+    expect(v).toBe('12202.0');
+});
 test('create a new address', () => __awaiter(void 0, void 0, void 0, function* () {
     const addr = yield TestnetConfig_1.testChainClientFactory().newAddress('ETHEREUM').newAddress();
     console.log(addr);
@@ -55,6 +67,19 @@ test('Get transaction BY ID including token transfer', () => __awaiter(void 0, v
     expect(tx).toBeTruthy();
     expect(tx.confirmed).toBe(true);
 }));
+test('Get transaction BY ID including GUSD transfer', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(1000000);
+        const tid = '0x86b022a1ce0a5874d8bbf44bb2dacdca610737a30c6e945eea4d29bb77c44445';
+        const client = TestnetConfig_1.ethereumClientForProd();
+        const tx = yield client.getTransactionById(tid);
+        const server = ChainUtils_1.ChainUtils.simpleTransactionToServer(tx);
+        expect(tx).toBeTruthy();
+        expect(tx.confirmed).toBe(true);
+        expect(tx.from.amount).toBe(0.2);
+        expect(Number(server.items[2].amount)).toBe(20);
+    });
+});
 test('Get transaction BY ID including token transfer on testnet', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(1000000);
