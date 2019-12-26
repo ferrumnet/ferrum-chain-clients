@@ -41,6 +41,12 @@ class EthereumGasPriceProvider {
     constructor() {
         this.lastUpdate = 0;
     }
+    static gasPriceForErc20(currency, balance) {
+        if (balance === 0) {
+            return EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR[currency] || EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+        }
+        return EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR[currency] || EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT;
+    }
     getGasPrice() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.lastUpdate > (Date.now() - EthereumGasPriceProvider.GasTimeout)) {
@@ -62,9 +68,7 @@ class EthereumGasPriceProvider {
     }
     getTransactionGas(currency, gasPrice, currentTargetBalance) {
         const gasAmount = currency === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
-            currentTargetBalance && currentTargetBalance > 0 ?
-                EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
-                EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+            EthereumGasPriceProvider.gasPriceForErc20(currency, currentTargetBalance || 0);
         return gasAmount * gasPrice;
     }
     __name__() {
@@ -74,7 +78,13 @@ class EthereumGasPriceProvider {
 exports.EthereumGasPriceProvider = EthereumGasPriceProvider;
 EthereumGasPriceProvider.GasStationUrl = 'https://ethgasstation.info/json/ethgasAPI.json';
 EthereumGasPriceProvider.GasTimeout = 30000;
-EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT = 52595;
-EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT = 36693;
 EthereumGasPriceProvider.ETH_TX_GAS = 21000;
+EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT = 70282;
+EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT = 55282;
+EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR = {
+    'FRM': 52595,
+};
+EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR = {
+    'FRM': 36693,
+};
 //# sourceMappingURL=GasPriceProvider.js.map

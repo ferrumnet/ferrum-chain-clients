@@ -45,9 +45,22 @@ export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
     private lastPrice: EthGasPrice|undefined;
     constructor() {}
 
-    public static ERC_20_GAS_ZERO_ACCOUNT = 52595;
-    public static ERC_20_GAS_NON_ZERO_ACCOUNT = 36693;
     public static ETH_TX_GAS = 21000;
+    private static ERC_20_GAS_ZERO_ACCOUNT = 70282;
+    private static ERC_20_GAS_NON_ZERO_ACCOUNT = 55282;
+    private static ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR: any = {
+        'FRM': 52595,
+    };
+    private static ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR: any = {
+        'FRM': 36693,
+    };
+
+    static gasPriceForErc20(currency: string, balance: number): number {
+        if (balance === 0) {
+            return EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR[currency] || EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+        }
+        return EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR[currency] || EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT;
+    }
 
     async getGasPrice(): Promise<EthGasPrice> {
         if (this.lastUpdate > (Date.now() - EthereumGasPriceProvider.GasTimeout)) {
@@ -69,9 +82,7 @@ export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
 
     getTransactionGas(currency: string, gasPrice: number, currentTargetBalance?: number) {
         const gasAmount = currency === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
-                currentTargetBalance && currentTargetBalance > 0 ?
-                    EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
-                        EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+                EthereumGasPriceProvider.gasPriceForErc20(currency, currentTargetBalance || 0);
         return gasAmount * gasPrice;
     }
 

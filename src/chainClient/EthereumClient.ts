@@ -238,9 +238,9 @@ export class EthereumClient implements ChainClient {
         const consumerContract = new web3.eth.Contract(abi.abi, contractAddress);
         const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
         const targetBalance = await this.getBalanceForContract(web3, to, contractAddress, 1);
+        const addrInfo = this.findContractInfo(contractAddress);
 
-        const requiredGas = targetBalance > 0 ? EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
-            EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+        const requiredGas = EthereumGasPriceProvider.gasPriceForErc20(addrInfo.name, targetBalance || 0);
         let gasPrice = (gasOverride || 0) / requiredGas;
         if (!gasOverride) {
             gasPrice = (await this.gasService.getGasPrice()).medium;

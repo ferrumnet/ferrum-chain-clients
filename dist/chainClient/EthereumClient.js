@@ -250,8 +250,8 @@ class EthereumClient {
             const consumerContract = new web3.eth.Contract(abi.abi, contractAddress);
             const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
             const targetBalance = yield this.getBalanceForContract(web3, to, contractAddress, 1);
-            const requiredGas = targetBalance > 0 ? GasPriceProvider_1.EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT :
-                GasPriceProvider_1.EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+            const addrInfo = this.findContractInfo(contractAddress);
+            const requiredGas = GasPriceProvider_1.EthereumGasPriceProvider.gasPriceForErc20(addrInfo.name, targetBalance || 0);
             let gasPrice = (gasOverride || 0) / requiredGas;
             if (!gasOverride) {
                 gasPrice = (yield this.gasService.getGasPrice()).medium;

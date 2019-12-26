@@ -20,9 +20,12 @@ export declare class EthereumGasPriceProvider implements GasPriceProvider, Injec
     private lastUpdate;
     private lastPrice;
     constructor();
-    static ERC_20_GAS_ZERO_ACCOUNT: number;
-    static ERC_20_GAS_NON_ZERO_ACCOUNT: number;
     static ETH_TX_GAS: number;
+    private static ERC_20_GAS_ZERO_ACCOUNT;
+    private static ERC_20_GAS_NON_ZERO_ACCOUNT;
+    private static ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR;
+    private static ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR;
+    static gasPriceForErc20(currency: string, balance: number): number;
     getGasPrice(): Promise<EthGasPrice>;
     getTransactionGas(currency: string, gasPrice: number, currentTargetBalance?: number): number;
     __name__(): string;
