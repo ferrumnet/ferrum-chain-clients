@@ -46,8 +46,8 @@ export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
     constructor() {}
 
     public static ETH_TX_GAS = 21000;
-    private static ERC_20_GAS_ZERO_ACCOUNT = 70282;
-    private static ERC_20_GAS_NON_ZERO_ACCOUNT = 55282;
+    private static ERC_20_GAS_ZERO_ACCOUNT = 150000; // TODO: Adjust based on previous transactoins
+    private static ERC_20_GAS_NON_ZERO_ACCOUNT = 80000;
     private static ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR: any = {
         'FRM': 52595,
     };

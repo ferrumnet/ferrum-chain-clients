@@ -79,8 +79,8 @@ exports.EthereumGasPriceProvider = EthereumGasPriceProvider;
 EthereumGasPriceProvider.GasStationUrl = 'https://ethgasstation.info/json/ethgasAPI.json';
 EthereumGasPriceProvider.GasTimeout = 30000;
 EthereumGasPriceProvider.ETH_TX_GAS = 21000;
-EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT = 70282;
-EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT = 55282;
+EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT = 150000; // TODO: Adjust based on previous transactoins
+EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT = 80000;
 EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR = {
     'FRM': 52595,
 };
