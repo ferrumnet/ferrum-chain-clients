@@ -104,14 +104,18 @@ export interface SignableTransaction {
     signature?: EcSignature;
     publicKeyHex?: HexString;
 }
+export interface GasParameters {
+    gasLimit: string;
+    gasPrice: string;
+}
 export interface ChainTransactionSigner {
     sign(skHexOrAddress: HexString, data: HexString, forceLow: boolean): Promise<EcSignature>;
 }
 export interface ChainClient extends ChainTransactionSigner {
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
-    processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any, amount: number): Promise<string>;
-    processPaymentFromPrivateKeyWithGas(skHex: HexString, targetAddress: string, currency: any, amount: number, gasOverride: number): Promise<string>;
-    createPaymentTransaction(fromAddress: string, targetAddress: string, currency: any, amount: number, gasOverride?: number, memo?: string): Promise<SignableTransaction>;
+    processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any, amount: number | string): Promise<string>;
+    processPaymentFromPrivateKeyWithGas(skHex: HexString, targetAddress: string, currency: any, amount: number | string, gasOverride: number | GasParameters): Promise<string>;
+    createPaymentTransaction(fromAddress: string, targetAddress: string, currency: any, amount: number | string, gasOverride?: number | GasParameters, memo?: string): Promise<SignableTransaction>;
     signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
     getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[] | undefined>;
     getBalance(address: string, currency: string): Promise<number | undefined>;

@@ -97,6 +97,9 @@ export class ChainUtils {
             .join ("");
     }
 
+    /**
+     *  Converts to bigint, similar to fromWei
+     */
     static toDecimalStr(amount: any, decimals: number): string {
         const bn = new BN(amount).toString();
         if (bn.length <= decimals) {
@@ -106,6 +109,20 @@ export class ChainUtils {
         return bn.substr(0, bn.length - decimals) + '.' + (bn.substr(bn.length - decimals) || '0');
     }
 
+    /**
+     * Converts a decimal to bigint, similar to toWei
+     */
+    static toBigIntStr(amount: string|number, decimals: number): string {
+        amount = typeof amount === 'number' ? amount.toFixed(decimals) : amount;
+        let [intPart, deciPart] = amount.split('.',2);
+        deciPart = deciPart || '';
+        if (deciPart.length < decimals) {
+            deciPart = deciPart + '0'.repeat(decimals - deciPart.length);
+        } else {
+            deciPart = deciPart.substr(0, decimals);
+        }
+        return intPart + deciPart;
+    }
 }
 
 export async function waitForTx(client: ChainClient, transactionId: string, waitTimeout: number, fetchTimeout: number) {

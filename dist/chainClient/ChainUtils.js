@@ -103,6 +103,9 @@ class ChainUtils {
             .map(b => b.toString(16).padStart(2, "0"))
             .join("");
     }
+    /**
+     *  Converts to bigint, similar to fromWei
+     */
     static toDecimalStr(amount, decimals) {
         const bn = new bn_js_1.default(amount).toString();
         if (bn.length <= decimals) {
@@ -110,6 +113,21 @@ class ChainUtils {
             return '0.' + '0'.repeat(zeros) + bn;
         }
         return bn.substr(0, bn.length - decimals) + '.' + (bn.substr(bn.length - decimals) || '0');
+    }
+    /**
+     * Converts a decimal to bigint, similar to toWei
+     */
+    static toBigIntStr(amount, decimals) {
+        amount = typeof amount === 'number' ? amount.toFixed(decimals) : amount;
+        let [intPart, deciPart] = amount.split('.', 2);
+        deciPart = deciPart || '';
+        if (deciPart.length < decimals) {
+            deciPart = deciPart + '0'.repeat(decimals - deciPart.length);
+        }
+        else {
+            deciPart = deciPart.substr(0, decimals);
+        }
+        return intPart + deciPart;
     }
 }
 exports.ChainUtils = ChainUtils;

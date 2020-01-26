@@ -13,7 +13,14 @@ export declare class ChainUtils {
     static simpleTransactionToServer(tx: SimpleTransferTransaction): ServerTransaction;
     static canonicalAddress(network: Network, address: string): string;
     static bufferToHex(buffer: ArrayBuffer): string;
+    /**
+     *  Converts to bigint, similar to fromWei
+     */
     static toDecimalStr(amount: any, decimals: number): string;
+    /**
+     * Converts a decimal to bigint, similar to toWei
+     */
+    static toBigIntStr(amount: string | number, decimals: number): string;
 }
 export declare function waitForTx(client: ChainClient, transactionId: string, waitTimeout: number, fetchTimeout: number): Promise<SimpleTransferTransaction | undefined>;
 export declare function normalizeBnbAmount(amount: string): number;

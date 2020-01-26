@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-import { BlockData, ChainClient, EcSignature, MultiChainConfig, NetworkStage, SignableTransaction, SimpleTransferTransaction } from "./types";
+import { BlockData, ChainClient, EcSignature, GasParameters, MultiChainConfig, NetworkStage, SignableTransaction, SimpleTransferTransaction } from "./types";
 import { HexString } from 'ferrum-plumbing';
 import { GasPriceProvider } from './GasPriceProvider';
 export declare class EthereumClient implements ChainClient {
@@ -20,15 +20,17 @@ export declare class EthereumClient implements ChainClient {
     getBlockByNumber(number: number): Promise<BlockData>;
     getBlockNumber(): Promise<number>;
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
-    processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, currency: string, amount: number): Promise<string>;
-    processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: string, amount: number, gasOverride: number): Promise<string>;
+    processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, currency: string, amount: number | string): Promise<string>;
+    processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: string, amount: number | string, gasOverride: number | GasParameters): Promise<string>;
+    private getGasLimit;
+    private getGas;
     private createSendTransaction;
     private createSendEth;
     signTransaction(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
     decodeSignature(sig: EcSignature): any;
     sign(skHex: HexString, data: HexString): Promise<EcSignature>;
     broadcastTransaction<T>(transaction: SignableTransaction): Promise<HexString>;
-    createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string, currency: any, amount: number, gasOverride?: number): Promise<SignableTransaction>;
+    createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string, currency: any, amount: number, gasOverride?: number | GasParameters): Promise<SignableTransaction>;
     /**
      * Note: This only returns incoming transactions to the given address and only works for ERC20 transactions
      */

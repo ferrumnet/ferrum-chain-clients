@@ -1,4 +1,4 @@
-import { BlockData, ChainClient, EcSignature, MultiChainConfig, NetworkStage, SignableTransaction, SimpleTransferTransaction } from './types';
+import { BlockData, ChainClient, EcSignature, GasParameters, MultiChainConfig, NetworkStage, SignableTransaction, SimpleTransferTransaction } from './types';
 import { HexString } from 'ferrum-plumbing';
 export declare class BinanceChainClient implements ChainClient {
     private networkStage;
@@ -11,7 +11,7 @@ export declare class BinanceChainClient implements ChainClient {
     getBalance(address: string, currency: string): Promise<number | undefined>;
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
     processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: any, amount: number, gasOverride: number): Promise<string>;
-    createPaymentTransaction(fromAddress: string, targetAddress: string, asset: any, payAmount: number, gasOverride?: number, memo?: string): Promise<SignableTransaction>;
+    createPaymentTransaction(fromAddress: string, targetAddress: string, asset: any, payAmount: number, gasOverride?: number | GasParameters, memo?: string): Promise<SignableTransaction>;
     signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
     broadcastTransaction<T>(transaction: SignableTransaction): Promise<string>;
     sign(skHex: HexString, data: HexString, forceLow?: boolean): Promise<EcSignature>;

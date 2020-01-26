@@ -40,6 +40,36 @@ test('toDecimal', () => {
     v = ChainUtils_1.ChainUtils.toDecimalStr(122020, 1);
     expect(v).toBe('12202.0');
 });
+test('toBigInt', () => {
+    let v = ChainUtils_1.ChainUtils.toBigIntStr(12.2020, 0);
+    expect(v).toBe('12');
+    v = ChainUtils_1.ChainUtils.toBigIntStr(12.2020, 2);
+    expect(v).toBe('1220');
+    v = ChainUtils_1.ChainUtils.toBigIntStr(12.2020, 4);
+    expect(v).toBe('122020');
+    v = ChainUtils_1.ChainUtils.toBigIntStr(12.2020, 8);
+    expect(v).toBe('1220200000');
+    v = ChainUtils_1.ChainUtils.toBigIntStr(12.2020, 12);
+    expect(v).toBe('12202000000000');
+    v = ChainUtils_1.ChainUtils.toBigIntStr(0.000001, 2);
+    expect(v).toBe('000');
+    v = ChainUtils_1.ChainUtils.toBigIntStr(0.000001, 12);
+    expect(v).toBe('0000001000000');
+    v = ChainUtils_1.ChainUtils.toBigIntStr('12.2020', 0);
+    expect(v).toBe('12');
+    v = ChainUtils_1.ChainUtils.toBigIntStr('12.2020', 2);
+    expect(v).toBe('1220');
+    v = ChainUtils_1.ChainUtils.toBigIntStr('12.2020', 4);
+    expect(v).toBe('122020');
+    v = ChainUtils_1.ChainUtils.toBigIntStr('12.2020', 8);
+    expect(v).toBe('1220200000');
+    v = ChainUtils_1.ChainUtils.toBigIntStr('12.2020', 12);
+    expect(v).toBe('12202000000000');
+    v = ChainUtils_1.ChainUtils.toBigIntStr('0.000001', 2);
+    expect(v).toBe('000');
+    v = ChainUtils_1.ChainUtils.toBigIntStr('0.000001', 12);
+    expect(v).toBe('0000001000000');
+});
 test('create a new address', () => __awaiter(void 0, void 0, void 0, function* () {
     const addr = yield TestnetConfig_1.testChainClientFactory().newAddress('ETHEREUM').newAddress();
     console.log(addr);

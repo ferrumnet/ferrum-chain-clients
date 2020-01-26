@@ -1,6 +1,6 @@
 import {
     BlockData,
-    ChainClient, EcSignature,
+    ChainClient, EcSignature, GasParameters,
     MultiChainConfig,
     NetworkStage,
     SignableTransaction,
@@ -88,8 +88,9 @@ export class BinanceChainClient implements ChainClient {
     }
 
     async createPaymentTransaction(fromAddress: string, targetAddress: string,
-                             asset: any, payAmount: number,
-                                   gasOverride?: number, memo?: string): Promise<SignableTransaction> {
+                                   asset: any, payAmount: number,
+                                   gasOverride?: number | GasParameters,
+                                   memo?: string): Promise<SignableTransaction> {
         const bigAmount = new Big(payAmount);
         const amount = Number(bigAmount.mul(BASENUMBER).toString());
         const signMsg = {

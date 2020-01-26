@@ -36,6 +36,9 @@ const ETH_DECIMALS = 18;
 function toDecimal(amount, decimals) {
     return Number(ChainUtils_1.ChainUtils.toDecimalStr(amount, decimals));
 }
+function toWei(decimals, amount) {
+    return new bn_js_1.default(ChainUtils_1.ChainUtils.toBigIntStr(amount, decimals));
+}
 class EthereumClient {
     constructor(networkStage, config, gasService) {
         this.networkStage = networkStage;
@@ -235,12 +238,45 @@ class EthereumClient {
             else {
                 const contract = this.contractAddresses[currency];
                 const decimal = this.decimals[currency];
-                const amountBN = web3_1.default.utils.toBN(Math.floor(amount * Math.pow(10, decimal)));
+                const amountBN = toWei(decimal, amount); // Web3.utils.toBN(Math.floor(amount * 10 ** decimal));
                 ferrum_plumbing_1.ValidationUtils.isTrue(!!contract, 'Unknown contract address for currency: ' + currency);
                 tx = yield this.createSendTransaction(contract, addressFrom.address, targetAddress, amountBN, gasOverride);
             }
             const signed = yield this.signTransaction(skHex, tx);
             return this.broadcastTransaction(signed);
+        });
+    }
+    getGasLimit(erc20, currency, targetBalance) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (erc20) {
+                return GasPriceProvider_1.EthereumGasPriceProvider.gasPriceForErc20(currency, targetBalance || 0);
+            }
+            else {
+                return GasPriceProvider_1.EthereumGasPriceProvider.ETH_TX_GAS;
+            }
+        });
+    }
+    getGas(erc20, currency, targetBalance, gasOverride) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!!gasOverride && typeof gasOverride === 'object') {
+                const go = gasOverride;
+                const gasLimit = go.gasLimit && Number.isFinite(Number(go.gasLimit)) ?
+                    Number(go.gasLimit) : yield this.getGasLimit(erc20, currency, targetBalance);
+                return [go.gasPrice, gasLimit];
+            }
+            const gasLimit = yield this.getGasLimit(erc20, currency, targetBalance);
+            if (erc20) {
+                let gasPrice = (gasOverride || 0) / gasLimit;
+                if (!gasOverride) {
+                    gasPrice = (yield this.gasService.getGasPrice()).medium;
+                }
+                return [gasPrice.toFixed(12), gasLimit];
+            }
+            let gasPrice = (gasOverride || 0) / gasLimit;
+            if (!gasOverride) {
+                gasPrice = (yield this.gasService.getGasPrice()).medium;
+            }
+            return [gasPrice.toFixed(12), gasLimit];
         });
     }
     createSendTransaction(contractAddress, from, to, amount, gasOverride) {
@@ -251,15 +287,11 @@ class EthereumClient {
             const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
             const targetBalance = yield this.getBalanceForContract(web3, to, contractAddress, 1);
             const addrInfo = this.findContractInfo(contractAddress);
-            const requiredGas = GasPriceProvider_1.EthereumGasPriceProvider.gasPriceForErc20(addrInfo.name, targetBalance || 0);
-            let gasPrice = (gasOverride || 0) / requiredGas;
-            if (!gasOverride) {
-                gasPrice = (yield this.gasService.getGasPrice()).medium;
-            }
+            const [gasPrice, gasLimit] = yield this.getGas(true, addrInfo.name, targetBalance || 0, gasOverride);
             const params = {
                 nonce: yield web3.eth.getTransactionCount(from, 'pending'),
-                gasPrice: Number(web3.utils.toWei(gasPrice.toFixed(12), 'ether')),
-                gasLimit: requiredGas,
+                gasPrice: Number(web3.utils.toWei(gasPrice, 'ether')),
+                gasLimit,
                 to: contractAddress,
                 value: 0,
                 data: myData,
@@ -276,18 +308,14 @@ class EthereumClient {
     createSendEth(from, to, amount, gasOverride) {
         return __awaiter(this, void 0, void 0, function* () {
             const web3 = new web3_1.default(new web3_1.default.providers.HttpProvider(this.provider));
-            let sendAmount = web3.utils.toWei(amount.toFixed(18), 'ether');
-            const requiredGas = GasPriceProvider_1.EthereumGasPriceProvider.ETH_TX_GAS;
-            let gasPrice = (gasOverride || 0) / requiredGas;
-            if (!gasOverride) {
-                gasPrice = (yield this.gasService.getGasPrice()).medium;
-            }
+            let sendAmount = toWei(ETH_DECIMALS, amount); // web3.utils.toWei(amount.toFixed(18), 'ether');
+            const [gasPrice, gasLimit] = yield this.getGas(false, 'ETH', 0, gasOverride);
             const params = {
                 nonce: yield web3.eth.getTransactionCount(from, 'pending'),
-                gasPrice: '0x' + new bn_js_1.default(web3.utils.toWei(gasPrice.toFixed(18), 'ether')).toString('hex'),
-                gasLimit: '0x' + new bn_js_1.default(GasPriceProvider_1.EthereumGasPriceProvider.ETH_TX_GAS).toString('hex'),
+                gasPrice: '0x' + new bn_js_1.default(web3.utils.toWei(gasPrice, 'ether')).toString('hex'),
+                gasLimit: '0x' + new bn_js_1.default(gasLimit).toString('hex'),
                 to: to,
-                value: '0x' + new bn_js_1.default(sendAmount).toString('hex'),
+                value: '0x' + sendAmount.toString('hex'),
                 data: '0x',
             };
             const tx = new ethereumjs_tx_1.Transaction(params, this.getChainOptions());
@@ -350,7 +378,7 @@ class EthereumClient {
             const decimal = this.decimals[currency];
             const amountBN = web3_1.default.utils.toBN(Math.floor(amount * Math.pow(10, decimal)));
             ferrum_plumbing_1.ValidationUtils.isTrue(!!contract, 'Unknown contract address for currency: ' + currency);
-            return this.createSendTransaction(contract, fromAddress, targetAddress, amountBN, gasOverride || 0);
+            return this.createSendTransaction(contract, fromAddress, targetAddress, amountBN, gasOverride);
         });
     }
     /**
