@@ -324,8 +324,14 @@ export class EthereumClient implements ChainClient {
     }
 
     async signTransaction(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction> {
-        ValidationUtils.isTrue(!!transaction.signableHex, 'transaction has no signable hex');
-        const sigHex = await this.sign(skHex, transaction.signableHex!);
+        let sigHex: EcSignature | undefined = undefined;
+        if (transaction.signature && transaction.signature.r) {
+            // transaction is already signed. Just apply the signature
+            sigHex = transaction.signature;
+        } else {
+            ValidationUtils.isTrue(!!transaction.signableHex, 'transaction has no signable hex');
+            sigHex = await this.sign(skHex, transaction.signableHex!);
+        }
         const tx = new Transaction('0x' + transaction.serializedTransaction, this.getChainOptions());
         // if (tx._implementsEIP155()) {
         //     sig.v += this.getChainId() * 2 + 8;

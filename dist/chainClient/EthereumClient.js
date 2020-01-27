@@ -330,8 +330,15 @@ class EthereumClient {
     }
     signTransaction(skHex, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            ferrum_plumbing_1.ValidationUtils.isTrue(!!transaction.signableHex, 'transaction has no signable hex');
-            const sigHex = yield this.sign(skHex, transaction.signableHex);
+            let sigHex = undefined;
+            if (transaction.signature && transaction.signature.r) {
+                // transaction is already signed. Just apply the signature
+                sigHex = transaction.signature;
+            }
+            else {
+                ferrum_plumbing_1.ValidationUtils.isTrue(!!transaction.signableHex, 'transaction has no signable hex');
+                sigHex = yield this.sign(skHex, transaction.signableHex);
+            }
             const tx = new ethereumjs_tx_1.Transaction('0x' + transaction.serializedTransaction, this.getChainOptions());
             // if (tx._implementsEIP155()) {
             //     sig.v += this.getChainId() * 2 + 8;
