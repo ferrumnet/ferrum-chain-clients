@@ -1,40 +1,41 @@
 import {SimpleTransferTransaction} from "../types";
-import {HexString} from "ferrum-plumbing";
+import {HexString, Network} from "ferrum-plumbing";
 // @ts-ignore
 import {decodeBnbRawTx} from 'bnb-tx-decoder';
 import {BINANCE_DECIMALS, normalizeBnbAmount} from "../ChainUtils";
 // @ts-ignore
 import BnbApiClient from '@binance-chain/javascript-sdk';
 
-function parseSingleItem(item: any) {
+function parseSingleItem(network: string, item: any) {
     const coin = item['coins'][0];
     const address = BnbApiClient.crypto.encodeAddress(item['address']);
     return {
         address,
-        currency: coin['denom'],
+        currency: network + ':' + coin['denom'],
         amount: normalizeBnbAmount(coin['amount']),
         decimals: BINANCE_DECIMALS,
     };
 }
 
-const txParserByType: { [k: string]: (tx: any) => SimpleTransferTransaction } = {
-  'MsgSend' : (tx: any) => {
-      const from = tx['inputs'] && tx['inputs'].length ? parseSingleItem(tx['inputs'][0]) : undefined;
-      const to = tx['outputs'] && tx['outputs'].length ? parseSingleItem(tx['outputs'][0]) : undefined;
+const txParserByType: { [k: string]: (network: string, tx: any) => SimpleTransferTransaction } = {
+  'MsgSend' : (network, tx) => {
+      const from = tx['inputs'] && tx['inputs'].length ? parseSingleItem(network, tx['inputs'][0]) : undefined;
+      const to = tx['outputs'] && tx['outputs'].length ? parseSingleItem(network, tx['outputs'][0]) : undefined;
       return {
-          from,
-          to,
+          fromItems: [from],
+          toItems: [to],
+          singleItem: true,
       } as SimpleTransferTransaction;
   }
 };
 
 export class BinanceTxParser {
-    public static parseFromHex(hex: HexString, blockTime: number, hash: string): SimpleTransferTransaction | undefined {
+    public static parseFromHex(network: string, feeCurrency: string, hex: HexString, blockTime: number, hash: string): SimpleTransferTransaction | undefined {
         const decoded = decodeBnbRawTx(hex);
-        return decoded ? BinanceTxParser.parseBnbTrabnsaction(decoded, blockTime, hash) : undefined;
+        return decoded ? BinanceTxParser.parseBnbTrabnsaction(network, feeCurrency, decoded, blockTime, hash) : undefined;
     }
 
-    private static parseBnbTrabnsaction(tx: any, blockTime: number, hash: string): SimpleTransferTransaction | undefined {
+    private static parseBnbTrabnsaction(network: string, feeCurrency: string, tx: any, blockTime: number, hash: string): SimpleTransferTransaction | undefined {
         const memo = tx['memo'];
         const msgs = tx['msg'];
         if (!msgs || !msgs.length) {
@@ -46,9 +47,10 @@ export class BinanceTxParser {
         if (!parser) {
             return undefined;
         }
-        const res = parser(msg);
+        const res = parser(network, msg);
         res.memo = memo;
-        res.network = 'BINANCE';
+        res.network = network as Network;
+        res.feeCurrency = feeCurrency;
         res.confirmed = true;
         res.confirmationTime = blockTime;
         res.creationTime = blockTime;

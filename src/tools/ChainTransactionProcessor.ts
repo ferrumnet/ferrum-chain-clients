@@ -1,6 +1,8 @@
 import {HexString, Injectable, Network, ValidationUtils} from 'ferrum-plumbing';
 import {ChainClientFactory} from '../chainClient/ChainClientFactory';
 import {SimpleTransferTransaction} from '../chainClient/types';
+import BN from 'bn.js';
+import {ChainUtils} from "../chainClient/ChainUtils";
 
 export class ChainTransactionProcessor implements Injectable {
     constructor(
@@ -8,10 +10,13 @@ export class ChainTransactionProcessor implements Injectable {
     ) {
     }
 
-    async checkAccountRemainingFundsForFee(network: Network, address: string, targetCurrency: string, requiredFee: number) {
+    async checkAccountRemainingFundsForFee(network: Network, address: string, targetCurrency: string, requiredFee: string) {
         const client = this.clientFactory.forNetwork(network);
-        const feeBal = await client.getBalance(address, client.feeCurrency()) || 0;
-        return Math.min(0, requiredFee - feeBal);
+        const feeBal = await client.getBalance(address, client.feeCurrency()) || '0';
+        const req = new BN(ChainUtils.toBigIntStr(requiredFee, client.feeDecimals()));
+        const bal = new BN(ChainUtils.toBigIntStr(feeBal, client.feeDecimals()));
+        const rem = req.sub(bal);
+        return rem.isNeg() ? '0' : ChainUtils.toDecimalStr(rem.toString(), client.feeDecimals());
     }
 
     async calculateTokenTransferFee(network: Network, targetCurrnecy: string) {
@@ -26,11 +31,11 @@ export class ChainTransactionProcessor implements Injectable {
         addressToBeFunded: string,
         targetCurrency: string,
         shouldWait: boolean,
-        feeAmount: number): Promise<SimpleTransferTransaction | string | undefined> {
+        feeAmount: string): Promise<SimpleTransferTransaction | string | undefined> {
         const transferFee = await this.calculateTokenTransferFee(network, targetCurrency);
         const remainingFee = await this.checkAccountRemainingFundsForFee(
             network, addressToBeFunded, targetCurrency, transferFee);
-        if (remainingFee > 0) {
+        if (remainingFee !== '0') {
             const client = this.clientFactory.forNetwork(network);
             // Transfer fee to address
             console.log('Transferring fee to address ', addressToBeFunded, remainingFee, client.feeCurrency());
@@ -54,8 +59,8 @@ export class ChainTransactionProcessor implements Injectable {
                         fromAddress: string,
                         toAddress: string,
                         currency: string,
-                        amount: number,
-                        requiredFee: number,
+                        amount: string,
+                        requiredFee: string,
                         shouldWait: boolean): Promise<SimpleTransferTransaction|string> {
         const remainingFee = await this.checkAccountRemainingFundsForFee(network, fromAddress, currency, requiredFee);
         ValidationUtils.isTrue(!remainingFee,
@@ -87,7 +92,7 @@ export class ChainTransactionProcessor implements Injectable {
                            fromAddress: string,
                            toAddress: string,
                            currency: string,
-                           amount: number) {
+                           amount: string) {
         const client = this.clientFactory.forNetwork(network);
         const fromBal = await client.getBalance(fromAddress, currency) || 0;
         ValidationUtils.isTrue(fromBal >= amount, `Sender '${fromAddress}' does not have enough balance. Required ${amount}, available: ${fromBal}`)

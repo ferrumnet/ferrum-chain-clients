@@ -7,6 +7,7 @@ export class RemoteClientWrapper implements ChainClient {
         this.broadcastTransaction = this.client.broadcastTransaction.bind(this.client);
         this.createPaymentTransaction = this.client.createPaymentTransaction.bind(this.client);
         this.feeCurrency = this.client.feeCurrency.bind(this.client);
+        this.feeDecimals = this.client.feeDecimals.bind(this.client);
         this.getBalance = this.client.getBalance.bind(this.client);
         this.getBlockByNumber = this.client.getBlockByNumber.bind(this.client);
         this.getBlockNumber = this.client.getBlockNumber.bind(this.client);
@@ -22,6 +23,7 @@ export class RemoteClientWrapper implements ChainClient {
     broadcastTransaction = this.client.broadcastTransaction;
     createPaymentTransaction = this.client.createPaymentTransaction;
     feeCurrency = this.client.feeCurrency;
+    feeDecimals = this.client.feeDecimals;
     getBalance = this.client.getBalance;
     getBlockByNumber = this.client.getBlockByNumber;
     getBlockNumber = this.client.getBlockNumber;

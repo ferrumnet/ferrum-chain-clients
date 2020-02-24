@@ -12,8 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const TestnetConfig_1 = require("../testUtils/configs/TestnetConfig");
 const ferrum_plumbing_1 = require("ferrum-plumbing");
 const ChainUtils_1 = require("./ChainUtils");
+const GasPriceProvider_1 = require("./GasPriceProvider");
 const clientFac = TestnetConfig_1.testChainClientFactory();
-function ethereumClientForTest() { return clientFac.forNetwork('ETHEREUM'); }
+function ethereumClientForTest() { return clientFac.forNetwork('RINKEBY'); }
 test('send tx', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);
@@ -77,8 +78,8 @@ test('create a new address', () => __awaiter(void 0, void 0, void 0, function* (
 test('send tx with overwritten gas', () => __awaiter(void 0, void 0, void 0, function* () {
     jest.setTimeout(10000000);
     const client = ethereumClientForTest();
-    const gas = 0.000333333;
-    const txId = yield client.processPaymentFromPrivateKeyWithGas(TestnetConfig_1.TEST_ACCOUNTS.mainAccountSk, TestnetConfig_1.TEST_ACCOUNTS.secondAccountAddress, 'FRM', 10, gas);
+    const gas = '0.000333333';
+    const txId = yield client.processPaymentFromPrivateKeyWithGas(TestnetConfig_1.TEST_ACCOUNTS.mainAccountSk, TestnetConfig_1.TEST_ACCOUNTS.secondAccountAddress, 'RINKEBY:' + TestnetConfig_1.TEST_FRM, '0.1', gas);
     console.log('Submitted tx ', txId, 'with custom gas ', gas);
     const tx = yield client.waitForTransaction(txId);
     console.log('Tx result ', tx);
@@ -104,9 +105,10 @@ test('Get transaction BY ID including GUSD transfer', function () {
         const client = TestnetConfig_1.ethereumClientForProd();
         const tx = yield client.getTransactionById(tid);
         const server = ChainUtils_1.ChainUtils.simpleTransactionToServer(tx);
+        console.log('Server tx', server);
         expect(tx).toBeTruthy();
         expect(tx.confirmed).toBe(true);
-        expect(tx.from.amount).toBe(0.2);
+        expect(tx.fromItems[0].amount).toBe('0.20');
         expect(Number(server.items[2].amount)).toBe(20);
     });
 });
@@ -138,7 +140,7 @@ test('Get token transactions BY address', function () {
         jest.setTimeout(100000);
         const addr = '0x89a39492ec912c0e3533db88672ecaad7bb92a82';
         const client = TestnetConfig_1.ethereumClientForProd();
-        const tx = yield client.getRecentTransactionsByAddress(addr);
+        const tx = yield client.getRecentTransactionsByAddress(addr, ['ETHEREUM:' + GasPriceProvider_1.FRM]);
         console.log(tx);
     });
 });
@@ -147,25 +149,44 @@ test('Get balance', function () {
         jest.setTimeout(100000);
         const addr = '0xbebe7881a7253c6c0246fabf4d159d2eb2db58e1';
         const client = TestnetConfig_1.ethereumClientForProd();
-        let bal = yield client.getBalance(addr, 'FRM');
+        let bal = yield client.getBalance(addr, 'ETHEREUM:' + GasPriceProvider_1.FRM);
         expect(bal).toBeTruthy();
         console.log('Balance is ', bal);
         let err;
         try {
-            yield client.getBalance(addr, 'RANDOM_TOK');
+            yield client.getBalance(addr, 'ETHEREUM:RANDOM_TOK');
         }
         catch (e) {
             err = e;
         }
         expect(err).toBeTruthy();
-        bal = yield client.getBalance(addr, 'ETH');
+        bal = yield client.getBalance(addr, 'ETHEREUM:ETH');
         console.log('Eth balance is ', bal);
         expect(bal).toBeTruthy();
     });
 });
-test('Get block by number', function () {
+test('Get erc20 transaction by id', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);
+        const txid = '0x20ff49c41e5f5daea28e02f694ae6a4bbef25b5ee653d2473eaac8cd959c3434';
+        const client = TestnetConfig_1.ethereumClientForProd();
+        const usdcTx = yield client.getTransactionById(txid);
+        expect(usdcTx.fromItems[0].amount).toBe('100.214618');
+        expect(usdcTx.fromItems[0].currency).toBe('ETHEREUM:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
+    });
+});
+test('Get another erc20 transaction by id', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(100000);
+        const txid = '0x94b46e2c81af39d2da3ed691ee08482d905dfaf8016d44a7565fb8d5acd7fa61';
+        const client = TestnetConfig_1.ethereumClientForProd();
+        const usdcTx = yield client.getTransactionById(txid);
+        expect(usdcTx.fromItems[0].amount).toBe('0');
+    });
+});
+test('Get block by number', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(10000000);
         const blockNo = 8825650;
         const client = TestnetConfig_1.ethereumClientForProd();
         const block = yield ferrum_plumbing_1.retry(() => __awaiter(this, void 0, void 0, function* () { return yield client.getBlockByNumber(blockNo); }));
@@ -175,25 +196,26 @@ test('Get block by number', function () {
         const usdcTx = block.transactions
             .find(t => t.id === '0x20ff49c41e5f5daea28e02f694ae6a4bbef25b5ee653d2473eaac8cd959c3434');
         console.log(ethTx, usdcTx);
-        expect(ethTx.from.amount).toBe(0.04);
-        expect(usdcTx.from.amount).toBe(100214618);
-        expect(usdcTx.from.currency).toBe('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
+        expect(ethTx.fromItems[0].amount).toBe('0.04');
+        expect(usdcTx.fromItems[0].amount).toBe('100.214618');
+        expect(usdcTx.fromItems[0].currency).toBe('ETHEREUM:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
     });
 });
 test('sen eth using ganache', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);
         const clientFact = TestnetConfig_1.testGanacheClientFactory();
-        const client = clientFact.forNetwork('ETHEREUM');
-        const sk = '6af7f508641153dedc1599547b681ad5770381de8be6bfa1d6f623db6918f49e';
-        const fromAddr = '0x0933Ccf2b714008a7F7FE3C227E3435e1682511f';
+        const network = 'ETHEREUM';
+        const client = clientFact.forNetwork(network);
+        const sk = '6e56b0ec570646d9a27b1e091987293a4cbc034520bc0e59f44edc04367f4b64';
+        const fromAddr = '0xAbf3fBC38b759C552Bf9C0eaffE5d2F4F09Aab0a';
         const addr = yield clientFact.newAddress('ETHEREUM').newAddress();
-        const tid = yield client.processPaymentFromPrivateKey(sk, addr.address, 'ETH', 0.1);
+        const tid = yield client.processPaymentFromPrivateKey(sk, addr.address, network + ':ETH', '0.1');
         yield ferrum_plumbing_1.sleep(1000);
         const tx = yield client.waitForTransaction(tid);
         expect(tx.confirmed).toBe(true);
         // Return the money
-        const tid2 = yield client.processPaymentFromPrivateKey(addr.privateKeyHex, fromAddr, 'ETH', 0.0991);
+        const tid2 = yield client.processPaymentFromPrivateKey(addr.privateKeyHex, fromAddr, network + ':ETH', '0.0991');
         const tx2 = yield client.waitForTransaction(tid2);
         expect(tx2.confirmed).toBe(true);
     });
@@ -201,8 +223,8 @@ test('sen eth using ganache', function () {
 test('Check transaction fee', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);
-        const eth = 0.001;
-        const gas = 0.0000001;
+        const eth = '0.001';
+        const gas = '0.0000001';
         const txId = yield sendEth(eth, gas);
         const clientFact = TestnetConfig_1.testGanacheClientFactory();
         const client = clientFact.forNetwork('ETHEREUM');
@@ -216,10 +238,11 @@ test('Check transaction fee', function () {
 function sendEth(eth, gas) {
     return __awaiter(this, void 0, void 0, function* () {
         const clientFact = TestnetConfig_1.testGanacheClientFactory();
-        const client = clientFact.forNetwork('ETHEREUM');
-        const sk = '6af7f508641153dedc1599547b681ad5770381de8be6bfa1d6f623db6918f49e';
+        const network = 'ETHEREUM';
+        const client = clientFact.forNetwork(network);
+        const sk = '6e56b0ec570646d9a27b1e091987293a4cbc034520bc0e59f44edc04367f4b64';
         const addr = yield clientFact.newAddress('ETHEREUM').newAddress();
-        const tid = yield client.processPaymentFromPrivateKeyWithGas(sk, addr.address, 'ETH', eth, gas);
+        const tid = yield client.processPaymentFromPrivateKeyWithGas(sk, addr.address, network + ':ETH', eth, gas);
         yield ferrum_plumbing_1.sleep(1000);
         const tx = yield client.waitForTransaction(tid);
         expect(tx.confirmed).toBe(true);

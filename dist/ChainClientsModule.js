@@ -19,11 +19,9 @@ class ChainClientsModule {
     configAsync(container) {
         return __awaiter(this, void 0, void 0, function* () {
             container.register(ChainClientFactory_1.ChainClientFactory, c => new ChainClientFactory_1.ChainClientFactory(c.get('MultiChainConfig'), c.get(GasPriceProvider_1.BinanceGasPriceProvider), c.get(GasPriceProvider_1.EthereumGasPriceProvider), c.get(CreateNewAddress_1.CreateNewAddressFactory)));
-            container.register(CreateNewAddress_1.BinanceChainAddress, c => new CreateNewAddress_1.BinanceChainAddress(c.get('MultiChainConfig')));
-            container.register(CreateNewAddress_1.EthereumAddress, c => new CreateNewAddress_1.EthereumAddress(c.get('MultiChainConfig')));
             container.register(GasPriceProvider_1.BinanceGasPriceProvider, c => new GasPriceProvider_1.BinanceGasPriceProvider());
             container.register(GasPriceProvider_1.EthereumGasPriceProvider, c => new GasPriceProvider_1.EthereumGasPriceProvider());
-            container.register(CreateNewAddress_1.CreateNewAddressFactory, c => new CreateNewAddress_1.CreateNewAddressFactory(c.get(CreateNewAddress_1.BinanceChainAddress), c.get(CreateNewAddress_1.EthereumAddress)));
+            container.register(CreateNewAddress_1.CreateNewAddressFactory, c => new CreateNewAddress_1.CreateNewAddressFactory());
         });
     }
 }

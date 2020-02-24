@@ -2,23 +2,26 @@ import fetch from "cross-fetch";
 import {Injectable} from 'ferrum-plumbing';
 import Web3 from 'web3';
 import BN from 'bn.js';
+import {ChainUtils} from "./ChainUtils";
+
+export const FRM = '0xe5caef4af8780e59df925470b050fb23c43ca68c';
 
 export interface EthGasPrice {
-    low: number;
-    medium: number;
-    high: number;
+    low: string;
+    medium: string;
+    high: string;
 }
 
 export interface GasPriceProvider {
     getGasPrice(): Promise<EthGasPrice>;
-    getTransactionGas(currency: string, gasPrice: number, currentTargetBalance?: number): number;
+    getTransactionGas(currency: string, gasPrice: string, currentTargetBalance?: string): string;
 }
 
 function gweiToEth(gweiNum: number) {
-    return Number(Web3.utils.fromWei(Web3.utils.toWei(new BN(gweiNum), 'gwei'), 'ether'));
+    return Web3.utils.fromWei(Web3.utils.toWei(new BN(gweiNum), 'gwei'), 'ether');
 }
 
-export const BINANCE_FEE = 0.000375;
+export const BINANCE_FEE = '0.000375';
 
 export class BinanceGasPriceProvider implements GasPriceProvider, Injectable {
     async getGasPrice(): Promise<EthGasPrice> {
@@ -29,7 +32,7 @@ export class BinanceGasPriceProvider implements GasPriceProvider, Injectable {
         };
     }
 
-    getTransactionGas(currency: string, _: number, __?: number) {
+    getTransactionGas(currency: string, _: string, __?: string) {
         return BINANCE_FEE;
     }
 
@@ -49,17 +52,18 @@ export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
     private static ERC_20_GAS_ZERO_ACCOUNT = 150000; // TODO: Adjust based on previous transactoins
     private static ERC_20_GAS_NON_ZERO_ACCOUNT = 80000;
     private static ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR: any = {
-        'FRM': 52595,
+        FRM: 52595,
     };
     private static ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR: any = {
-        'FRM': 36693,
+        FRM: 36693,
     };
 
-    static gasPriceForErc20(currency: string, balance: number): number {
-        if (balance === 0) {
-            return EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR[currency] || EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+    static gasLimiForErc20(currency: string, balance: string): number {
+        const tok = ChainUtils.tokenPart(currency);
+        if (Number(balance) === 0) {
+            return EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR[tok] || EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
         }
-        return EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR[currency] || EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT;
+        return EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR[tok] || EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT;
     }
 
     async getGasPrice(): Promise<EthGasPrice> {
@@ -80,10 +84,11 @@ export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
         return this.lastPrice;
     }
 
-    getTransactionGas(currency: string, gasPrice: number, currentTargetBalance?: number) {
-        const gasAmount = currency === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
-                EthereumGasPriceProvider.gasPriceForErc20(currency, currentTargetBalance || 0);
-        return gasAmount * gasPrice;
+    getTransactionGas(currency: string, gasPrice: string, currentTargetBalance?: string) {
+        const tok = ChainUtils.tokenPart(currency);
+        const gasAmount = tok === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
+                EthereumGasPriceProvider.gasLimiForErc20(currency, currentTargetBalance || '0');
+        return new BN(gasAmount).mul(new BN(gasPrice)).toString();
     }
 
     __name__(): string {

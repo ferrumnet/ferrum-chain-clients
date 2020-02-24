@@ -20,7 +20,7 @@ async function testSendTokenInTestnet(network: Network, sendAddr: string, curren
     let addrBal = await client.getBalance(newAddr.address, currency) || 0;
     expect(addrBal).toBe(0);
 
-    const txId = await client.processPaymentFromPrivateKey(TEST_ACCOUNTS.mainAccountSk, newAddr.address, currency, 10);
+    const txId = await client.processPaymentFromPrivateKey(TEST_ACCOUNTS.mainAccountSk, newAddr.address, currency, '10');
     const sendTx = await client.waitForTransaction(txId);
     expect(sendTx!.confirmed).toBe(true);
     addrBal = await client.getBalance(newAddr.address, currency) || 0;
@@ -30,7 +30,7 @@ async function testSendTokenInTestnet(network: Network, sendAddr: string, curren
     const tool = new ChainTransactionProcessor(clientFact);
     const txs = await tool.sendTokenUsingSk(
         network, TEST_ACCOUNTS.mainAccountSk, newAddr.privateKeyHex, newAddr.address,
-        sendAddr, currency, 10);
+        sendAddr, currency, '10');
     console.log('tool.sendTokenUsingSk', txs);
     // Send some FRM to the new address.
     addrBal = await client.getBalance(newAddr.address, currency) || 0;

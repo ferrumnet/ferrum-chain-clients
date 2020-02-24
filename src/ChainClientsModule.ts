@@ -14,12 +14,8 @@ export class ChainClientsModule implements Module {
             c.get(BinanceGasPriceProvider),
             c.get(EthereumGasPriceProvider),
             c.get(CreateNewAddressFactory),));
-        container.register(BinanceChainAddress, c => new BinanceChainAddress(c.get('MultiChainConfig')));
-        container.register(EthereumAddress, c => new EthereumAddress(c.get('MultiChainConfig')));
         container.register(BinanceGasPriceProvider, c => new BinanceGasPriceProvider());
         container.register(EthereumGasPriceProvider, c => new EthereumGasPriceProvider());
-        container.register(CreateNewAddressFactory, c => new CreateNewAddressFactory(
-            c.get(BinanceChainAddress),
-            c.get(EthereumAddress)));
+        container.register(CreateNewAddressFactory, c => new CreateNewAddressFactory());
     }
 }

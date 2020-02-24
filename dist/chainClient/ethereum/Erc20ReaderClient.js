@@ -19,6 +19,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const abi = __importStar(require("../../resources/erc20-abi.json"));
 const ContractClientBase_1 = require("./ContractClientBase");
 const ferrum_plumbing_1 = require("ferrum-plumbing");
+const ChainUtils_1 = require("../ChainUtils");
 class Erc20ReaderClient extends ContractClientBase_1.ContractClientBase {
     constructor(client, contract) {
         super(client, contract, abi.abi);
@@ -63,7 +64,7 @@ class Erc20ReaderClient extends ContractClientBase_1.ContractClientBase {
                 return undefined;
             }
             const decimals = yield this.decimals();
-            return raw / (Math.pow(10, decimals));
+            return ChainUtils_1.ChainUtils.toDecimalStr(raw, decimals);
         });
     }
     amountToRaw(amount) {
@@ -72,7 +73,7 @@ class Erc20ReaderClient extends ContractClientBase_1.ContractClientBase {
                 return undefined;
             }
             const decimals = yield this.decimals();
-            return amount * (Math.pow(10, decimals));
+            return ChainUtils_1.ChainUtils.toBigIntStr(amount, decimals);
         });
     }
 }

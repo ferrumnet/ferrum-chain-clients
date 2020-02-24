@@ -2,6 +2,7 @@ import {EthereumClient} from '../EthereumClient';
 import * as abi from '../../resources/erc20-abi.json';
 import {ContractClientBase} from './ContractClientBase';
 import {Injectable, TypeUtils} from 'ferrum-plumbing';
+import {ChainUtils} from "../ChainUtils";
 
 export class Erc20ReaderClient extends ContractClientBase implements Injectable {
     private _decimals: number | undefined;
@@ -27,35 +28,35 @@ export class Erc20ReaderClient extends ContractClientBase implements Injectable 
         return TypeUtils.meomize<number>(this, '_symbol', () => this.call(m => m.symbol()));
     }
 
-    async totalSupply(): Promise<number> {
+    async totalSupply(): Promise<string> {
         const total = await TypeUtils.meomize<number>(this, '_totalSupply',
             () => this.call(m => m.totalSupply()));
         return (await this.rawToAmount(total))!;
     }
 
-    public async balanceOf(address: string): Promise<number|undefined> {
+    public async balanceOf(address: string): Promise<string|undefined> {
         const bal = await this.call(m => m.balanceOf(address));
         return this.rawToAmount(bal);
     }
 
-    public async allowance(owner: string, spender: string): Promise<number|undefined> {
+    public async allowance(owner: string, spender: string): Promise<string|undefined> {
         const allow = await this.call(m => m.allowance(owner, spender));
         return this.rawToAmount(allow);
     }
 
-    private async rawToAmount(raw?: number) {
-        if (!raw) {
-            return undefined;
+    private async rawToAmount(raw?: string) {
+            if (!raw) {
+                return undefined;
+            }
+            const decimals = await this.decimals();
+            return ChainUtils.toDecimalStr(raw, decimals);
         }
-        const decimals = await this.decimals();
-        return raw / (Math.pow(10, decimals));
-    }
 
-    private async amountToRaw(amount?: number) {
-        if (!amount) {
-            return undefined;
+    private async amountToRaw(amount?: string) {
+            if (!amount) {
+                return undefined;
+            }
+            const decimals = await this.decimals();
+            return ChainUtils.toBigIntStr(amount, decimals);
         }
-        const decimals = await this.decimals();
-        return amount * (Math.pow(10, decimals));
     }
-}

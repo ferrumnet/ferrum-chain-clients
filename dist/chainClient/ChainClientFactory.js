@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const EthereumClient_1 = require("./EthereumClient");
 const BinanceChainClient_1 = require("./BinanceChainClient");
 const RemoteClientWrapper_1 = require("./remote/RemoteClientWrapper");
+const FullEthereumClient_1 = require("./ethereum/FullEthereumClient");
 class ChainClientFactory {
     constructor(localConfig, binanceGasProvider, ethGasProvider, newAddressFactory, remoteSigner) {
         this.localConfig = localConfig;
@@ -22,11 +22,21 @@ class ChainClientFactory {
                     this.bnbClient = new BinanceChainClient_1.BinanceChainClient(this.networkStage, this.localConfig);
                 }
                 return this.wrap(this.bnbClient, 'BINANCE');
+            case 'BINANCE_TESTNET':
+                if (!this.bnbClientTestnet) {
+                    this.bnbClientTestnet = new BinanceChainClient_1.BinanceChainClient('test', this.localConfig);
+                }
+                return this.wrap(this.bnbClientTestnet, 'BINANCE_TESTNET');
             case 'ETHEREUM':
                 if (!this.ethClient) {
-                    this.ethClient = new EthereumClient_1.EthereumClient(this.networkStage, this.localConfig, this.ethGasProvider);
+                    this.ethClient = new FullEthereumClient_1.FullEthereumClient('prod', this.localConfig, this.ethGasProvider);
                 }
                 return this.wrap(this.ethClient, 'ETHEREUM');
+            case 'RINKEBY':
+                if (!this.rinkebyClient) {
+                    this.rinkebyClient = new FullEthereumClient_1.FullEthereumClient('test', this.localConfig, this.ethGasProvider);
+                }
+                return this.wrap(this.rinkebyClient, 'RINKEBY');
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);
         }
@@ -38,7 +48,11 @@ class ChainClientFactory {
         switch (network) {
             case 'BINANCE':
                 return this.binanceGasProvider;
+            case 'BINANCE_TESTNET':
+                return this.binanceGasProvider;
             case 'ETHEREUM':
+                return this.ethGasProvider;
+            case 'RINKEBY':
                 return this.ethGasProvider;
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);

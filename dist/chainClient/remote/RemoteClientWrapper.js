@@ -8,6 +8,7 @@ class RemoteClientWrapper {
         this.broadcastTransaction = this.client.broadcastTransaction;
         this.createPaymentTransaction = this.client.createPaymentTransaction;
         this.feeCurrency = this.client.feeCurrency;
+        this.feeDecimals = this.client.feeDecimals;
         this.getBalance = this.client.getBalance;
         this.getBlockByNumber = this.client.getBlockByNumber;
         this.getBlockNumber = this.client.getBlockNumber;
@@ -20,6 +21,7 @@ class RemoteClientWrapper {
         this.broadcastTransaction = this.client.broadcastTransaction.bind(this.client);
         this.createPaymentTransaction = this.client.createPaymentTransaction.bind(this.client);
         this.feeCurrency = this.client.feeCurrency.bind(this.client);
+        this.feeDecimals = this.client.feeDecimals.bind(this.client);
         this.getBalance = this.client.getBalance.bind(this.client);
         this.getBlockByNumber = this.client.getBlockByNumber.bind(this.client);
         this.getBlockNumber = this.client.getBlockNumber.bind(this.client);

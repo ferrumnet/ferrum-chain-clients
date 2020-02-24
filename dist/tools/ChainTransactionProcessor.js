@@ -8,8 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const ferrum_plumbing_1 = require("ferrum-plumbing");
+const bn_js_1 = __importDefault(require("bn.js"));
+const ChainUtils_1 = require("../chainClient/ChainUtils");
 class ChainTransactionProcessor {
     constructor(clientFactory) {
         this.clientFactory = clientFactory;
@@ -17,8 +22,11 @@ class ChainTransactionProcessor {
     checkAccountRemainingFundsForFee(network, address, targetCurrency, requiredFee) {
         return __awaiter(this, void 0, void 0, function* () {
             const client = this.clientFactory.forNetwork(network);
-            const feeBal = (yield client.getBalance(address, client.feeCurrency())) || 0;
-            return Math.min(0, requiredFee - feeBal);
+            const feeBal = (yield client.getBalance(address, client.feeCurrency())) || '0';
+            const req = new bn_js_1.default(ChainUtils_1.ChainUtils.toBigIntStr(requiredFee, client.feeDecimals()));
+            const bal = new bn_js_1.default(ChainUtils_1.ChainUtils.toBigIntStr(feeBal, client.feeDecimals()));
+            const rem = req.sub(bal);
+            return rem.isNeg() ? '0' : ChainUtils_1.ChainUtils.toDecimalStr(rem.toString(), client.feeDecimals());
         });
     }
     calculateTokenTransferFee(network, targetCurrnecy) {
@@ -32,7 +40,7 @@ class ChainTransactionProcessor {
         return __awaiter(this, void 0, void 0, function* () {
             const transferFee = yield this.calculateTokenTransferFee(network, targetCurrency);
             const remainingFee = yield this.checkAccountRemainingFundsForFee(network, addressToBeFunded, targetCurrency, transferFee);
-            if (remainingFee > 0) {
+            if (remainingFee !== '0') {
                 const client = this.clientFactory.forNetwork(network);
                 // Transfer fee to address
                 console.log('Transferring fee to address ', addressToBeFunded, remainingFee, client.feeCurrency());

@@ -11,7 +11,7 @@ export abstract class ContractClientBase {
 
     protected async call(methodFun: (m: any) => any, ) {
         const web3 = this.web3();
-        let erc20Contract = new web3.eth.Contract(abi.abi, this.contract);
+        let erc20Contract = new web3.eth.Contract(abi.abi as any, this.contract);
         return await methodFun(erc20Contract.methods).call();
     }
 

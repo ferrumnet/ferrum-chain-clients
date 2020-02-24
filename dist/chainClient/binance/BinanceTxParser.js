@@ -8,32 +8,33 @@ const bnb_tx_decoder_1 = require("bnb-tx-decoder");
 const ChainUtils_1 = require("../ChainUtils");
 // @ts-ignore
 const javascript_sdk_1 = __importDefault(require("@binance-chain/javascript-sdk"));
-function parseSingleItem(item) {
+function parseSingleItem(network, item) {
     const coin = item['coins'][0];
     const address = javascript_sdk_1.default.crypto.encodeAddress(item['address']);
     return {
         address,
-        currency: coin['denom'],
+        currency: network + ':' + coin['denom'],
         amount: ChainUtils_1.normalizeBnbAmount(coin['amount']),
         decimals: ChainUtils_1.BINANCE_DECIMALS,
     };
 }
 const txParserByType = {
-    'MsgSend': (tx) => {
-        const from = tx['inputs'] && tx['inputs'].length ? parseSingleItem(tx['inputs'][0]) : undefined;
-        const to = tx['outputs'] && tx['outputs'].length ? parseSingleItem(tx['outputs'][0]) : undefined;
+    'MsgSend': (network, tx) => {
+        const from = tx['inputs'] && tx['inputs'].length ? parseSingleItem(network, tx['inputs'][0]) : undefined;
+        const to = tx['outputs'] && tx['outputs'].length ? parseSingleItem(network, tx['outputs'][0]) : undefined;
         return {
-            from,
-            to,
+            fromItems: [from],
+            toItems: [to],
+            singleItem: true,
         };
     }
 };
 class BinanceTxParser {
-    static parseFromHex(hex, blockTime, hash) {
+    static parseFromHex(network, feeCurrency, hex, blockTime, hash) {
         const decoded = bnb_tx_decoder_1.decodeBnbRawTx(hex);
-        return decoded ? BinanceTxParser.parseBnbTrabnsaction(decoded, blockTime, hash) : undefined;
+        return decoded ? BinanceTxParser.parseBnbTrabnsaction(network, feeCurrency, decoded, blockTime, hash) : undefined;
     }
-    static parseBnbTrabnsaction(tx, blockTime, hash) {
+    static parseBnbTrabnsaction(network, feeCurrency, tx, blockTime, hash) {
         const memo = tx['memo'];
         const msgs = tx['msg'];
         if (!msgs || !msgs.length) {
@@ -45,9 +46,10 @@ class BinanceTxParser {
         if (!parser) {
             return undefined;
         }
-        const res = parser(msg);
+        const res = parser(network, msg);
         res.memo = memo;
-        res.network = 'BINANCE';
+        res.network = network;
+        res.feeCurrency = feeCurrency;
         res.confirmed = true;
         res.confirmationTime = blockTime;
         res.creationTime = blockTime;

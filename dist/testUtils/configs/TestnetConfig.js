@@ -9,10 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const EthereumClient_1 = require("../../chainClient/EthereumClient");
 const GasPriceProvider_1 = require("../../chainClient/GasPriceProvider");
-const __1 = require("../..");
 const CreateNewAddress_1 = require("../../chainClient/CreateNewAddress");
+const FullEthereumClient_1 = require("../../chainClient/ethereum/FullEthereumClient");
+const BinanceChainClient_1 = require("../../chainClient/BinanceChainClient");
+const ChainClientFactory_1 = require("../../chainClient/ChainClientFactory");
 exports.TEST_ACCOUNTS = {
     mainAccountSk: '3C6681B912ABEA03AB2D625759FE38E9BC7301120C13CFA3A3217112A3F2A919',
     mainAccountAddress: '0x0D959c295E36c140AB766dC12E21eBBB411Bd611',
@@ -20,50 +21,40 @@ exports.TEST_ACCOUNTS = {
     secondAccountSk: 'ec2a2b02f465f7e77d1b6128c564748eee8bdca22cce008dbce4e6dc1a44d993',
     secondAccountAddress: '0x8017877A1C06efbc7f444AC709119C1e209F26Ee',
 };
+exports.TEST_FRM = '0x93698a057cec27508a9157a946e03e277b46fe56';
+exports.TEST_GUSD = '0x056fd409e1d7a124bd7017459dfea2f387b6d5cd';
 exports.TESTNET_CONFIG = {
     binanceChainUrl: 'https://testnet-dex.binance.org',
     networkStage: 'test',
-    contractAddresses: {
-        'FRM': '0x93698a057cec27508a9157a946e03e277b46fe56',
-    },
-    contractDecimals: {
-        'FRM': 6,
-    },
-    web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
+    web3Provider: '',
+    web3ProviderRinkeby: 'https://rinkeby.infura.io/v3/637d6212c3de438c845e2544baad58b7',
     binanceChainSeedNode: 'https://data-seed-pre-0-s3.binance.org',
     requiredEthConfirmations: 0,
 };
-exports.GANACHE_CONFIG = Object.assign(Object.assign({}, exports.TESTNET_CONFIG), { web3Provider: 'http://localhost:7545' });
+exports.GANACHE_CONFIG = Object.assign(Object.assign({}, exports.TESTNET_CONFIG), { web3Provider: 'http://localhost:7545', web3ProviderRinkeby: 'http://localhost:7545' });
 const TEST_PROD_CONFIG = {
-    web3Provider: 'https://mainnet.infura.io/v3/2b1dbb61817f4ae6ac90d9b41662993b',
-    contractAddresses: {
-        FRM: '0xe5caef4af8780e59df925470b050fb23c43ca68c',
-        GUSD: '0x056fd409e1d7a124bd7017459dfea2f387b6d5cd',
-    },
-    contractDecimals: {
-        FRM: 6,
-        GUSD: 2,
-    },
+    web3Provider: 'https://mainnet.infura.io/v3/637d6212c3de438c845e2544baad58b7',
+    web3ProviderRinkeby: 'https://rinkeby.infura.io/v3/637d6212c3de438c845e2544baad58b7',
     binanceChainUrl: 'https://dex.binance.org',
     binanceChainSeedNode: '',
     networkStage: 'test',
 };
 function ethereumClientForProd() {
-    return new EthereumClient_1.EthereumClient('prod', TEST_PROD_CONFIG, new GasPriceProvider_1.EthereumGasPriceProvider());
+    return new FullEthereumClient_1.FullEthereumClient('prod', TEST_PROD_CONFIG, new GasPriceProvider_1.EthereumGasPriceProvider());
 }
 exports.ethereumClientForProd = ethereumClientForProd;
 function binanceClientForProd() {
-    return new __1.BinanceChainClient('prod', TEST_PROD_CONFIG);
+    return new BinanceChainClient_1.BinanceChainClient('prod', TEST_PROD_CONFIG);
 }
 exports.binanceClientForProd = binanceClientForProd;
 function testChainClientFactory() {
-    return new __1.ChainClientFactory(exports.TESTNET_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new GasPriceProvider_1.EthereumGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(new CreateNewAddress_1.BinanceChainAddress(exports.TESTNET_CONFIG), new CreateNewAddress_1.EthereumAddress(exports.TESTNET_CONFIG)));
+    return new ChainClientFactory_1.ChainClientFactory(exports.TESTNET_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new GasPriceProvider_1.EthereumGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory());
 }
 exports.testChainClientFactory = testChainClientFactory;
 class DummyGasPriceProvider extends GasPriceProvider_1.EthereumGasPriceProvider {
     getGasPrice() {
         return __awaiter(this, void 0, void 0, function* () {
-            const gwei = 0.000000001;
+            const gwei = '0.000000001';
             return { high: gwei, low: gwei, medium: gwei };
         });
     }
@@ -72,7 +63,7 @@ class DummyGasPriceProvider extends GasPriceProvider_1.EthereumGasPriceProvider 
     }
 }
 function testGanacheClientFactory() {
-    return new __1.ChainClientFactory(exports.GANACHE_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new DummyGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(new CreateNewAddress_1.BinanceChainAddress(exports.TESTNET_CONFIG), new CreateNewAddress_1.EthereumAddress(exports.GANACHE_CONFIG)));
+    return new ChainClientFactory_1.ChainClientFactory(exports.GANACHE_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new DummyGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory());
 }
 exports.testGanacheClientFactory = testGanacheClientFactory;
 //# sourceMappingURL=TestnetConfig.js.map

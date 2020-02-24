@@ -23,14 +23,14 @@ function testSendTokenInTestnet(network, sendAddr, currency) {
         // Send some FRM to the new address.
         let addrBal = (yield client.getBalance(newAddr.address, currency)) || 0;
         expect(addrBal).toBe(0);
-        const txId = yield client.processPaymentFromPrivateKey(TestnetConfig_1.TEST_ACCOUNTS.mainAccountSk, newAddr.address, currency, 10);
+        const txId = yield client.processPaymentFromPrivateKey(TestnetConfig_1.TEST_ACCOUNTS.mainAccountSk, newAddr.address, currency, '10');
         const sendTx = yield client.waitForTransaction(txId);
         expect(sendTx.confirmed).toBe(true);
         addrBal = (yield client.getBalance(newAddr.address, currency)) || 0;
         expect(addrBal).toBe(10);
         // Sweep
         const tool = new ChainTransactionProcessor_1.ChainTransactionProcessor(clientFact);
-        const txs = yield tool.sendTokenUsingSk(network, TestnetConfig_1.TEST_ACCOUNTS.mainAccountSk, newAddr.privateKeyHex, newAddr.address, sendAddr, currency, 10);
+        const txs = yield tool.sendTokenUsingSk(network, TestnetConfig_1.TEST_ACCOUNTS.mainAccountSk, newAddr.privateKeyHex, newAddr.address, sendAddr, currency, '10');
         console.log('tool.sendTokenUsingSk', txs);
         // Send some FRM to the new address.
         addrBal = (yield client.getBalance(newAddr.address, currency)) || 0;

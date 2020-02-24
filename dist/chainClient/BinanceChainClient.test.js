@@ -18,25 +18,19 @@ const BinanceChainClient_1 = require("./BinanceChainClient");
 const TestnetConfig_1 = require("../testUtils/configs/TestnetConfig");
 const conf = {
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
-    contractAddresses: {
-        'FRM': '',
-    },
-    contractDecimals: {
-        'FRM': 6,
-    },
     binanceChainUrl: 'https://testnet-dex.binance.org',
     binanceChainSeedNode: 'https://data-seed-pre-0-s3.binance.org',
     networkStage: 'test',
 };
-const CURRENCY = 'FRM-410';
+const CURRENCY = 'BINANCE_TESTNET:FRM-410';
 test('send tx', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(1000000);
         const client = new BinanceChainClient_1.BinanceChainClient('test', conf);
         const privateKey = 'e0d33c540f7eff1d20a1de049236542fd2d21a365e42e01b0a416f93aa078890';
         const to = 'tbnb136zj94xtalc7tp6pcp73r4zx9csdh8cyn7re2d';
-        const currency = 'FRM-410';
-        const txId = yield client.processPaymentFromPrivateKey(privateKey, to, currency, 0.001);
+        const currency = 'BINANCE_TESTNET:FRM-410';
+        const txId = yield client.processPaymentFromPrivateKey(privateKey, to, currency, '0.001');
         console.log('Sent tx', txId);
     });
 });
@@ -70,12 +64,12 @@ test('ppk', () => __awaiter(void 0, void 0, void 0, function* () {
 test('get balance', () => __awaiter(void 0, void 0, void 0, function* () {
     const address = 'tbnb136zj94xtalc7tp6pcp73r4zx9csdh8cyn7re2d';
     const client = new BinanceChainClient_1.BinanceChainClient('test', conf);
-    let bal = yield client.getBalance(address, 'RANDOM_TOK');
+    let bal = yield client.getBalance(address, 'BINANCE_TESTNET:RANDOM_TOK');
     expect(bal).toBeUndefined();
     bal = yield client.getBalance(address, CURRENCY);
     expect(bal).toBeTruthy();
     console.log('Balance was ', bal);
-    bal = yield client.getBalance(address, 'BNB');
+    bal = yield client.getBalance(address, 'BINANCE_TESTNET:BNB');
     expect(bal).toBeTruthy();
     console.log('Balance was ', bal);
 }));
@@ -87,9 +81,9 @@ test('get block prod', function () {
         const block = yield client.getBlockByNumber(44395899);
         console.log(block);
         const tx = block.transactions[0];
-        expect(tx.from.amount).toBe(0.0001);
-        expect(tx.from.currency).toBe('BNB');
-        expect(tx.fee).toBe(0.000375);
+        expect(tx.fromItems[0].amount).toBe('0.00010000');
+        expect(tx.fromItems[0].currency).toBe('BINANCE:BNB');
+        expect(tx.fee).toBe('0.00037500');
     });
 });
 test('get block test', function () {
@@ -100,12 +94,12 @@ test('get block test', function () {
         // const block = await client.getBlockByNumber(49483742);
         console.log(block);
         const tx = block.transactions[0];
-        expect(tx.from.address).toBe('tbnb1zqs84eg34kur74uhs6x6m0ketawgtf4nqcj27j');
-        expect(tx.to.address).toBe('tbnb189az9plcke2c00vns0zfmllfpfdw67dtv25kgx');
-        expect(tx.from.amount).toBe(0.00000001);
-        expect(tx.to.amount).toBe(0.00000001);
-        expect(tx.from.currency).toBe('BNB');
-        expect(tx.fee).toBe(0.000375);
+        expect(tx.fromItems[0].address).toBe('tbnb1zqs84eg34kur74uhs6x6m0ketawgtf4nqcj27j');
+        expect(tx.toItems[0].address).toBe('tbnb189az9plcke2c00vns0zfmllfpfdw67dtv25kgx');
+        expect(tx.fromItems[0].amount).toBe('0.00000001');
+        expect(tx.toItems[0].amount).toBe('0.00000001');
+        expect(tx.fromItems[0].currency).toBe('BINANCE_TESTNET:BNB');
+        expect(tx.fee).toBe('0.000375');
         expect(tx.memo).toBe('Test transaction');
     });
 });

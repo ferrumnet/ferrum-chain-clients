@@ -14,10 +14,10 @@ test('Can get gas price ', () => __awaiter(void 0, void 0, void 0, function* () 
     const gpp = new GasPriceProvider_1.EthereumGasPriceProvider();
     const price = yield gpp.getGasPrice();
     console.log(price);
-    expect(price.high).toBeGreaterThan(0);
-    expect(price.high).toBeLessThan(1);
-    expect(price.low).toBeGreaterThan(0);
-    expect(price.low).toBeLessThan(1);
-    expect(price.low).toBeGreaterThan(0);
+    expect(Number(price.high)).toBeGreaterThan(0);
+    expect(Number(price.high)).toBeLessThan(1);
+    expect(Number(price.low)).toBeGreaterThan(0);
+    expect(Number(price.low)).toBeLessThan(1);
+    expect(Number(price.low)).toBeGreaterThan(0);
 }));
 //# sourceMappingURL=GasPriceProvider.test.js.map

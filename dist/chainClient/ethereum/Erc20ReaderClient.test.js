@@ -11,13 +11,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const TestnetConfig_1 = require("../../testUtils/configs/TestnetConfig");
 const Erc20ReaderClient_1 = require("./Erc20ReaderClient");
+const GasPriceProvider_1 = require("../GasPriceProvider");
 const clientFac = TestnetConfig_1.testChainClientFactory();
 test('Read FRM info', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);
         const ethC = clientFac.forNetwork('ETHEREUM');
-        const erc20 = new Erc20ReaderClient_1.Erc20ReaderClient(ethC, TestnetConfig_1.TESTNET_CONFIG.contractAddresses['FRM']);
-        const totalSuppy = yield erc20.totalSupply();
+        const erc20 = new Erc20ReaderClient_1.Erc20ReaderClient(ethC, GasPriceProvider_1.FRM);
+        const totalSuppy = Number(yield erc20.totalSupply());
         console.log('Total supply', totalSuppy);
         expect(totalSuppy).toBeGreaterThan(1000);
         expect(totalSuppy).toBeLessThan(350000000);

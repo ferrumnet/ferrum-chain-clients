@@ -1,9 +1,8 @@
 import {HexString, Network, sleep, ValidationUtils} from 'ferrum-plumbing';
 import {ChainClient, ServerTransaction, ServerTransactionItem, SimpleTransferTransaction, EcSignature} from './types';
-import Web3 from 'web3';
-import ecc from 'tiny-secp256k1';
 // @ts-ignore
-import {ecsign} from 'ethereumjs-utils';
+import {sign, } from 'hdkey/lib/secp256k1';
+import {ecsign} from 'ethereumjs-util';
 import BN from "bn.js";
 
 export class ChainUtils {
@@ -19,10 +18,10 @@ export class ChainUtils {
         const dataBuffer = Buffer.from(data, 'hex');
         const skBuffer = Buffer.from(sk, 'hex');
         if (forceLow) {
-            const res = ecc.sign(dataBuffer, skBuffer);
+            const res = sign(dataBuffer, skBuffer);
             return {
-                r: res.slice(0, 32).toString('hex'),
-                s: res.slice(32, 64).toString('hex'),
+                r: res.signature.slice(0, 32).toString('hex'),
+                s: res.signature.slice(32, 64).toString('hex'),
                 v: 0,
             }
         } else {
@@ -39,32 +38,36 @@ export class ChainUtils {
         if (!a1 || !a2) {
             return false;
         }
-        if (network === 'ETHEREUM' || network === 'BINANCE') {
-            return a1.toLowerCase() === a2.toLowerCase();
-        } else {
-            return a1 === a2;
-        }
+        return ChainUtils.canonicalAddress(network, a1) === ChainUtils.canonicalAddress(network, a2);
     }
 
     static simpleTransactionToServer(tx: SimpleTransferTransaction): ServerTransaction {
+        ValidationUtils.isTrue(tx.fromItems.length !== 0, 'Transaction has no items');
+        const items: ServerTransactionItem[] = [];
         const feeItem = {
-            address: tx.from.address,
+            address: tx.fromItems[0].address,
             currency: tx.feeCurrency,
             addressType: 'ADDRESS',
-            amount: toServerAmount(-1 * tx.fee, tx.feeCurrency, tx.feeDecimals),
+            amount: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals || ETH_DECIMALS, true),
+            itemType: 'FEE',
         } as ServerTransactionItem;
-        const item1 = {
-            address: tx.from.address,
-            currency: tx.from.currency,
-            addressType: 'ADDRESS',
-            amount: toServerAmount(-1 * tx.from.amount, tx.from.currency, tx.from.decimals),
-        } as ServerTransactionItem;
-        const item2 = {
-            address: tx.to.address,
-            currency: tx.to.currency,
-            addressType: 'ADDRESS',
-            amount: toServerAmount(tx.to.amount, tx.to.currency, tx.to.decimals),
-        } as ServerTransactionItem;
+        items.push(feeItem);
+        tx.fromItems.forEach(i => {
+            items.push({
+                address: i.address,
+                currency: i.currency,
+                addressType: 'ADDRESS',
+                amount: toServerAmount(i.amount, i.currency, i.decimals || ETH_DECIMALS, true),
+            } as ServerTransactionItem);
+        });
+        tx.toItems.forEach(i => {
+            items.push({
+                address: i.address,
+                currency: i.currency,
+                addressType: 'ADDRESS',
+                amount: toServerAmount(i.amount, i.currency, i.decimals || ETH_DECIMALS),
+            } as ServerTransactionItem);
+        });
         return {
             id: tx.id,
             network: tx.network,
@@ -72,29 +75,22 @@ export class ChainUtils {
             transactionId: tx.id,
             confirmationTime: tx.confirmationTime,
             creationTime: tx.creationTime,
-            fee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals),
+            fee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals || ETH_DECIMALS),
             feeCurrency: tx.feeCurrency,
             isConfirmed: tx.confirmed,
             isFailed: tx.failed,
             version: 0,
-            items: [feeItem, item1, item2],
+            items,
         } as ServerTransaction;
     }
 
     static canonicalAddress(network: Network, address: string) {
         // TODO: Turn address to byte and back instead of lowercase.
-        if (network === 'ETHEREUM' || network === 'BINANCE') {
+        if (['ETHEREUM', 'RINKEBY', 'BINANCE', 'BINANCE_TESTNET'].indexOf(network) >= 0) {
             return address.toLowerCase();
         } else {
             return address;
         }
-    }
-
-    static bufferToHex (buffer: ArrayBuffer) {
-        return Array
-            .from (new Uint8Array (buffer))
-            .map (b => b.toString (16).padStart (2, "0"))
-            .join ("");
     }
 
     /**
@@ -123,6 +119,12 @@ export class ChainUtils {
         }
         return intPart + deciPart;
     }
+
+    static tokenPart(cur: string) {
+        const pars = cur.split(':');
+        ValidationUtils.isTrue(pars.length == 2, 'Invalid currency ' + cur);
+        return pars[1];
+    }
 }
 
 export async function waitForTx(client: ChainClient, transactionId: string, waitTimeout: number, fetchTimeout: number) {
@@ -144,20 +146,15 @@ export async function waitForTx(client: ChainClient, transactionId: string, wait
     }
 }
 
-function toServerAmount(amount: number, currency: string, decimals?: number) {
-    if (currency === 'ETH') {
-        return ethToGwei(amount);
-    }
+function toServerAmount(amount: string, currency: string, decimals: number, negate: boolean = false) {
     ValidationUtils.isTrue(decimals !== undefined, 'decimals must be provided for currency ' + currency);
-    return (amount * (10 ** (decimals || 0))).toFixed(12);
+    const bn = ChainUtils.toBigIntStr(amount, decimals);
+    return negate ? new BN(bn).neg().toString() : bn;
 }
 
-function ethToGwei(eth: number): string {
-    return Web3.utils.toWei(eth.toFixed(9), 'gwei'); // Kudi server uses gwei as the smaller unit
-}
-
-export function normalizeBnbAmount(amount: string): number {
-    return Number(amount) / (10 ** BINANCE_DECIMALS);
+export function normalizeBnbAmount(amount: string): string {
+    return ChainUtils.toDecimalStr(amount, BINANCE_DECIMALS);
 }
 
 export const BINANCE_DECIMALS = 8;
+export const ETH_DECIMALS = 18;

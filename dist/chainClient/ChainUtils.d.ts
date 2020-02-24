@@ -12,7 +12,6 @@ export declare class ChainUtils {
     static addressesAreEqual(network: Network, a1: string, a2: string): boolean;
     static simpleTransactionToServer(tx: SimpleTransferTransaction): ServerTransaction;
     static canonicalAddress(network: Network, address: string): string;
-    static bufferToHex(buffer: ArrayBuffer): string;
     /**
      *  Converts to bigint, similar to fromWei
      */
@@ -21,8 +20,10 @@ export declare class ChainUtils {
      * Converts a decimal to bigint, similar to toWei
      */
     static toBigIntStr(amount: string | number, decimals: number): string;
+    static tokenPart(cur: string): string;
 }
 export declare function waitForTx(client: ChainClient, transactionId: string, waitTimeout: number, fetchTimeout: number): Promise<SimpleTransferTransaction | undefined>;
-export declare function normalizeBnbAmount(amount: string): number;
+export declare function normalizeBnbAmount(amount: string): string;
 export declare const BINANCE_DECIMALS = 8;
+export declare const ETH_DECIMALS = 18;
 //# sourceMappingURL=ChainUtils.d.ts.map

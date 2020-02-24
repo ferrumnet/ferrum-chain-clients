@@ -6,6 +6,7 @@ import {BinanceGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider} fro
 import {CreateNewAddressFactory} from './CreateNewAddress';
 import {RemoteSignerClient} from "./remote/RemoteSignerClient";
 import {RemoteClientWrapper} from "./remote/RemoteClientWrapper";
+import {FullEthereumClient} from "./ethereum/FullEthereumClient";
 
 export class ChainClientFactory implements Injectable {
     private readonly networkStage: NetworkStage;
@@ -19,7 +20,9 @@ export class ChainClientFactory implements Injectable {
     }
 
     private bnbClient: BinanceChainClient | undefined;
+    private bnbClientTestnet: BinanceChainClient | undefined;
     private ethClient: EthereumClient | undefined;
+    private rinkebyClient: EthereumClient | undefined;
 
     private wrap(client: ChainClient, network: Network) {
         return this.remoteSigner ? new RemoteClientWrapper(client, this.remoteSigner, network) : client;
@@ -32,11 +35,21 @@ export class ChainClientFactory implements Injectable {
                     this.bnbClient = new BinanceChainClient(this.networkStage, this.localConfig);
                 }
                 return this.wrap(this.bnbClient, 'BINANCE');
+            case 'BINANCE_TESTNET':
+                if (!this.bnbClientTestnet) {
+                    this.bnbClientTestnet = new BinanceChainClient('test', this.localConfig);
+                }
+                return this.wrap(this.bnbClientTestnet, 'BINANCE_TESTNET');
             case 'ETHEREUM':
                 if (!this.ethClient) {
-                    this.ethClient = new EthereumClient(this.networkStage, this.localConfig, this.ethGasProvider);
+                    this.ethClient = new FullEthereumClient('prod' as NetworkStage, this.localConfig, this.ethGasProvider);
                 }
                 return this.wrap(this.ethClient, 'ETHEREUM');
+            case 'RINKEBY':
+                if (!this.rinkebyClient) {
+                    this.rinkebyClient = new FullEthereumClient('test', this.localConfig, this.ethGasProvider);
+                }
+                return this.wrap(this.rinkebyClient, 'RINKEBY');
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network)
         }
@@ -50,7 +63,11 @@ export class ChainClientFactory implements Injectable {
         switch (network) {
             case 'BINANCE':
                 return this.binanceGasProvider;
+            case 'BINANCE_TESTNET':
+                return this.binanceGasProvider;
             case 'ETHEREUM':
+                return this.ethGasProvider;
+            case 'RINKEBY':
                 return this.ethGasProvider;
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);

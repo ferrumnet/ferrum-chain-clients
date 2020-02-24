@@ -13,10 +13,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const ferrum_plumbing_1 = require("ferrum-plumbing");
-const web3_1 = __importDefault(require("web3"));
-const tiny_secp256k1_1 = __importDefault(require("tiny-secp256k1"));
 // @ts-ignore
-const ethereumjs_utils_1 = require("ethereumjs-utils");
+const secp256k1_1 = require("hdkey/lib/secp256k1");
+const ethereumjs_util_1 = require("ethereumjs-util");
 const bn_js_1 = __importDefault(require("bn.js"));
 class ChainUtils {
     /**
@@ -27,15 +26,15 @@ class ChainUtils {
         const dataBuffer = Buffer.from(data, 'hex');
         const skBuffer = Buffer.from(sk, 'hex');
         if (forceLow) {
-            const res = tiny_secp256k1_1.default.sign(dataBuffer, skBuffer);
+            const res = secp256k1_1.sign(dataBuffer, skBuffer);
             return {
-                r: res.slice(0, 32).toString('hex'),
-                s: res.slice(32, 64).toString('hex'),
+                r: res.signature.slice(0, 32).toString('hex'),
+                s: res.signature.slice(32, 64).toString('hex'),
                 v: 0,
             };
         }
         else {
-            const sig = ethereumjs_utils_1.ecsign(dataBuffer, skBuffer);
+            const sig = ethereumjs_util_1.ecsign(dataBuffer, skBuffer);
             return {
                 r: sig.r.toString('hex'),
                 s: sig.s.toString('hex'),
@@ -47,32 +46,35 @@ class ChainUtils {
         if (!a1 || !a2) {
             return false;
         }
-        if (network === 'ETHEREUM' || network === 'BINANCE') {
-            return a1.toLowerCase() === a2.toLowerCase();
-        }
-        else {
-            return a1 === a2;
-        }
+        return ChainUtils.canonicalAddress(network, a1) === ChainUtils.canonicalAddress(network, a2);
     }
     static simpleTransactionToServer(tx) {
+        ferrum_plumbing_1.ValidationUtils.isTrue(tx.fromItems.length !== 0, 'Transaction has no items');
+        const items = [];
         const feeItem = {
-            address: tx.from.address,
+            address: tx.fromItems[0].address,
             currency: tx.feeCurrency,
             addressType: 'ADDRESS',
-            amount: toServerAmount(-1 * tx.fee, tx.feeCurrency, tx.feeDecimals),
+            amount: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals || exports.ETH_DECIMALS, true),
+            itemType: 'FEE',
         };
-        const item1 = {
-            address: tx.from.address,
-            currency: tx.from.currency,
-            addressType: 'ADDRESS',
-            amount: toServerAmount(-1 * tx.from.amount, tx.from.currency, tx.from.decimals),
-        };
-        const item2 = {
-            address: tx.to.address,
-            currency: tx.to.currency,
-            addressType: 'ADDRESS',
-            amount: toServerAmount(tx.to.amount, tx.to.currency, tx.to.decimals),
-        };
+        items.push(feeItem);
+        tx.fromItems.forEach(i => {
+            items.push({
+                address: i.address,
+                currency: i.currency,
+                addressType: 'ADDRESS',
+                amount: toServerAmount(i.amount, i.currency, i.decimals || exports.ETH_DECIMALS, true),
+            });
+        });
+        tx.toItems.forEach(i => {
+            items.push({
+                address: i.address,
+                currency: i.currency,
+                addressType: 'ADDRESS',
+                amount: toServerAmount(i.amount, i.currency, i.decimals || exports.ETH_DECIMALS),
+            });
+        });
         return {
             id: tx.id,
             network: tx.network,
@@ -80,28 +82,22 @@ class ChainUtils {
             transactionId: tx.id,
             confirmationTime: tx.confirmationTime,
             creationTime: tx.creationTime,
-            fee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals),
+            fee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals || exports.ETH_DECIMALS),
             feeCurrency: tx.feeCurrency,
             isConfirmed: tx.confirmed,
             isFailed: tx.failed,
             version: 0,
-            items: [feeItem, item1, item2],
+            items,
         };
     }
     static canonicalAddress(network, address) {
         // TODO: Turn address to byte and back instead of lowercase.
-        if (network === 'ETHEREUM' || network === 'BINANCE') {
+        if (['ETHEREUM', 'RINKEBY', 'BINANCE', 'BINANCE_TESTNET'].indexOf(network) >= 0) {
             return address.toLowerCase();
         }
         else {
             return address;
         }
-    }
-    static bufferToHex(buffer) {
-        return Array
-            .from(new Uint8Array(buffer))
-            .map(b => b.toString(16).padStart(2, "0"))
-            .join("");
     }
     /**
      *  Converts to bigint, similar to fromWei
@@ -129,6 +125,11 @@ class ChainUtils {
         }
         return intPart + deciPart;
     }
+    static tokenPart(cur) {
+        const pars = cur.split(':');
+        ferrum_plumbing_1.ValidationUtils.isTrue(pars.length == 2, 'Invalid currency ' + cur);
+        return pars[1];
+    }
 }
 exports.ChainUtils = ChainUtils;
 ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT = 60000;
@@ -154,19 +155,15 @@ function waitForTx(client, transactionId, waitTimeout, fetchTimeout) {
     });
 }
 exports.waitForTx = waitForTx;
-function toServerAmount(amount, currency, decimals) {
-    if (currency === 'ETH') {
-        return ethToGwei(amount);
-    }
+function toServerAmount(amount, currency, decimals, negate = false) {
     ferrum_plumbing_1.ValidationUtils.isTrue(decimals !== undefined, 'decimals must be provided for currency ' + currency);
-    return (amount * (Math.pow(10, (decimals || 0)))).toFixed(12);
-}
-function ethToGwei(eth) {
-    return web3_1.default.utils.toWei(eth.toFixed(9), 'gwei'); // Kudi server uses gwei as the smaller unit
+    const bn = ChainUtils.toBigIntStr(amount, decimals);
+    return negate ? new bn_js_1.default(bn).neg().toString() : bn;
 }
 function normalizeBnbAmount(amount) {
-    return Number(amount) / (Math.pow(10, exports.BINANCE_DECIMALS));
+    return ChainUtils.toDecimalStr(amount, exports.BINANCE_DECIMALS);
 }
 exports.normalizeBnbAmount = normalizeBnbAmount;
 exports.BINANCE_DECIMALS = 8;
+exports.ETH_DECIMALS = 18;
 //# sourceMappingURL=ChainUtils.js.map

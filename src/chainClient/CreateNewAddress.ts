@@ -5,7 +5,10 @@ import * as crypto from '@binance-chain/javascript-sdk/lib/crypto';
 // @ts-ignore
 import * as utils from '@binance-chain/javascript-sdk/lib/utils';
 import Web3 from 'web3';
-import {MultiChainConfig} from './types';
+import {NetworkStage} from './types';
+import {ecrecover, ecsign, privateToAddress, publicToAddress} from 'ethereumjs-util';
+import {Buffer} from 'buffer';
+import {randomBytes, sha256sync} from "ferrum-crypto";
 
 export interface CreateNewAddress {
     newAddress(): Promise<AddressWithSecretKeys>;
@@ -16,15 +19,27 @@ export interface CreateNewAddress {
  * Note: Do not directly use this. Instead use ChainClientFactory
  */
 export class CreateNewAddressFactory implements Injectable {
-    constructor(private binancaAddress: BinanceChainAddress, private ethAddress: EthereumAddress) {
+    private readonly ethAddress: EthereumAddress;
+    private readonly rinkebyAddress: EthereumAddress;
+    private readonly binance: BinanceChainAddress;
+    private readonly binanceTestnet: BinanceChainAddress;
+    constructor() {
+        this.ethAddress = new EthereumAddress('prod');
+        this.rinkebyAddress = new EthereumAddress('test');
+        this.binance = new BinanceChainAddress('prod');
+        this.binanceTestnet = new BinanceChainAddress('test');
     }
 
     create(network: Network): CreateNewAddress {
         switch (network) {
             case 'BINANCE':
-                return this.binancaAddress;
+                return this.binance;
+            case 'BINANCE_TESTNET':
+                return this.binanceTestnet;
             case 'ETHEREUM':
                 return this.ethAddress;
+            case 'RINKEBY':
+                return this.rinkebyAddress;
             default:
                 throw new Error('CreateNewAddressFactory.create: Network not supported: ' + network)
         }
@@ -35,8 +50,8 @@ export class CreateNewAddressFactory implements Injectable {
 
 export class BinanceChainAddress implements CreateNewAddress, Injectable {
     private readonly network: "test" | "prod";
-    constructor(config: MultiChainConfig) {
-        this.network = config.networkStage;
+    constructor(networkStage: NetworkStage) {
+        this.network = networkStage;
     }
 
     __name__(): string {
@@ -72,38 +87,38 @@ export class BinanceChainAddress implements CreateNewAddress, Injectable {
 
 export class EthereumAddress implements CreateNewAddress, Injectable {
     private readonly network: "test" | "prod";
-    private readonly provider: string;
-    private web3: Web3;
-    constructor(config: MultiChainConfig) {
-        this.network = config.networkStage;
-        this.provider = config.web3Provider;
-        this.web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
+    constructor(networkStage: NetworkStage) {
+        this.network = networkStage;
     }
 
     __name__(): string {
         return 'EthereumAddress';
     }
 
-    async addressFromSk(sk: HexString) {
-        const account = this.web3.eth.accounts.privateKeyToAccount(sk);
-        const testData = utils.sha3(Buffer.from('TEST DATA').toString('hex')).toString('hex');
-        const sign = account.sign(testData);
-        const verif = this.web3.eth.accounts.recover(sign);
-        if (verif !== account.address) {
+    async addressFromSk(sk: HexString): Promise<AddressWithSecretKeys> {
+        const skBuf = Buffer.from(sk, 'hex');
+        const address = privateToAddress(skBuf);
+        const testData = Buffer.from(sha256sync(Buffer.from('TEST DATA').toString('hex')), 'hex');
+        const sign = ecsign(testData, skBuf, this.chainId());
+        const pubKey = ecrecover(testData, sign.v, sign.r, sign.s, this.chainId());
+        const verifAddress = publicToAddress(pubKey);
+        if (verifAddress.toString('hex') !== address.toString('hex')) {
             const msg = 'CreateNewAddress: Error creating a new address. Could not verify generated signature';
-            console.error(msg, account.privateKey);
             throw new Error(msg);
         }
         return {
-            address: account.address,
-            network: 'ETHEREUM' as Network,
-            privateKeyHex: account.privateKey.substr(2),
+            address: '0x' + address.toString('hex'),
+            network: this.network === 'prod' ? 'ETHEREUM' : 'RINKEBY',
+            privateKeyHex: sk,
             createdAt: Date.now(),
         }
     }
 
     async newAddress(): Promise<AddressWithSecretKeys> {
-        const web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
-        return this.addressFromSk(web3.utils.randomHex(32));
+        return this.addressFromSk(randomBytes(32));
+    }
+
+    private chainId() {
+        return this.network === 'prod' ? 1 : 4;
     }
 }

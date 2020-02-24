@@ -11,9 +11,9 @@ export declare class Erc20ReaderClient extends ContractClientBase implements Inj
     decimals(): Promise<number>;
     name(): Promise<string>;
     symbol(): Promise<string>;
-    totalSupply(): Promise<number>;
-    balanceOf(address: string): Promise<number | undefined>;
-    allowance(owner: string, spender: string): Promise<number | undefined>;
+    totalSupply(): Promise<string>;
+    balanceOf(address: string): Promise<string | undefined>;
+    allowance(owner: string, spender: string): Promise<string | undefined>;
     private rawToAmount;
     private amountToRaw;
 }

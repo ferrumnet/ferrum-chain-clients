@@ -12,13 +12,17 @@ export interface IDecodedLog {
   address: string;
 }
 
+export interface SimpleTransferTransactionItem {
+  address: string; currency: string; amount: string; decimals?: number;
+}
+
 export interface SimpleTransferTransaction {
   network: Network;
-  fee: number;
+  fee: string;
   feeCurrency: string;
   feeDecimals?: number;
-  from: { address: string, currency: string, amount: number, decimals?: number };
-  to: { address: string, currency: string, amount: number, decimals?: number };
+  fromItems: SimpleTransferTransactionItem[];
+  toItems: SimpleTransferTransactionItem[];
   confirmed: boolean;
   failed: boolean;
   confirmationTime: number;
@@ -26,6 +30,7 @@ export interface SimpleTransferTransaction {
   id: string;
   memo?: string;
   reason?: string;
+  singleItem: boolean;
 }
 
 /**
@@ -37,6 +42,7 @@ export interface ServerTransactionItem {
   amount: string;
   currency: string;
   fakeAddress: boolean;
+  itemType?: string;
 }
 
 export interface ServerTransaction {
@@ -70,8 +76,7 @@ export type NetworkStage = 'test' | 'prod';
 
 export interface MultiChainConfig {
   web3Provider: string;
-  contractAddresses: { [ k: string ]: string };
-  contractDecimals: { [k:string]: number };
+  web3ProviderRinkeby: string;
   binanceChainUrl: string;
   binanceChainSeedNode: string;
   networkStage: NetworkStage;
@@ -80,8 +85,8 @@ export interface MultiChainConfig {
 }
 
 export const NetworkNativeCurrencies = {
-  'ETHEREUM': 'ETH',
-  'BINANCE': 'BNB',
+  'ETHEREUM': 'ETHEREUM:ETH',
+  'BINANCE': 'BINANCE:BNB',
 };
 
 export interface EcSignature {
@@ -115,26 +120,28 @@ export interface ChainClient extends ChainTransactionSigner {
   getTransactionById(tid: string): Promise<SimpleTransferTransaction|undefined>;
 
   processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any,
-                               amount: number|string): Promise<string>;
+                               amount: string): Promise<string>;
 
   processPaymentFromPrivateKeyWithGas(skHex: HexString, targetAddress: string, currency: any,
-                                      amount: number|string, gasOverride: number | GasParameters): Promise<string>;
+                                      amount: string, gasOverride: string | GasParameters): Promise<string>;
 
   createPaymentTransaction(fromAddress: string, targetAddress: string,
-                           currency: any, amount: number | string,
-                           gasOverride?: number | GasParameters, memo?: string): Promise<SignableTransaction>;
+                           currency: any, amount: string,
+                           gasOverride?: string | GasParameters, memo?: string): Promise<SignableTransaction>;
 
   signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
 
-  getRecentTransactionsByAddress(address: string): Promise<SimpleTransferTransaction[]|undefined>;
+  getRecentTransactionsByAddress(address: string, currencies: string[]): Promise<SimpleTransferTransaction[]|undefined>;
 
-  getBalance(address: string, currency: string): Promise<number|undefined>;
+  getBalance(address: string, currency: string): Promise<string|undefined>;
 
   broadcastTransaction<T>(transaction: SignableTransaction): Promise<string>;
 
   waitForTransaction(tid: string): Promise<SimpleTransferTransaction|undefined>;
 
   feeCurrency(): string;
+
+  feeDecimals(): number;
 
   getBlockByNumber(number: number): Promise<BlockData>;
 

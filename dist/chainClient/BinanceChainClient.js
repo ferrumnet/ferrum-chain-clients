@@ -26,10 +26,8 @@ const javascript_sdk_1 = __importStar(require("@binance-chain/javascript-sdk"));
 const ChainUtils_1 = require("./ChainUtils");
 const BinanceTxParser_1 = require("./binance/BinanceTxParser");
 const GasPriceProvider_1 = require("./GasPriceProvider");
-const big_js_1 = __importDefault(require("big.js"));
 const elliptic_1 = require("elliptic");
 const ferrum_crypto_1 = require("ferrum-crypto");
-const BASENUMBER = Math.pow(10, 8);
 class BinanceChainClient {
     constructor(networkStage, config) {
         this.networkStage = networkStage;
@@ -37,16 +35,18 @@ class BinanceChainClient {
         this.seedNodeUrl = config.binanceChainSeedNode;
         this.txWaitTimeout = config.pendingTransactionShowTimeout || ChainUtils_1.ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT;
         this.addFeeToRawParsedTx = this.addFeeToRawParsedTx.bind(this);
+        this.getBlockByNumber = this.getBlockByNumber.bind(this);
     }
-    feeCurrency() {
-        return 'BNB';
-    }
+    network() { return this.networkStage === 'prod' ? 'BINANCE' : 'BINANCE_TESTNET'; }
+    feeCurrency() { return this.networkStage === 'prod' ? 'BINANCE:BNB' : 'BINANCE_TESTNET:BNB'; }
+    feeDecimals() { return ChainUtils_1.BINANCE_DECIMALS; }
     getBalance(address, currency) {
         return __awaiter(this, void 0, void 0, function* () {
             const bnbClient = new javascript_sdk_1.default(this.url);
             const bal = (yield bnbClient.getBalance(address)) || [];
-            const tokenBal = bal.find((b) => b.symbol === currency);
-            return tokenBal ? Number(tokenBal.free) : undefined;
+            const tok = ChainUtils_1.ChainUtils.tokenPart(currency);
+            const tokenBal = bal.find((b) => b.symbol === tok);
+            return tokenBal ? tokenBal.free : undefined;
         });
     }
     getTransactionById(tid) {
@@ -70,33 +70,35 @@ class BinanceChainClient {
             const output = tx['value']['outputs'][0];
             return {
                 id: apiRes['hash'],
+                network: this.network(),
                 confirmationTime: new Date(tx.timeStamp).getTime(),
-                from: {
-                    address: input['address'],
-                    amount: ChainUtils_1.normalizeBnbAmount(input['coins'][0]['amount']),
-                    currency: input['coins'][0]['denom'],
-                    decimals: ChainUtils_1.BINANCE_DECIMALS,
-                },
-                to: {
-                    address: output['address'],
-                    amount: ChainUtils_1.normalizeBnbAmount(output['coins'][0]['amount']),
-                    currency: output['coins'][0]['denom'],
-                    decimals: ChainUtils_1.BINANCE_DECIMALS,
-                },
+                fromItems: [{
+                        address: input['address'],
+                        amount: ChainUtils_1.normalizeBnbAmount(input['coins'][0]['amount']),
+                        currency: this.fullCurrency(input['coins'][0]['denom']),
+                        decimals: ChainUtils_1.BINANCE_DECIMALS,
+                    }],
+                toItems: [{
+                        address: output['address'],
+                        amount: ChainUtils_1.normalizeBnbAmount(output['coins'][0]['amount']),
+                        currency: this.fullCurrency(output['coins'][0]['denom']),
+                        decimals: ChainUtils_1.BINANCE_DECIMALS,
+                    }],
                 fee: ChainUtils_1.normalizeBnbAmount(tx.txFee),
-                feeCurrency: 'BNB',
+                feeCurrency: this.feeCurrency(),
                 feeDecimals: ChainUtils_1.BINANCE_DECIMALS,
                 confirmed: true,
+                singleItem: true,
             };
         });
     }
     processPaymentFromPrivateKeyWithGas(skHex, targetAddress, currency, amount, gasOverride) {
         return this.processPaymentFromPrivateKey(skHex, targetAddress, currency, amount);
     }
-    createPaymentTransaction(fromAddress, targetAddress, asset, payAmount, gasOverride, memo) {
+    createPaymentTransaction(fromAddress, targetAddress, currency, payAmount, gasOverride, memo) {
         return __awaiter(this, void 0, void 0, function* () {
-            const bigAmount = new big_js_1.default(payAmount);
-            const amount = Number(bigAmount.mul(BASENUMBER).toString());
+            const amount = Number(ChainUtils_1.ChainUtils.toBigIntStr(payAmount, ChainUtils_1.BINANCE_DECIMALS));
+            const asset = ChainUtils_1.ChainUtils.tokenPart(currency);
             const signMsg = {
                 inputs: [{
                         address: fromAddress,
@@ -158,11 +160,13 @@ class BinanceChainClient {
             const signature = Buffer.allocUnsafe(64);
             r.copy(signature, 0);
             s.copy(signature, 32);
+            const verif = curve.verify(Buffer.from(transaction.signableHex, 'hex'), { r, s }, Buffer.from(transaction.publicKeyHex, 'hex'));
+            ferrum_plumbing_1.ValidationUtils.isTrue(verif, 'Error verifying signature using public key');
             const tx = new javascript_sdk_1.Transaction(txOptions);
             tx.addSignature(publicKey.getPublic(), signature);
             try {
                 console.log(`About to execute transaction: `, transaction.serializedTransaction);
-                const res = yield this.bnbClient._broadcastDelegate(tx);
+                const res = yield this.bnbClient.sendRawTransaction(tx.serialize(), true);
                 if (res.status !== 200) {
                     console.error('Error executing transaction', transaction.serializedTransaction, res);
                     throw new Error('Error executing transaction: ' + JSON.stringify(res));
@@ -186,7 +190,6 @@ class BinanceChainClient {
     }
     processPaymentFromPrivateKey(sk, targetAddress, currency, amount) {
         return __awaiter(this, void 0, void 0, function* () {
-            const bnbClient = yield this.getBnbClient();
             const addressFrom = javascript_sdk_1.crypto.getAddressFromPrivateKey(sk, this.networkStage === 'test' ? 'tbnb' : 'bnb');
             const tx = yield this.createPaymentTransaction(addressFrom, targetAddress, currency, amount);
             const signedTx = yield this.signTransaction(sk, tx);
@@ -238,7 +241,7 @@ class BinanceChainClient {
             if (!apiRes.tx || !apiRes.tx.length) {
                 return [];
             }
-            return apiRes.tx.map(this.parseTx).filter(Boolean);
+            return apiRes.tx.map((tx) => this.parseTx(tx)).filter(Boolean);
         });
     }
     api(api) {
@@ -283,7 +286,7 @@ class BinanceChainClient {
                 throw new Error(`Error calling '${fullApi}'. Expected '${num_txs}' transactions but got ${txsEncoded.length}.`);
             }
             const confTime = Date.parse(timestamp);
-            const decoded = txsEncoded.map((txe) => BinanceTxParser_1.BinanceTxParser.parseFromHex(Buffer.from(txe['tx'], 'base64').toString('hex'), confTime, txe['hash']))
+            const decoded = txsEncoded.map((txe) => BinanceTxParser_1.BinanceTxParser.parseFromHex(this.network(), this.feeCurrency(), Buffer.from(txe['tx'], 'base64').toString('hex'), confTime, txe['hash']))
                 .filter(Boolean)
                 .map(this.addFeeToRawParsedTx);
             return {
@@ -305,7 +308,7 @@ class BinanceChainClient {
         return __awaiter(this, void 0, void 0, function* () {
             const res = yield this.callApi('v2/transactions-in-block/' + number);
             const txs = res['tx'] || [];
-            const transactions = txs.map(this.parseTx).filter(Boolean);
+            const transactions = txs.map((tx) => this.parseTx(tx)).filter(Boolean);
             return {
                 transactions,
                 transactionIds: transactions.map((t) => t.id),
@@ -347,22 +350,24 @@ class BinanceChainClient {
     parseTx(tx) {
         return tx.txType === 'TRANSFER' ? {
             id: tx.txHash,
+            network: this.network(),
             confirmationTime: new Date(tx.timeStamp).getTime(),
-            from: {
-                address: tx.fromAddr,
-                currency: tx.txAsset,
-                amount: Number(tx.value),
-                decimals: ChainUtils_1.BINANCE_DECIMALS,
-            },
-            to: {
-                address: tx.toAddr,
-                currency: tx.txAsset,
-                amount: Number(tx.value),
-                decimals: ChainUtils_1.BINANCE_DECIMALS,
-            },
-            fee: ChainUtils_1.normalizeBnbAmount(tx.txFee),
-            feeCurrency: 'BNB',
+            fromItems: [{
+                    address: tx.fromAddr,
+                    currency: `${this.network()}:${tx.txAsset}`,
+                    amount: tx.value,
+                    decimals: ChainUtils_1.BINANCE_DECIMALS,
+                }],
+            toItems: [{
+                    address: tx.toAddr,
+                    currency: `${this.network()}:${tx.txAsset}`,
+                    amount: tx.value,
+                    decimals: ChainUtils_1.BINANCE_DECIMALS,
+                }],
+            fee: tx.txFee,
+            feeCurrency: this.feeCurrency(),
             feeDecimals: ChainUtils_1.BINANCE_DECIMALS,
+            singleItem: true,
             confirmed: true,
         } : undefined;
     }
@@ -406,6 +411,9 @@ class BinanceChainClient {
                 }],
             msgType: "MsgSend"
         };
+    }
+    fullCurrency(tok) {
+        return `${this.network()}:${tok}`;
     }
 }
 exports.BinanceChainClient = BinanceChainClient;

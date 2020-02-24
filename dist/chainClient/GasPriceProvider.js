@@ -15,10 +15,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const cross_fetch_1 = __importDefault(require("cross-fetch"));
 const web3_1 = __importDefault(require("web3"));
 const bn_js_1 = __importDefault(require("bn.js"));
+const ChainUtils_1 = require("./ChainUtils");
+exports.FRM = '0xe5caef4af8780e59df925470b050fb23c43ca68c';
 function gweiToEth(gweiNum) {
-    return Number(web3_1.default.utils.fromWei(web3_1.default.utils.toWei(new bn_js_1.default(gweiNum), 'gwei'), 'ether'));
+    return web3_1.default.utils.fromWei(web3_1.default.utils.toWei(new bn_js_1.default(gweiNum), 'gwei'), 'ether');
 }
-exports.BINANCE_FEE = 0.000375;
+exports.BINANCE_FEE = '0.000375';
 class BinanceGasPriceProvider {
     getGasPrice() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -41,11 +43,12 @@ class EthereumGasPriceProvider {
     constructor() {
         this.lastUpdate = 0;
     }
-    static gasPriceForErc20(currency, balance) {
-        if (balance === 0) {
-            return EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR[currency] || EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
+    static gasLimiForErc20(currency, balance) {
+        const tok = ChainUtils_1.ChainUtils.tokenPart(currency);
+        if (Number(balance) === 0) {
+            return EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR[tok] || EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT;
         }
-        return EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR[currency] || EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT;
+        return EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR[tok] || EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT;
     }
     getGasPrice() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -67,9 +70,10 @@ class EthereumGasPriceProvider {
         });
     }
     getTransactionGas(currency, gasPrice, currentTargetBalance) {
-        const gasAmount = currency === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
-            EthereumGasPriceProvider.gasPriceForErc20(currency, currentTargetBalance || 0);
-        return gasAmount * gasPrice;
+        const tok = ChainUtils_1.ChainUtils.tokenPart(currency);
+        const gasAmount = tok === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
+            EthereumGasPriceProvider.gasLimiForErc20(currency, currentTargetBalance || '0');
+        return new bn_js_1.default(gasAmount).mul(new bn_js_1.default(gasPrice)).toString();
     }
     __name__() {
         return 'GasPriceProvider';
@@ -82,9 +86,9 @@ EthereumGasPriceProvider.ETH_TX_GAS = 21000;
 EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT = 150000; // TODO: Adjust based on previous transactoins
 EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT = 80000;
 EthereumGasPriceProvider.ERC_20_GAS_ZERO_ACCOUNT_FOR_CUR = {
-    'FRM': 52595,
+    FRM: 52595,
 };
 EthereumGasPriceProvider.ERC_20_GAS_NON_ZERO_ACCOUNT_FOR_CUR = {
-    'FRM': 36693,
+    FRM: 36693,
 };
 //# sourceMappingURL=GasPriceProvider.js.map
