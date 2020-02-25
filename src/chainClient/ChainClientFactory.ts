@@ -9,14 +9,12 @@ import {RemoteClientWrapper} from "./remote/RemoteClientWrapper";
 import {FullEthereumClient} from "./ethereum/FullEthereumClient";
 
 export class ChainClientFactory implements Injectable {
-    private readonly networkStage: NetworkStage;
     constructor(private localConfig: MultiChainConfig,
                 private binanceGasProvider: BinanceGasPriceProvider,
                 private ethGasProvider: EthereumGasPriceProvider,
                 private newAddressFactory: CreateNewAddressFactory,
                 private remoteSigner?: RemoteSignerClient,
                 ) {
-        this.networkStage = this.localConfig.networkStage as NetworkStage;
     }
 
     private bnbClient: BinanceChainClient | undefined;
@@ -32,7 +30,7 @@ export class ChainClientFactory implements Injectable {
         switch (network) {
             case 'BINANCE':
                 if (!this.bnbClient) {
-                    this.bnbClient = new BinanceChainClient(this.networkStage, this.localConfig);
+                    this.bnbClient = new BinanceChainClient('prod', this.localConfig);
                 }
                 return this.wrap(this.bnbClient, 'BINANCE');
             case 'BINANCE_TESTNET':

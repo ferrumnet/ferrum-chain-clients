@@ -10,7 +10,6 @@ class ChainClientFactory {
         this.ethGasProvider = ethGasProvider;
         this.newAddressFactory = newAddressFactory;
         this.remoteSigner = remoteSigner;
-        this.networkStage = this.localConfig.networkStage;
     }
     wrap(client, network) {
         return this.remoteSigner ? new RemoteClientWrapper_1.RemoteClientWrapper(client, this.remoteSigner, network) : client;
@@ -19,7 +18,7 @@ class ChainClientFactory {
         switch (network) {
             case 'BINANCE':
                 if (!this.bnbClient) {
-                    this.bnbClient = new BinanceChainClient_1.BinanceChainClient(this.networkStage, this.localConfig);
+                    this.bnbClient = new BinanceChainClient_1.BinanceChainClient('prod', this.localConfig);
                 }
                 return this.wrap(this.bnbClient, 'BINANCE');
             case 'BINANCE_TESTNET':

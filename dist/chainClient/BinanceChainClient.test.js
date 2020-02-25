@@ -20,7 +20,6 @@ const conf = {
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
     binanceChainUrl: 'https://testnet-dex.binance.org',
     binanceChainSeedNode: 'https://data-seed-pre-0-s3.binance.org',
-    networkStage: 'test',
 };
 const CURRENCY = 'BINANCE_TESTNET:FRM-410';
 test('send tx', function () {

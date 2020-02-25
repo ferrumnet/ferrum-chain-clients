@@ -79,7 +79,6 @@ export interface MultiChainConfig {
   web3ProviderRinkeby: string;
   binanceChainUrl: string;
   binanceChainSeedNode: string;
-  networkStage: NetworkStage;
   requiredEthConfirmations?: number;
   pendingTransactionShowTimeout?: number;
 }
