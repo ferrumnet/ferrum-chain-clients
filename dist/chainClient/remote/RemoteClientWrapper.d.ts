@@ -7,7 +7,7 @@ export declare class RemoteClientWrapper implements ChainClient {
     private network;
     constructor(client: ChainClient, signer: RemoteSignerClient, network: Network);
     broadcastTransaction: <T>(transaction: import("../types").SignableTransaction) => Promise<string>;
-    createPaymentTransaction: (fromAddress: string, targetAddress: string, currency: any, amount: string, gasOverride?: string | import("../types").GasParameters | undefined, memo?: string | undefined) => Promise<import("../types").SignableTransaction>;
+    createPaymentTransaction: (fromAddress: string, targetAddress: string, currency: any, amount: string, gasOverride?: string | import("../types").GasParameters | undefined, memo?: string | undefined, nonce?: number | undefined) => Promise<import("../types").SignableTransaction>;
     feeCurrency: () => string;
     feeDecimals: () => number;
     getBalance: (address: string, currency: string) => Promise<string | undefined>;

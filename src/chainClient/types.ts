@@ -127,7 +127,7 @@ export interface ChainClient extends ChainTransactionSigner {
 
   createPaymentTransaction(fromAddress: string, targetAddress: string,
                            currency: any, amount: string,
-                           gasOverride?: string | GasParameters, memo?: string): Promise<SignableTransaction>;
+                           gasOverride?: string | GasParameters, memo?: string, nonce?: number): Promise<SignableTransaction>;
 
   signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
 

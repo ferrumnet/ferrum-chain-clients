@@ -327,7 +327,9 @@ export abstract class EthereumClient implements ChainClient {
     }
 
     async createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string,
-                                       currency: string, amount: string, gasOverride?: string | GasParameters): Promise<SignableTransaction> {
+                                       currency: string, amount: string, gasOverride?: string | GasParameters,
+                                       memo?: string, nonce?: number,
+                                       ): Promise<SignableTransaction> {
         if (currency === this.feeCurrency()) {
             return this.createSendEth(fromAddress, targetAddress, amount, gasOverride);
         }

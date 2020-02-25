@@ -13,7 +13,7 @@ export declare class BinanceChainClient implements ChainClient {
     getBalance(address: string, currency: string): Promise<string | undefined>;
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
     processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: any, amount: string, gasOverride: string | GasParameters): Promise<string>;
-    createPaymentTransaction(fromAddress: string, targetAddress: string, currency: any, payAmount: string, gasOverride?: string | GasParameters, memo?: string): Promise<SignableTransaction>;
+    createPaymentTransaction(fromAddress: string, targetAddress: string, currency: any, payAmount: string, gasOverride?: string | GasParameters, memo?: string, nonce?: number): Promise<SignableTransaction>;
     signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
     broadcastTransaction<T>(transaction: SignableTransaction): Promise<string>;
     sign(skHex: HexString, data: HexString, forceLow?: boolean): Promise<EcSignature>;

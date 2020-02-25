@@ -330,7 +330,7 @@ class EthereumClient {
             return yield sendRawTx(rawTransaction);
         });
     }
-    createPaymentTransaction(fromAddress, targetAddress, currency, amount, gasOverride) {
+    createPaymentTransaction(fromAddress, targetAddress, currency, amount, gasOverride, memo, nonce) {
         return __awaiter(this, void 0, void 0, function* () {
             if (currency === this.feeCurrency()) {
                 return this.createSendEth(fromAddress, targetAddress, amount, gasOverride);

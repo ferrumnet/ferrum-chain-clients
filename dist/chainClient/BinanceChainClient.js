@@ -95,7 +95,7 @@ class BinanceChainClient {
     processPaymentFromPrivateKeyWithGas(skHex, targetAddress, currency, amount, gasOverride) {
         return this.processPaymentFromPrivateKey(skHex, targetAddress, currency, amount);
     }
-    createPaymentTransaction(fromAddress, targetAddress, currency, payAmount, gasOverride, memo) {
+    createPaymentTransaction(fromAddress, targetAddress, currency, payAmount, gasOverride, memo, nonce) {
         return __awaiter(this, void 0, void 0, function* () {
             const amount = Number(ChainUtils_1.ChainUtils.toBigIntStr(payAmount, ChainUtils_1.BINANCE_DECIMALS));
             const asset = ChainUtils_1.ChainUtils.tokenPart(currency);
@@ -124,7 +124,7 @@ class BinanceChainClient {
                 chain_id: client.chainId,
                 memo: memo || '',
                 msg,
-                sequence: parseInt(sequence),
+                sequence: nonce || parseInt(sequence),
                 source: client._source,
                 type: msg.msgType,
             };

@@ -94,7 +94,9 @@ export class BinanceChainClient implements ChainClient {
     async createPaymentTransaction(fromAddress: string, targetAddress: string,
                                    currency: any, payAmount: string,
                                    gasOverride?: string | GasParameters,
-                                   memo?: string): Promise<SignableTransaction> {
+                                   memo?: string,
+                                   nonce?: number,
+                                   ): Promise<SignableTransaction> {
         const amount = Number(ChainUtils.toBigIntStr(payAmount, BINANCE_DECIMALS));
         const asset = ChainUtils.tokenPart(currency);
         const signMsg = {
@@ -123,7 +125,7 @@ export class BinanceChainClient implements ChainClient {
             chain_id: client.chainId,
             memo: memo || '',
             msg,
-            sequence: parseInt(sequence),
+            sequence: nonce || parseInt(sequence),
             source: client._source,
             type: msg.msgType,
         };

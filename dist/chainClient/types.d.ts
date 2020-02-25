@@ -108,7 +108,7 @@ export interface ChainClient extends ChainTransactionSigner {
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
     processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any, amount: string): Promise<string>;
     processPaymentFromPrivateKeyWithGas(skHex: HexString, targetAddress: string, currency: any, amount: string, gasOverride: string | GasParameters): Promise<string>;
-    createPaymentTransaction(fromAddress: string, targetAddress: string, currency: any, amount: string, gasOverride?: string | GasParameters, memo?: string): Promise<SignableTransaction>;
+    createPaymentTransaction(fromAddress: string, targetAddress: string, currency: any, amount: string, gasOverride?: string | GasParameters, memo?: string, nonce?: number): Promise<SignableTransaction>;
     signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
     getRecentTransactionsByAddress(address: string, currencies: string[]): Promise<SimpleTransferTransaction[] | undefined>;
     getBalance(address: string, currency: string): Promise<string | undefined>;

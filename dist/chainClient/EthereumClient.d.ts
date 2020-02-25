@@ -27,7 +27,7 @@ export declare abstract class EthereumClient implements ChainClient {
     decodeSignature(sig: EcSignature): any;
     sign(skHex: HexString, data: HexString): Promise<EcSignature>;
     broadcastTransaction<T>(transaction: SignableTransaction): Promise<HexString>;
-    createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string, currency: string, amount: string, gasOverride?: string | GasParameters): Promise<SignableTransaction>;
+    createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string, currency: string, amount: string, gasOverride?: string | GasParameters, memo?: string, nonce?: number): Promise<SignableTransaction>;
     /**
      * Note: This only returns incoming transactions to the given address and only works for ERC20 transactions
      */
