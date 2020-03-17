@@ -230,7 +230,8 @@ export abstract class EthereumClient implements ChainClient {
             const go = gasOverride as GasParameters;
             const gasLimit = go.gasLimit && Number.isFinite(Number(go.gasLimit)) ?
               Number(go.gasLimit) : await EthereumClient.getGasLimit(erc20, currency, targetBalance);
-            return [go.gasPrice, gasLimit];
+            const gasPrice = ChainUtils.toBigIntStr(go.gasPrice, ETH_DECIMALS);
+            return [gasPrice, gasLimit];
         }
 
         const gasLimit = await EthereumClient.getGasLimit(erc20, currency, targetBalance);

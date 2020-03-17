@@ -240,7 +240,8 @@ class EthereumClient {
                 const go = gasOverride;
                 const gasLimit = go.gasLimit && Number.isFinite(Number(go.gasLimit)) ?
                     Number(go.gasLimit) : yield EthereumClient.getGasLimit(erc20, currency, targetBalance);
-                return [go.gasPrice, gasLimit];
+                const gasPrice = ChainUtils_1.ChainUtils.toBigIntStr(go.gasPrice, ChainUtils_1.ETH_DECIMALS);
+                return [gasPrice, gasLimit];
             }
             const gasLimit = yield EthereumClient.getGasLimit(erc20, currency, targetBalance);
             if (erc20) {

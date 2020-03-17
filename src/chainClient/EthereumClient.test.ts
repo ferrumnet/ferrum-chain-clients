@@ -75,6 +75,17 @@ test('create a new address', async  () => {
     console.log(addr);
 });
 
+test('send tx with overwritten gas as params', async () => {
+    jest.setTimeout(10000000);
+    const client = ethereumClientForTest();
+    const gas = '0.000333333';
+    const txId = await client.processPaymentFromPrivateKeyWithGas(TEST_ACCOUNTS.mainAccountSk,
+      TEST_ACCOUNTS.secondAccountAddress, 'RINKEBY:' + TEST_FRM, '0.1', gas);
+    console.log('Submitted tx ', txId, 'with custom gas ', gas);
+    const tx = await client.waitForTransaction(txId);
+    console.log('Tx result ', tx);
+});
+
 test('send tx with overwritten gas', async () => {
     jest.setTimeout(10000000);
     const client = ethereumClientForTest();
