@@ -139,6 +139,11 @@ export abstract class EthereumClient implements ChainClient {
                     } as SimpleTransferTransaction;
                 }
                 let logs = transactionReceipt['logs'];
+                // TODO: This is a hack to fix bug with web3 https://github.com/ethereum/web3.js/issues/3134
+                // Remove once the bug is fixed
+                logs = (logs || []).filter(l =>
+                  !(l.topics || []).find(t => new BN(t.slice(2) || '0', 'hex').isZero()));
+
                 if (logs !== undefined) {
                     let decodedLogs: any[] = [];
                     try {
