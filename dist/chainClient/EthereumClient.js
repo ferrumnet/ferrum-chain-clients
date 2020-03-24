@@ -431,8 +431,15 @@ class EthereumClient {
     }
     static getTransactionError(web3, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
-            const code = yield web3.eth.call(transaction);
-            return ferrum_crypto_1.hexToUtf8(code.substr(138)).replace(/\0/g, '');
+            try {
+                const { from, to, gasPrice, gas, value, data, nonce } = transaction;
+                const code = yield web3.eth.call({ from, to, gasPrice, gas, value, data, nonce });
+                return ferrum_crypto_1.hexToUtf8(code.substr(138)).replace(/\0/g, '');
+            }
+            catch (e) {
+                // gobble
+                return '';
+            }
         });
     }
     createErc20SendTransaction(currency, from, to, amount, gasProvider, nonce) {

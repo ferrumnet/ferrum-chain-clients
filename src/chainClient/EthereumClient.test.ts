@@ -86,6 +86,15 @@ test('send tx with overwritten gas as params', async () => {
     console.log('Tx result ', tx);
 });
 
+test('send rinkeby tx that is failed', async () => {
+    jest.setTimeout(10000000);
+    const client = ethereumClientForTest();
+    const tx = await client.getTransactionById('0xa5b6ceb8bfed8851c82344d5382c1d31a814ec8d6ae3d876cb4eacd0697582f3');
+    console.log('GOT TX ', tx);
+
+});
+
+
 test('send tx with overwritten gas', async () => {
     jest.setTimeout(10000000);
     const client = ethereumClientForTest();

@@ -431,8 +431,14 @@ export abstract class EthereumClient implements ChainClient {
     }
 
     private static async getTransactionError(web3: Web3, transaction: any) {
-        const code = await web3.eth.call(transaction) as string;
-        return hexToUtf8(code.substr(138)).replace(/\0/g, '');
+        try {
+            const {from, to, gasPrice, gas, value, data, nonce} = transaction;
+            const code = await web3.eth.call({from, to, gasPrice, gas, value, data, nonce}) as string;
+            return hexToUtf8(code.substr(138)).replace(/\0/g, '');
+        } catch (e) {
+            // gobble
+            return '';
+        }
     }
 
     private async createErc20SendTransaction(

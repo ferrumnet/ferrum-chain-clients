@@ -84,6 +84,12 @@ test('send tx with overwritten gas as params', () => __awaiter(void 0, void 0, v
     const tx = yield client.waitForTransaction(txId);
     console.log('Tx result ', tx);
 }));
+test('send rinkeby tx that is failed', () => __awaiter(void 0, void 0, void 0, function* () {
+    jest.setTimeout(10000000);
+    const client = ethereumClientForTest();
+    const tx = yield client.getTransactionById('0xa5b6ceb8bfed8851c82344d5382c1d31a814ec8d6ae3d876cb4eacd0697582f3');
+    console.log('GOT TX ', tx);
+}));
 test('send tx with overwritten gas', () => __awaiter(void 0, void 0, void 0, function* () {
     jest.setTimeout(10000000);
     const client = ethereumClientForTest();
