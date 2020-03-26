@@ -121,12 +121,12 @@ export abstract class EthereumClient implements ChainClient {
                         feeCurrency: this.feeCurrency(),
                         feeDecimals: ETH_DECIMALS,
                         fromItems: [{
-                            address: transaction.from,
+                            address: transactionReceipt["from"],
                             currency: '', // TODO: If to is a contract
                             amount: '0'
                         }],
                         toItems: [{
-                            address: transaction.to,
+                            address: transactionReceipt["to"],
                             currency: '',
                             amount: '0'
                         }],

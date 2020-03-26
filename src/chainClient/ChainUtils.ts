@@ -78,7 +78,7 @@ export class ChainUtils {
             fee: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals || ETH_DECIMALS),
             feeCurrency: tx.feeCurrency,
             isConfirmed: tx.confirmed,
-            isFailed: tx.failed,
+            failed: tx.failed,
             version: 0,
             items,
         } as ServerTransaction;

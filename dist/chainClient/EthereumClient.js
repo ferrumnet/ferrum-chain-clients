@@ -129,12 +129,12 @@ class EthereumClient {
                             feeCurrency: this.feeCurrency(),
                             feeDecimals: ChainUtils_1.ETH_DECIMALS,
                             fromItems: [{
-                                    address: transaction.from,
+                                    address: transactionReceipt["from"],
                                     currency: '',
                                     amount: '0'
                                 }],
                             toItems: [{
-                                    address: transaction.to,
+                                    address: transactionReceipt["to"],
                                     currency: '',
                                     amount: '0'
                                 }],

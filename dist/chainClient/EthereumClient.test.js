@@ -75,6 +75,16 @@ test('create a new address', () => __awaiter(void 0, void 0, void 0, function* (
     const addr = yield TestnetConfig_1.testChainClientFactory().newAddress('ETHEREUM').newAddress();
     console.log(addr);
 }));
+test('debug tx', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(10000000);
+        const client = ethereumClientForTest();
+        const txId = '0xd3804b1ec84f98c6e30b04987f082b8d4c2ef307da41d5c450cfa4a70e437b39';
+        // const txId = '0xdd70b1151a6d8d401e744ed61d74d2668b7ccac2444c7d8acf912ad6466d41ac';
+        const tx = yield client.getTransactionById(txId);
+        console.log(JSON.stringify(ChainUtils_1.ChainUtils.simpleTransactionToServer(tx)));
+    });
+});
 test('send tx with overwritten gas as params', () => __awaiter(void 0, void 0, void 0, function* () {
     jest.setTimeout(10000000);
     const client = ethereumClientForTest();

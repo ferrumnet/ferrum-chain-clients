@@ -55,7 +55,7 @@ export interface ServerTransaction {
   receiveTime: number;
   confirmationTime: number;
   isConfirmed: boolean;
-  isFailed: boolean;
+  failed: boolean;
   transactionData: string;
   notes: string;
   version: number;
