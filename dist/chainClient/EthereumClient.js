@@ -327,11 +327,8 @@ class EthereumClient {
             ferrum_plumbing_1.ValidationUtils.isTrue(tx.verifySignature(), 'Signature cannot be verified');
             const rawTransaction = '0x' + transaction.serializedTransaction;
             // var transactionHash = utils.keccak256(rawTransaction);
-            const sendRawTx = (rawTx) => new Promise((resolve, reject) => web3.eth
-                .sendSignedTransaction(rawTx)
-                .on('transactionHash', resolve)
-                .on('error', reject));
-            return yield sendRawTx(rawTransaction);
+            const receipt = yield web3.eth.sendSignedTransaction(rawTransaction);
+            return receipt.transactionHash;
         });
     }
     createPaymentTransaction(fromAddress, targetAddress, currency, amount, gasOverride, memo, nonce) {

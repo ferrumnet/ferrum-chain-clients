@@ -321,15 +321,8 @@ export abstract class EthereumClient implements ChainClient {
         ValidationUtils.isTrue(tx.verifySignature(), 'Signature cannot be verified');
         const rawTransaction = '0x' + transaction.serializedTransaction;
         // var transactionHash = utils.keccak256(rawTransaction);
-        const sendRawTx = (rawTx: any) =>
-          new Promise<string>((resolve, reject) =>
-            web3.eth
-              .sendSignedTransaction(rawTx)
-              .on('transactionHash', resolve)
-              .on('error', reject)
-          );
-
-        return await sendRawTx(rawTransaction);
+        const receipt = await web3.eth.sendSignedTransaction(rawTransaction);
+        return receipt.transactionHash;
     }
 
     async createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string,
