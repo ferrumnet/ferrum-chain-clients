@@ -156,14 +156,10 @@ export class BinanceChainClient implements ChainClient {
         const curve = new ec('secp256k1');
         const publicKey = curve.keyFromPublic(Buffer.from(transaction.publicKeyHex!, 'hex'));
         const txOptions = this.deserializeTx(transaction.serializedTransaction!);
-        const r = Buffer.from(transaction.signature!.r, 'hex');
-        const s = Buffer.from(transaction.signature!.s, 'hex');
-        const signature = Buffer.allocUnsafe(64);
-        r.copy(signature, 0);
-        s.copy(signature, 32);
-        const verif = curve.verify(Buffer.from(transaction.signableHex!, 'hex'), {r, s},
-          Buffer.from(transaction.publicKeyHex!, 'hex'));
-        ValidationUtils.isTrue(verif, 'Error verifying signature using public key');
+        const signature = Buffer.from(ChainUtils.signatureToHex(transaction.signature! as EcSignature), 'hex');
+        // const verif = curve.verify(Buffer.from(transaction.signableHex!, 'hex'), {r, s},
+        //   Buffer.from(transaction.publicKeyHex!, 'hex'));
+        // ValidationUtils.isTrue(verif, 'Error verifying signature using public key');
         const tx = new Transaction(txOptions);
         tx.addSignature(publicKey.getPublic(), signature);
         try {

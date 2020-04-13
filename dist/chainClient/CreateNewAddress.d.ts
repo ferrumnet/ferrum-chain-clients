@@ -13,6 +13,8 @@ export declare class CreateNewAddressFactory implements Injectable {
     private readonly rinkebyAddress;
     private readonly binance;
     private readonly binanceTestnet;
+    private readonly bitcoinTestnet;
+    private readonly bitcoin;
     constructor();
     create(network: Network): CreateNewAddress;
     __name__(): string;

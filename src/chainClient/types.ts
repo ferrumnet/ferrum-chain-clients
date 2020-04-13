@@ -102,7 +102,7 @@ export interface SignableTransaction {
   transaction: any;
   serializedTransaction: HexString;
   signableHex?: HexString;
-  signature?: EcSignature;
+  signature?: EcSignature | EcSignature[];
   publicKeyHex?: HexString;
 }
 

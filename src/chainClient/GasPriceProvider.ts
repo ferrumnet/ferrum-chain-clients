@@ -43,7 +43,7 @@ export class BinanceGasPriceProvider implements GasPriceProvider, Injectable {
 
 export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
     private static GasStationUrl = 'https://ethgasstation.info/json/ethgasAPI.json';
-    private static GasTimeout = 30000;
+    static readonly GasTimeout = 30000;
     private lastUpdate = 0;
     private lastPrice: EthGasPrice|undefined;
     constructor() {}

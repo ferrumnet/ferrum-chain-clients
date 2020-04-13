@@ -1,4 +1,4 @@
-import { Injectable, Network } from 'ferrum-plumbing';
+import { Injectable, LocalCache, Network } from 'ferrum-plumbing';
 import { ChainClient, MultiChainConfig } from "./types";
 import { BinanceGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider } from './GasPriceProvider';
 import { CreateNewAddressFactory } from './CreateNewAddress';
@@ -9,11 +9,14 @@ export declare class ChainClientFactory implements Injectable {
     private ethGasProvider;
     private newAddressFactory;
     private remoteSigner?;
-    constructor(localConfig: MultiChainConfig, binanceGasProvider: BinanceGasPriceProvider, ethGasProvider: EthereumGasPriceProvider, newAddressFactory: CreateNewAddressFactory, remoteSigner?: RemoteSignerClient | undefined);
+    private readonly cache;
+    constructor(localConfig: MultiChainConfig, binanceGasProvider: BinanceGasPriceProvider, ethGasProvider: EthereumGasPriceProvider, newAddressFactory: CreateNewAddressFactory, remoteSigner?: RemoteSignerClient | undefined, cache?: LocalCache);
     private bnbClient;
     private bnbClientTestnet;
     private ethClient;
     private rinkebyClient;
+    private bitcoinClient;
+    private bitcoinTestnetClient;
     private wrap;
     forNetwork(network: Network): ChainClient;
     newAddress(network: Network): import("./CreateNewAddress").CreateNewAddress;

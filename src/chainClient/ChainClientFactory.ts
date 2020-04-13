@@ -1,4 +1,4 @@
-import {Injectable, Network} from 'ferrum-plumbing';
+import {Injectable, LocalCache, Network} from 'ferrum-plumbing';
 import {EthereumClient} from "./EthereumClient";
 import {ChainClient, MultiChainConfig, NetworkStage} from "./types";
 import {BinanceChainClient} from './BinanceChainClient';
@@ -7,20 +7,27 @@ import {CreateNewAddressFactory} from './CreateNewAddress';
 import {RemoteSignerClient} from "./remote/RemoteSignerClient";
 import {RemoteClientWrapper} from "./remote/RemoteClientWrapper";
 import {FullEthereumClient} from "./ethereum/FullEthereumClient";
+import {BitcoinClient} from "./bitcoin/BitcoinClient";
+import {BitcoinAddress} from "./bitcoin/BitcoinAddress";
 
 export class ChainClientFactory implements Injectable {
+    private readonly cache: LocalCache;
     constructor(private localConfig: MultiChainConfig,
                 private binanceGasProvider: BinanceGasPriceProvider,
                 private ethGasProvider: EthereumGasPriceProvider,
                 private newAddressFactory: CreateNewAddressFactory,
                 private remoteSigner?: RemoteSignerClient,
+                cache?: LocalCache,
                 ) {
+        this.cache = cache || new LocalCache();
     }
 
     private bnbClient: BinanceChainClient | undefined;
     private bnbClientTestnet: BinanceChainClient | undefined;
     private ethClient: EthereumClient | undefined;
     private rinkebyClient: EthereumClient | undefined;
+    private bitcoinClient: BitcoinClient | undefined;
+    private bitcoinTestnetClient: BitcoinClient | undefined;
 
     private wrap(client: ChainClient, network: Network) {
         return this.remoteSigner ? new RemoteClientWrapper(client, this.remoteSigner, network) : client;
@@ -48,6 +55,18 @@ export class ChainClientFactory implements Injectable {
                     this.rinkebyClient = new FullEthereumClient('test', this.localConfig, this.ethGasProvider);
                 }
                 return this.wrap(this.rinkebyClient, 'RINKEBY');
+            case 'BITCOIN':
+                 if (!this.bitcoinClient) {
+                     this.bitcoinClient = new BitcoinClient('prod',
+                       this.cache, new BitcoinAddress('prod'));
+                 }
+                 return this.wrap(this.bitcoinClient, 'BITCOIN');
+            case 'BITCOIN_TESTNET':
+                if (!this.bitcoinTestnetClient) {
+                    this.bitcoinTestnetClient = new BitcoinClient('test',
+                      this.cache, new BitcoinAddress('test'));
+                }
+                return this.wrap(this.bitcoinTestnetClient, 'BITCOIN_TESTNET');
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network)
         }
@@ -72,7 +91,5 @@ export class ChainClientFactory implements Injectable {
         }
     }
 
-    __name__(): string {
-        return 'ChainClientFactory';
-    }
+    __name__(): string { return 'ChainClientFactory'; }
 }

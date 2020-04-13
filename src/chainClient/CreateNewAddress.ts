@@ -9,6 +9,7 @@ import {NetworkStage} from './types';
 import {ecrecover, ecsign, privateToAddress, publicToAddress} from 'ethereumjs-util';
 import {Buffer} from 'buffer';
 import {randomBytes, sha256sync} from "ferrum-crypto";
+import {BitcoinAddress} from "./bitcoin/BitcoinAddress";
 
 export interface CreateNewAddress {
     newAddress(): Promise<AddressWithSecretKeys>;
@@ -23,11 +24,15 @@ export class CreateNewAddressFactory implements Injectable {
     private readonly rinkebyAddress: EthereumAddress;
     private readonly binance: BinanceChainAddress;
     private readonly binanceTestnet: BinanceChainAddress;
+    private readonly bitcoinTestnet: BitcoinAddress;
+    private readonly bitcoin: BitcoinAddress;
     constructor() {
         this.ethAddress = new EthereumAddress('prod');
         this.rinkebyAddress = new EthereumAddress('test');
         this.binance = new BinanceChainAddress('prod');
         this.binanceTestnet = new BinanceChainAddress('test');
+        this.bitcoinTestnet = new BitcoinAddress('test');
+        this.bitcoin = new BitcoinAddress('prod');
     }
 
     create(network: Network): CreateNewAddress {
@@ -40,6 +45,10 @@ export class CreateNewAddressFactory implements Injectable {
                 return this.ethAddress;
             case 'RINKEBY':
                 return this.rinkebyAddress;
+            case 'BITCOIN':
+                return this.bitcoin;
+            case 'BITCOIN_TESTNET':
+                return this.bitcoinTestnet;
             default:
                 throw new Error('CreateNewAddressFactory.create: Network not supported: ' + network)
         }

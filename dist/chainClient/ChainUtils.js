@@ -30,7 +30,7 @@ class ChainUtils {
             return {
                 r: res.signature.slice(0, 32).toString('hex'),
                 s: res.signature.slice(32, 64).toString('hex'),
-                v: 0,
+                v: res.recovery,
             };
         }
         else {
@@ -41,6 +41,16 @@ class ChainUtils {
                 v: sig.v,
             };
         }
+    }
+    static signatureToHex(sig) {
+        const i = sig.v + 27 + 4;
+        const cBuf = Buffer.alloc(66);
+        cBuf.writeInt8(i, 0);
+        const r = Buffer.from(sig.r, 'hex');
+        const s = Buffer.from(sig.s, 'hex');
+        r.copy(cBuf, 1, 0, 32);
+        s.copy(cBuf, 33, 0, 32);
+        return cBuf.toString('hex');
     }
     static addressesAreEqual(network, a1, a2) {
         if (!a1 || !a2) {

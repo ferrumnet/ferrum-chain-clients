@@ -20,6 +20,7 @@ import {ecsign} from 'ethereumjs-util';
 import {Log, TransactionReceipt} from 'web3-core/types';
 
 const BLOCK_CACH_TIMEOUT = 10 * 1000;
+const ERC_20_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
 function toDecimal(amount: any, decimals: number): string {
     return ChainUtils.toDecimalStr(amount, decimals);
@@ -27,6 +28,11 @@ function toDecimal(amount: any, decimals: number): string {
 
 function toWei(decimals: number, amount: string): BN {
     return new BN(ChainUtils.toBigIntStr(amount, decimals));
+}
+
+function transactionLogHasErc20Transfer(log: Log) {
+    const topics = log.topics || [];
+    return topics.length > 1 && topics[0] === ERC_20_TOPIC
 }
 
 export abstract class EthereumClient implements ChainClient {
@@ -141,8 +147,10 @@ export abstract class EthereumClient implements ChainClient {
                 let logs = transactionReceipt['logs'];
                 // TODO: This is a hack to fix bug with web3 https://github.com/ethereum/web3.js/issues/3134
                 // Remove once the bug is fixed
-                logs = (logs || []).filter(l =>
-                  !(l.topics || []).find(t => new BN(t.slice(2) || '0', 'hex').isZero()));
+                // logs = (logs || []).filter(l =>
+                //   !(l.topics || []).find(t =>
+                //     new BN(t.slice(2) || '0', 'hex').isZero()));
+                logs = (logs || []).filter(transactionLogHasErc20Transfer);
 
                 if (logs !== undefined) {
                     let decodedLogs: any[] = [];
@@ -285,9 +293,10 @@ export abstract class EthereumClient implements ChainClient {
 
     async signTransaction(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction> {
         let sigHex: EcSignature | undefined = undefined;
-        if (transaction.signature && transaction.signature.r) {
+        ValidationUtils.isTrue(!Array.isArray(transaction.signature), 'Multiple sig eth not supported');
+        if (transaction.signature && (transaction.signature as EcSignature).r) {
             // transaction is already signed. Just apply the signature
-            sigHex = transaction.signature;
+            sigHex = transaction.signature as EcSignature;
         } else {
             ValidationUtils.isTrue(!!transaction.signableHex, 'transaction has no signable hex');
             sigHex = await this.sign(skHex, transaction.signableHex!);

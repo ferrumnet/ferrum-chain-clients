@@ -14,12 +14,18 @@ const CreateNewAddress_1 = require("../../chainClient/CreateNewAddress");
 const FullEthereumClient_1 = require("../../chainClient/ethereum/FullEthereumClient");
 const BinanceChainClient_1 = require("../../chainClient/BinanceChainClient");
 const ChainClientFactory_1 = require("../../chainClient/ChainClientFactory");
+const BitcoinClient_1 = require("../../chainClient/bitcoin/BitcoinClient");
+const ferrum_plumbing_1 = require("ferrum-plumbing");
+const BitcoinAddress_1 = require("../../chainClient/bitcoin/BitcoinAddress");
 exports.TEST_ACCOUNTS = {
     mainAccountSk: '3C6681B912ABEA03AB2D625759FE38E9BC7301120C13CFA3A3217112A3F2A919',
+    mainAccountAddressBtc: '1MK6fMPS2gSV7Gt5iWaTZQV47PvrC7a5jr',
+    mainAccountAddressBtcTestnet: 'n1q3xQUQqhsjtPMhS5YqPKhNyPXZ9dbpCZ',
     mainAccountAddress: '0x0D959c295E36c140AB766dC12E21eBBB411Bd611',
     mainAccountAddressBnb: 'tbnb1mm8t4rexcz44wrhxv2ac94lpmjdsjx73jkyhzr',
     secondAccountSk: 'ec2a2b02f465f7e77d1b6128c564748eee8bdca22cce008dbce4e6dc1a44d993',
     secondAccountAddress: '0x8017877A1C06efbc7f444AC709119C1e209F26Ee',
+    secondAccountAddressBtcTestnet: 'mfX7AnsMaAk9GMhN2Z3iuHSTT5UYrkWWVK',
 };
 exports.TEST_FRM = '0x93698a057cec27508a9157a946e03e277b46fe56';
 exports.TEST_GUSD = '0x056fd409e1d7a124bd7017459dfea2f387b6d5cd';
@@ -47,6 +53,14 @@ function binanceClientForProd() {
     return new BinanceChainClient_1.BinanceChainClient('prod', TEST_PROD_CONFIG);
 }
 exports.binanceClientForProd = binanceClientForProd;
+function bitcoinClientForProd() {
+    return new BitcoinClient_1.BitcoinClient('prod', new ferrum_plumbing_1.LocalCache(), new BitcoinAddress_1.BitcoinAddress('prod'));
+}
+exports.bitcoinClientForProd = bitcoinClientForProd;
+function bitcoinClientForTest() {
+    return new BitcoinClient_1.BitcoinClient('test', new ferrum_plumbing_1.LocalCache(), new BitcoinAddress_1.BitcoinAddress('test'));
+}
+exports.bitcoinClientForTest = bitcoinClientForTest;
 function testChainClientFactory() {
     return new ChainClientFactory_1.ChainClientFactory(exports.TESTNET_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new GasPriceProvider_1.EthereumGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory());
 }

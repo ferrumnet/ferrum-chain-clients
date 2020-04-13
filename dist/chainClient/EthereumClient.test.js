@@ -206,7 +206,7 @@ test('Get another erc20 transaction by id', function () {
         const txid = '0x94b46e2c81af39d2da3ed691ee08482d905dfaf8016d44a7565fb8d5acd7fa61';
         const client = TestnetConfig_1.ethereumClientForProd();
         const usdcTx = yield client.getTransactionById(txid);
-        expect(usdcTx.fromItems[0].amount).toBe('0');
+        expect(usdcTx.fromItems[0].amount).toBe('85619.0');
     });
 });
 test('Get block by number', function () {

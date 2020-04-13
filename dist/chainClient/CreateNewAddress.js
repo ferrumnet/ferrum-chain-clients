@@ -27,6 +27,7 @@ const web3_1 = __importDefault(require("web3"));
 const ethereumjs_util_1 = require("ethereumjs-util");
 const buffer_1 = require("buffer");
 const ferrum_crypto_1 = require("ferrum-crypto");
+const BitcoinAddress_1 = require("./bitcoin/BitcoinAddress");
 /**
  * Note: Do not directly use this. Instead use ChainClientFactory
  */
@@ -36,6 +37,8 @@ class CreateNewAddressFactory {
         this.rinkebyAddress = new EthereumAddress('test');
         this.binance = new BinanceChainAddress('prod');
         this.binanceTestnet = new BinanceChainAddress('test');
+        this.bitcoinTestnet = new BitcoinAddress_1.BitcoinAddress('test');
+        this.bitcoin = new BitcoinAddress_1.BitcoinAddress('prod');
     }
     create(network) {
         switch (network) {
@@ -47,6 +50,10 @@ class CreateNewAddressFactory {
                 return this.ethAddress;
             case 'RINKEBY':
                 return this.rinkebyAddress;
+            case 'BITCOIN':
+                return this.bitcoin;
+            case 'BITCOIN_TESTNET':
+                return this.bitcoinTestnet;
             default:
                 throw new Error('CreateNewAddressFactory.create: Network not supported: ' + network);
         }

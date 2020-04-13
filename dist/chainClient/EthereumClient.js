@@ -32,11 +32,16 @@ const ethereumjs_tx_1 = require("ethereumjs-tx");
 const ferrum_crypto_1 = require("ferrum-crypto");
 const ethereumjs_util_1 = require("ethereumjs-util");
 const BLOCK_CACH_TIMEOUT = 10 * 1000;
+const ERC_20_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 function toDecimal(amount, decimals) {
     return ChainUtils_1.ChainUtils.toDecimalStr(amount, decimals);
 }
 function toWei(decimals, amount) {
     return new bn_js_1.default(ChainUtils_1.ChainUtils.toBigIntStr(amount, decimals));
+}
+function transactionLogHasErc20Transfer(log) {
+    const topics = log.topics || [];
+    return topics.length > 1 && topics[0] === ERC_20_TOPIC;
 }
 class EthereumClient {
     constructor(networkStage, config, gasService) {
@@ -149,7 +154,10 @@ class EthereumClient {
                     let logs = transactionReceipt['logs'];
                     // TODO: This is a hack to fix bug with web3 https://github.com/ethereum/web3.js/issues/3134
                     // Remove once the bug is fixed
-                    logs = (logs || []).filter(l => !(l.topics || []).find(t => new bn_js_1.default(t.slice(2) || '0', 'hex').isZero()));
+                    // logs = (logs || []).filter(l =>
+                    //   !(l.topics || []).find(t =>
+                    //     new BN(t.slice(2) || '0', 'hex').isZero()));
+                    logs = (logs || []).filter(transactionLogHasErc20Transfer);
                     if (logs !== undefined) {
                         let decodedLogs = [];
                         try {
@@ -289,6 +297,7 @@ class EthereumClient {
     signTransaction(skHex, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
             let sigHex = undefined;
+            ferrum_plumbing_1.ValidationUtils.isTrue(!Array.isArray(transaction.signature), 'Multiple sig eth not supported');
             if (transaction.signature && transaction.signature.r) {
                 // transaction is already signed. Just apply the signature
                 sigHex = transaction.signature;

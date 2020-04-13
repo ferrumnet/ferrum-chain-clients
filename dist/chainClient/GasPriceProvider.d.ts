@@ -17,7 +17,7 @@ export declare class BinanceGasPriceProvider implements GasPriceProvider, Inject
 }
 export declare class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
     private static GasStationUrl;
-    private static GasTimeout;
+    static readonly GasTimeout = 30000;
     private lastUpdate;
     private lastPrice;
     constructor();
