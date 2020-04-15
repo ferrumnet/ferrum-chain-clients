@@ -115,6 +115,12 @@ test('Get transaction BY ID no token transfer', () => __awaiter(void 0, void 0, 
     const tx = yield client.getTransactionById(tid);
     console.log(tx);
 }));
+test('Get transaction BY ID for zero address hack', () => __awaiter(void 0, void 0, void 0, function* () {
+    const tid = '0xc329d26c21bcb31d1d83bf412c34ba9ee23b93bb75aabc2ea354573113bd7136';
+    const client = ethereumClientForTest();
+    const tx = yield client.getTransactionById(tid);
+    console.log(tx);
+}));
 test('Get transaction BY ID including token transfer', () => __awaiter(void 0, void 0, void 0, function* () {
     const tid = '0xc80881f0bcee3c53411bf8781665dbb762a0aef4780af0f8868dc7513387ebe3';
     const client = TestnetConfig_1.ethereumClientForProd();

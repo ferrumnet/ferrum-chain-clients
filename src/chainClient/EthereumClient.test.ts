@@ -100,9 +100,7 @@ test('send rinkeby tx that is failed', async () => {
     const client = ethereumClientForTest();
     const tx = await client.getTransactionById('0xa5b6ceb8bfed8851c82344d5382c1d31a814ec8d6ae3d876cb4eacd0697582f3');
     console.log('GOT TX ', tx);
-
 });
-
 
 test('send tx with overwritten gas', async () => {
     jest.setTimeout(10000000);
@@ -118,6 +116,13 @@ test('send tx with overwritten gas', async () => {
 test('Get transaction BY ID no token transfer', async () => {
     const tid = '0x2268da5e389627122707f64b61fb9129a7cb3554117b2f07e75200833e8d7ce9';
     const client = ethereumClientForProd();
+    const tx = await client.getTransactionById(tid);
+    console.log(tx);
+});
+
+test('Get transaction BY ID for zero address hack', async () => {
+    const tid = '0xc329d26c21bcb31d1d83bf412c34ba9ee23b93bb75aabc2ea354573113bd7136';
+    const client = ethereumClientForTest();
     const tx = await client.getTransactionById(tid);
     console.log(tx);
 });

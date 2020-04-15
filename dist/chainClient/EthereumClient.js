@@ -33,6 +33,7 @@ const ferrum_crypto_1 = require("ferrum-crypto");
 const ethereumjs_util_1 = require("ethereumjs-util");
 const BLOCK_CACH_TIMEOUT = 10 * 1000;
 const ERC_20_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+const HACK_ZERO_REPLACEMENT = '0x0000000000000000000000000000000000000001';
 function toDecimal(amount, decimals) {
     return ChainUtils_1.ChainUtils.toDecimalStr(amount, decimals);
 }
@@ -41,7 +42,8 @@ function toWei(decimals, amount) {
 }
 function transactionLogHasErc20Transfer(log) {
     const topics = log.topics || [];
-    return topics.length > 1 && topics[0] === ERC_20_TOPIC;
+    const nonZeroData = log.data && log.data !== '0x' && log.data !== '0X';
+    return nonZeroData && topics.length > 1 && topics[0] === ERC_20_TOPIC;
 }
 class EthereumClient {
     constructor(networkStage, config, gasService) {
@@ -152,12 +154,15 @@ class EthereumClient {
                         };
                     }
                     let logs = transactionReceipt['logs'];
+                    logs = (logs || []).filter(transactionLogHasErc20Transfer);
                     // TODO: This is a hack to fix bug with web3 https://github.com/ethereum/web3.js/issues/3134
                     // Remove once the bug is fixed
-                    // logs = (logs || []).filter(l =>
-                    //   !(l.topics || []).find(t =>
-                    //     new BN(t.slice(2) || '0', 'hex').isZero()));
-                    logs = (logs || []).filter(transactionLogHasErc20Transfer);
+                    // logs.forEach(l =>
+                    //   (l.topics || []).forEach((t, i) => {
+                    //       const isZ = new BN(t.slice(2) || '0', 'hex').isZero();
+                    //       if (isZ) { l.topics[i] = HACK_ZERO_REPLACEMENT; }
+                    //   }
+                    // ));
                     if (logs !== undefined) {
                         let decodedLogs = [];
                         try {
