@@ -2,7 +2,7 @@ import fetch from "cross-fetch";
 import {Injectable} from 'ferrum-plumbing';
 import Web3 from 'web3';
 import BN from 'bn.js';
-import {ChainUtils} from "./ChainUtils";
+import {ChainUtils, ETH_DECIMALS} from "./ChainUtils";
 
 export const FRM = '0xe5caef4af8780e59df925470b050fb23c43ca68c';
 
@@ -88,7 +88,7 @@ export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
         const tok = ChainUtils.tokenPart(currency);
         const gasAmount = tok === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
                 EthereumGasPriceProvider.gasLimiForErc20(currency, currentTargetBalance || '0');
-        return new BN(gasAmount).mul(new BN(gasPrice)).toString();
+        return new BN(gasAmount).mul(new BN(ChainUtils.toBigIntStr(gasPrice, ETH_DECIMALS))).toString();
     }
 
     __name__(): string {

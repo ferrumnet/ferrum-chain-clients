@@ -2,7 +2,7 @@ import {Container, Module} from "ferrum-plumbing";
 import {ChainClientFactory} from "./chainClient/ChainClientFactory";
 import {MultiChainConfig} from "./chainClient/types";
 import {BinanceGasPriceProvider, EthereumGasPriceProvider} from "./chainClient/GasPriceProvider";
-import {BinanceChainAddress, CreateNewAddressFactory, EthereumAddress} from "./chainClient/CreateNewAddress";
+import {CreateNewAddressFactory} from "./chainClient/CreateNewAddress";
 
 /**
  * You must register the MultiChainConfig outside this module

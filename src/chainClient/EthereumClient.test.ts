@@ -84,6 +84,15 @@ test('debug tx', async function() {
     console.log(JSON.stringify(ChainUtils.simpleTransactionToServer(tx!)));
 });
 
+test('test another tx', async function() {
+    jest.setTimeout(10000000);
+    const client = ethereumClientForProd();
+    const txId = '0x6dc718edd603c2e91e6919ccb0e87c1e0b0a188cdca46e3ca68df763d21f2ef8';
+    // const txId = '0xdd70b1151a6d8d401e744ed61d74d2668b7ccac2444c7d8acf912ad6466d41ac';
+    const tx = await client.getTransactionById(txId);
+    console.log(JSON.stringify(ChainUtils.simpleTransactionToServer(tx!)));
+});
+
 test('send tx with overwritten gas as params', async () => {
     jest.setTimeout(10000000);
     const client = ethereumClientForTest();

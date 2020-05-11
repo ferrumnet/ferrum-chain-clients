@@ -9,5 +9,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="chain-node-watcher" />
+    <orderEntry type="module" module-name="ferrum-plumbing" />
+    <orderEntry type="module" module-name="aws-lambda-helper" />
+    <orderEntry type="module" module-name="wallet-address-manager" />
   </component>
 </module>

@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../aws-lambda-helper/.idea/aws-lambda-helper.iml" filepath="$PROJECT_DIR$/../aws-lambda-helper/.idea/aws-lambda-helper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../chain-node-watcher/.idea/chain-node-watcher.iml" filepath="$PROJECT_DIR$/../chain-node-watcher/.idea/chain-node-watcher.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/ferrum-chain-clients.iml" filepath="$PROJECT_DIR$/.idea/ferrum-chain-clients.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ferrum-plumbing/.idea/ferrum-plumbing.iml" filepath="$PROJECT_DIR$/../ferrum-plumbing/.idea/ferrum-plumbing.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../wallet-address-manager/.idea/wallet-address-manager.iml" filepath="$PROJECT_DIR$/../wallet-address-manager/.idea/wallet-address-manager.iml" />
     </modules>
   </component>
 </project>
