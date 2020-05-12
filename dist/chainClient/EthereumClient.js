@@ -333,16 +333,29 @@ class EthereumClient {
             return { r: sig.r.toString('hex'), s: sig.s.toString('hex'), v: sig.v };
         });
     }
-    broadcastTransaction(transaction) {
+    broadcastTransaction(transaction, onTransactionReceipt, onError) {
         return __awaiter(this, void 0, void 0, function* () {
             const web3 = this.web3();
             const tx = new ethereumjs_tx_1.Transaction('0x' + transaction.serializedTransaction, this.getChainOptions());
             ferrum_plumbing_1.ValidationUtils.isTrue(tx.validate(), 'Provided transaction is invalid');
             ferrum_plumbing_1.ValidationUtils.isTrue(tx.verifySignature(), 'Signature cannot be verified');
             const rawTransaction = '0x' + transaction.serializedTransaction;
+            const txIds = [''];
             // var transactionHash = utils.keccak256(rawTransaction);
-            const receipt = yield web3.eth.sendSignedTransaction(rawTransaction);
-            return receipt.transactionHash;
+            return new Promise((resolve, reject) => {
+                web3.eth.sendSignedTransaction(rawTransaction, (e, hash) => {
+                    reject(e);
+                    if (!!onError) {
+                        onError(hash, e);
+                    }
+                }).on('transactionHash', (txId) => {
+                    txIds[0] = txId;
+                    resolve(txId);
+                })
+                    .on('receipt', (receipt) => onTransactionReceipt ?
+                    onTransactionReceipt(receipt.transactionHash) : {})
+                    .on('error', e => onError ? onError(txIds[0], e) : {});
+            });
         });
     }
     createPaymentTransaction(fromAddress, targetAddress, currency, amount, gasOverride, memo, nonce) {

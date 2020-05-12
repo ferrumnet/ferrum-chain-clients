@@ -328,15 +328,31 @@ export abstract class EthereumClient implements ChainClient {
         return {r: sig.r.toString('hex'), s: sig.s.toString('hex'), v: sig.v};
     }
 
-    async broadcastTransaction<T>(transaction: SignableTransaction): Promise<HexString> {
+    async broadcastTransaction<T>(transaction: SignableTransaction,
+                                  onTransactionReceipt?: (txId: string) => void,
+                                  onError?: (txId: string, e: Error) => void,
+                                  ): Promise<HexString> {
         const web3 = this.web3();
         const tx = new Transaction('0x' + transaction.serializedTransaction, this.getChainOptions());
         ValidationUtils.isTrue(tx.validate(), 'Provided transaction is invalid');
         ValidationUtils.isTrue(tx.verifySignature(), 'Signature cannot be verified');
         const rawTransaction = '0x' + transaction.serializedTransaction;
+        const txIds = [''];
         // var transactionHash = utils.keccak256(rawTransaction);
-        const receipt = await web3.eth.sendSignedTransaction(rawTransaction);
-        return receipt.transactionHash;
+        return new Promise<string>((resolve, reject) => {
+            web3.eth.sendSignedTransaction(rawTransaction,
+                (e, hash) => {
+                    reject(e);
+                    if (!!onError) { onError(hash, e); }
+                },
+            ).on('transactionHash', (txId: string) => {
+                txIds[0] = txId;
+                resolve(txId);
+            })
+            .on('receipt', (receipt) => onTransactionReceipt ?
+                onTransactionReceipt(receipt.transactionHash) : {})
+            .on('error', e => onError ? onError(txIds[0], e) : {})
+        });
     }
 
     async createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string,
