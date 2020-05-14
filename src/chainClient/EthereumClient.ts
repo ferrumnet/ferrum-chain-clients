@@ -329,7 +329,7 @@ export abstract class EthereumClient implements ChainClient {
     }
 
     async broadcastTransaction<T>(transaction: SignableTransaction,
-                                  onTransactionReceipt?: (txId: string) => void,
+                                  onTransactionReceipt?: (txId: string, feeBigInt: string, feeCurrency: string) => void,
                                   onError?: (txId: string, e: Error) => void,
                                   ): Promise<HexString> {
         const web3 = this.web3();
@@ -359,7 +359,10 @@ export abstract class EthereumClient implements ChainClient {
                 }
             })
             .on('receipt', (receipt) => onTransactionReceipt ?
-                onTransactionReceipt(receipt.transactionHash) : {})
+                onTransactionReceipt(
+                    receipt.transactionHash,
+                    new BN(tx.gasPrice).muln(receipt.gasUsed).toString(),
+                    this.feeCurrency()) : {})
             .on('error', e => onError ? onError(txIds[0], e) : {})
         });
     }

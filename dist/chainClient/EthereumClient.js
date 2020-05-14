@@ -363,7 +363,7 @@ class EthereumClient {
                     }
                 })
                     .on('receipt', (receipt) => onTransactionReceipt ?
-                    onTransactionReceipt(receipt.transactionHash) : {})
+                    onTransactionReceipt(receipt.transactionHash, new bn_js_1.default(tx.gasPrice).muln(receipt.gasUsed).toString(), this.feeCurrency()) : {})
                     .on('error', e => onError ? onError(txIds[0], e) : {});
             });
         });
