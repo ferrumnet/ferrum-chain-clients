@@ -342,12 +342,21 @@ export abstract class EthereumClient implements ChainClient {
         return new Promise<string>((resolve, reject) => {
             web3.eth.sendSignedTransaction(rawTransaction,
                 (e, hash) => {
-                    reject(e);
-                    if (!!onError) { onError(hash, e); }
+                    if (!!e) {
+                        reject(e);
+                        if (!!onError && !!hash) { onError(hash, e); }
+                    } else {
+                        if (!!hash && !txIds[0]) {
+                            txIds[0] = hash;
+                            resolve(hash);
+                        }
+                    }
                 },
             ).on('transactionHash', (txId: string) => {
-                txIds[0] = txId;
-                resolve(txId);
+                if (!txIds[0]) {
+                    txIds[0] = txId;
+                    resolve(txId);
+                }
             })
             .on('receipt', (receipt) => onTransactionReceipt ?
                 onTransactionReceipt(receipt.transactionHash) : {})
