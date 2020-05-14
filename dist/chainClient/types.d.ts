@@ -111,7 +111,7 @@ export interface ChainClient extends ChainTransactionSigner {
     signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
     getRecentTransactionsByAddress(address: string, currencies: string[]): Promise<SimpleTransferTransaction[] | undefined>;
     getBalance(address: string, currency: string): Promise<string | undefined>;
-    broadcastTransaction<T>(transaction: SignableTransaction, onTransactionReceipt?: (txId: string) => void, onError?: (txId: string, e: Error) => void): Promise<string>;
+    broadcastTransaction<T>(transaction: SignableTransaction, onTransactionReceipt?: (txId: string, feeBigInt: string, feeCurrency: string) => void, onError?: (txId: string, e: Error) => void): Promise<string>;
     waitForTransaction(tid: string): Promise<SimpleTransferTransaction | undefined>;
     feeCurrency(): string;
     feeDecimals(): number;

@@ -135,7 +135,7 @@ export interface ChainClient extends ChainTransactionSigner {
   getBalance(address: string, currency: string): Promise<string|undefined>;
 
   broadcastTransaction<T>(transaction: SignableTransaction,
-                          onTransactionReceipt?: (txId: string) => void,
+                          onTransactionReceipt?: (txId: string, feeBigInt: string, feeCurrency: string) => void,
                           onError?: (txId: string, e: Error) => void,
   ): Promise<string>;
 
