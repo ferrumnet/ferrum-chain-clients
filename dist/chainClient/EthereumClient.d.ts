@@ -17,7 +17,7 @@ export declare abstract class EthereumClient implements ChainClient {
     private lastBlockNumber;
     private lastBlockRead;
     getCachedCurrentBlock(): Promise<number>;
-    getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
+    getTransactionById(tid: string, includePending?: boolean): Promise<SimpleTransferTransaction | undefined>;
     processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, currency: string, amount: string): Promise<string>;
     processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: string, amount: string, gasOverride: string | GasParameters): Promise<string>;
     private static getGasLimit;
@@ -26,7 +26,7 @@ export declare abstract class EthereumClient implements ChainClient {
     signTransaction(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
     decodeSignature(sig: EcSignature): any;
     sign(skHex: HexString, data: HexString): Promise<EcSignature>;
-    broadcastTransaction<T>(transaction: SignableTransaction, onTransactionReceipt?: (txId: string, feeBigInt: string, feeCurrency: string) => void, onError?: (txId: string, e: Error) => void): Promise<HexString>;
+    broadcastTransaction<T>(transaction: SignableTransaction): Promise<HexString>;
     createPaymentTransaction<Tx>(fromAddress: string, targetAddress: string, currency: string, amount: string, gasOverride?: string | GasParameters, memo?: string, nonce?: number): Promise<SignableTransaction>;
     /**
      * Note: This only returns incoming transactions to the given address and only works for ERC20 transactions

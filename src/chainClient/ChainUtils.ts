@@ -138,12 +138,21 @@ export class ChainUtils {
     }
 }
 
-export async function waitForTx(client: ChainClient, transactionId: string, waitTimeout: number, fetchTimeout: number) {
+export async function waitForTx(
+    client: ChainClient,
+    transactionId: string,
+    waitTimeout: number,
+    fetchTimeout: number,
+    justWaitForPending: boolean = false,
+    ) {
     const time = Date.now();
     while (true) {
-        const tx = await client.getTransactionById(transactionId);
+        const tx = await client.getTransactionById(transactionId, true);
         if (!tx && (Date.now() - time) > waitTimeout) {
             return undefined;
+        }
+        if (tx && justWaitForPending) {
+            return tx;
         }
         if (tx && (tx.confirmed || tx.failed)) {
             return tx;

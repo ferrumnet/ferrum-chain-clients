@@ -145,13 +145,16 @@ exports.ChainUtils = ChainUtils;
 ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT = 60000;
 ChainUtils.TX_FETCH_TIMEOUT = 1000;
 ChainUtils.TX_MAXIMUM_WAIT_TIMEOUT = 3600 * 1000;
-function waitForTx(client, transactionId, waitTimeout, fetchTimeout) {
+function waitForTx(client, transactionId, waitTimeout, fetchTimeout, justWaitForPending = false) {
     return __awaiter(this, void 0, void 0, function* () {
         const time = Date.now();
         while (true) {
-            const tx = yield client.getTransactionById(transactionId);
+            const tx = yield client.getTransactionById(transactionId, true);
             if (!tx && (Date.now() - time) > waitTimeout) {
                 return undefined;
+            }
+            if (tx && justWaitForPending) {
+                return tx;
             }
             if (tx && (tx.confirmed || tx.failed)) {
                 return tx;

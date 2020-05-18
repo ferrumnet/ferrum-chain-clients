@@ -116,7 +116,7 @@ export interface ChainTransactionSigner {
 }
 
 export interface ChainClient extends ChainTransactionSigner {
-  getTransactionById(tid: string): Promise<SimpleTransferTransaction|undefined>;
+  getTransactionById(tid: string, includePending?: boolean): Promise<SimpleTransferTransaction|undefined>;
 
   processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any,
                                amount: string): Promise<string>;
@@ -134,10 +134,7 @@ export interface ChainClient extends ChainTransactionSigner {
 
   getBalance(address: string, currency: string): Promise<string|undefined>;
 
-  broadcastTransaction<T>(transaction: SignableTransaction,
-                          onTransactionReceipt?: (txId: string, feeBigInt: string, feeCurrency: string) => void,
-                          onError?: (txId: string, e: Error) => void,
-  ): Promise<string>;
+  broadcastTransaction<T>(transaction: SignableTransaction): Promise<string>;
 
   waitForTransaction(tid: string): Promise<SimpleTransferTransaction|undefined>;
 

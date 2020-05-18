@@ -105,7 +105,7 @@ class EthereumClient {
             return this.getBlockNumber();
         });
     }
-    getTransactionById(tid) {
+    getTransactionById(tid, includePending = false) {
         return __awaiter(this, void 0, void 0, function* () {
             return ferrum_plumbing_1.retry(() => __awaiter(this, void 0, void 0, function* () {
                 try {
@@ -114,9 +114,32 @@ class EthereumClient {
                     if (!transaction) {
                         return undefined;
                     }
+                    if (!transaction.blockHash && !transaction.blockNumber && !includePending) {
+                        return undefined;
+                    }
                     let transactionReceipt = yield web3.eth.getTransactionReceipt(tid);
                     if (!transactionReceipt) {
-                        return undefined;
+                        const fee = web3_1.default.utils.fromWei(new bn_js_1.default(transaction.gasPrice).muln(transaction.gas), 'ether');
+                        return {
+                            confirmed: false,
+                            failed: false,
+                            fee,
+                            feeCurrency: this.feeCurrency(),
+                            id: transaction.hash,
+                            network: this.network(),
+                            feeDecimals: this.feeDecimals(),
+                            fromItems: [{
+                                    address: transaction.from,
+                                    currency: '',
+                                    amount: '0'
+                                }],
+                            toItems: [{
+                                    address: transaction.to,
+                                    currency: '',
+                                    amount: '0'
+                                }],
+                            singleItem: true,
+                        };
                     }
                     const currentBlock = yield this.getCachedCurrentBlock();
                     let confirmed = transactionReceipt.blockNumber === null ? 0 : Math.max(1, currentBlock - transactionReceipt.blockNumber);
@@ -333,7 +356,7 @@ class EthereumClient {
             return { r: sig.r.toString('hex'), s: sig.s.toString('hex'), v: sig.v };
         });
     }
-    broadcastTransaction(transaction, onTransactionReceipt, onError) {
+    broadcastTransaction(transaction) {
         return __awaiter(this, void 0, void 0, function* () {
             const web3 = this.web3();
             const tx = new ethereumjs_tx_1.Transaction('0x' + transaction.serializedTransaction, this.getChainOptions());
@@ -346,9 +369,6 @@ class EthereumClient {
                 web3.eth.sendSignedTransaction(rawTransaction, (e, hash) => {
                     if (!!e) {
                         reject(e);
-                        if (!!onError && !!hash) {
-                            onError(hash, e);
-                        }
                     }
                     else {
                         if (!!hash && !txIds[0]) {
@@ -356,15 +376,12 @@ class EthereumClient {
                             resolve(hash);
                         }
                     }
-                }).on('transactionHash', (txId) => {
+                }).once('transactionHash', (txId) => {
                     if (!txIds[0]) {
                         txIds[0] = txId;
                         resolve(txId);
                     }
-                })
-                    .on('receipt', (receipt) => onTransactionReceipt ?
-                    onTransactionReceipt(receipt.transactionHash, new bn_js_1.default(tx.gasPrice).muln(receipt.gasUsed).toString(), this.feeCurrency()) : {})
-                    .on('error', e => onError ? onError(txIds[0], e) : {});
+                });
             });
         });
     }

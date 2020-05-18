@@ -99,7 +99,7 @@ export abstract class EthereumClient implements ChainClient {
         return this.getBlockNumber();
     }
 
-    async getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined> {
+    async getTransactionById(tid: string, includePending: boolean = false): Promise<SimpleTransferTransaction | undefined> {
         return retry(async () => {
             try {
                 const web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
@@ -107,9 +107,33 @@ export abstract class EthereumClient implements ChainClient {
                 if (!transaction) {
                     return undefined;
                 }
+                if (!transaction.blockHash && !transaction.blockNumber && !includePending) {
+                    return undefined;
+                }
                 let transactionReceipt = await web3.eth.getTransactionReceipt(tid);
                 if (!transactionReceipt) {
-                    return undefined;
+                    const fee = Web3.utils.fromWei(
+                        new BN(transaction.gasPrice).muln(transaction.gas), 'ether');
+                    return {
+                        confirmed: false,
+                        failed: false,
+                        fee,
+                        feeCurrency: this.feeCurrency(),
+                        id: transaction.hash,
+                        network: this.network(),
+                        feeDecimals: this.feeDecimals(),
+                        fromItems: [{
+                            address: transaction.from,
+                            currency: '', // TODO: If to is a contract
+                            amount: '0'
+                        }],
+                        toItems: [{
+                            address: transaction.to,
+                            currency: '', // TODO: If to is a contract
+                            amount: '0'
+                        }],
+                        singleItem: true,
+                    } as SimpleTransferTransaction;
                 }
                 const currentBlock = await this.getCachedCurrentBlock();
                 let confirmed = transactionReceipt.blockNumber === null ? 0 : Math.max(1, currentBlock - transactionReceipt.blockNumber);
@@ -328,10 +352,7 @@ export abstract class EthereumClient implements ChainClient {
         return {r: sig.r.toString('hex'), s: sig.s.toString('hex'), v: sig.v};
     }
 
-    async broadcastTransaction<T>(transaction: SignableTransaction,
-                                  onTransactionReceipt?: (txId: string, feeBigInt: string, feeCurrency: string) => void,
-                                  onError?: (txId: string, e: Error) => void,
-                                  ): Promise<HexString> {
+    async broadcastTransaction<T>(transaction: SignableTransaction): Promise<HexString> {
         const web3 = this.web3();
         const tx = new Transaction('0x' + transaction.serializedTransaction, this.getChainOptions());
         ValidationUtils.isTrue(tx.validate(), 'Provided transaction is invalid');
@@ -344,7 +365,6 @@ export abstract class EthereumClient implements ChainClient {
                 (e, hash) => {
                     if (!!e) {
                         reject(e);
-                        if (!!onError && !!hash) { onError(hash, e); }
                     } else {
                         if (!!hash && !txIds[0]) {
                             txIds[0] = hash;
@@ -352,18 +372,12 @@ export abstract class EthereumClient implements ChainClient {
                         }
                     }
                 },
-            ).on('transactionHash', (txId: string) => {
+            ).once('transactionHash', (txId: string) => {
                 if (!txIds[0]) {
                     txIds[0] = txId;
                     resolve(txId);
                 }
             })
-            .on('receipt', (receipt) => onTransactionReceipt ?
-                onTransactionReceipt(
-                    receipt.transactionHash,
-                    new BN(tx.gasPrice).muln(receipt.gasUsed).toString(),
-                    this.feeCurrency()) : {})
-            .on('error', e => onError ? onError(txIds[0], e) : {})
         });
     }
 

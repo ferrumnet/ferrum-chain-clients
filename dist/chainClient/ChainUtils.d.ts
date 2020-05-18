@@ -23,7 +23,7 @@ export declare class ChainUtils {
     static toBigIntStr(amount: string | number, decimals: number): string;
     static tokenPart(cur: string): string;
 }
-export declare function waitForTx(client: ChainClient, transactionId: string, waitTimeout: number, fetchTimeout: number): Promise<SimpleTransferTransaction | undefined>;
+export declare function waitForTx(client: ChainClient, transactionId: string, waitTimeout: number, fetchTimeout: number, justWaitForPending?: boolean): Promise<SimpleTransferTransaction | undefined>;
 export declare function normalizeBnbAmount(amount: string): string;
 export declare const BINANCE_DECIMALS = 8;
 export declare const ETH_DECIMALS = 18;
