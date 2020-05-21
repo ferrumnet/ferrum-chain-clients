@@ -25,11 +25,17 @@ export class EtherScanHistoryClient implements ChainHistoryClient, Injectable {
     providesHistory(): Boolean { return true; }
 
     async getNonBlockTransactions(fromBlock: number, toBlock: number, filter: any): Promise<SimpleTransferTransaction[]> {
+        if (fromBlock > toBlock) {
+            return [];
+        }
         const res = await this.api('txlistinternal', '', fromBlock.toString(), toBlock.toString());
         return this.parseTxs(res.result || []);
     }
 
     async getTransactionsForAddress(address: string, fromBlock: number, toBlock: number, filter: any): Promise<SimpleTransferTransaction[]> {
+        if (fromBlock > toBlock) {
+            return [];
+        }
         const res1 = await this.api('txlistinternal', address, fromBlock.toString(), toBlock.toString());
         const res2 = await this.api('tokentx', address, fromBlock.toString(), toBlock.toString());
         const res3 = await this.api('txlist', address, fromBlock.toString(), toBlock.toString());

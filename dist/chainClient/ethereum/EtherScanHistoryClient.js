@@ -32,12 +32,18 @@ class EtherScanHistoryClient {
     providesHistory() { return true; }
     getNonBlockTransactions(fromBlock, toBlock, filter) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (fromBlock > toBlock) {
+                return [];
+            }
             const res = yield this.api('txlistinternal', '', fromBlock.toString(), toBlock.toString());
             return this.parseTxs(res.result || []);
         });
     }
     getTransactionsForAddress(address, fromBlock, toBlock, filter) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (fromBlock > toBlock) {
+                return [];
+            }
             const res1 = yield this.api('txlistinternal', address, fromBlock.toString(), toBlock.toString());
             const res2 = yield this.api('tokentx', address, fromBlock.toString(), toBlock.toString());
             const res3 = yield this.api('txlist', address, fromBlock.toString(), toBlock.toString());
