@@ -6,12 +6,14 @@ const RemoteClientWrapper_1 = require("./remote/RemoteClientWrapper");
 const FullEthereumClient_1 = require("./ethereum/FullEthereumClient");
 const BitcoinClient_1 = require("./bitcoin/BitcoinClient");
 const BitcoinAddress_1 = require("./bitcoin/BitcoinAddress");
+const EtherScanHistoryClient_1 = require("./ethereum/EtherScanHistoryClient");
 class ChainClientFactory {
-    constructor(localConfig, binanceGasProvider, ethGasProvider, newAddressFactory, remoteSigner, cache) {
+    constructor(localConfig, binanceGasProvider, ethGasProvider, newAddressFactory, loggerFactory, remoteSigner, cache) {
         this.localConfig = localConfig;
         this.binanceGasProvider = binanceGasProvider;
         this.ethGasProvider = ethGasProvider;
         this.newAddressFactory = newAddressFactory;
+        this.loggerFactory = loggerFactory;
         this.remoteSigner = remoteSigner;
         this.cache = cache || new ferrum_plumbing_1.LocalCache();
     }
@@ -69,6 +71,16 @@ class ChainClientFactory {
                 return this.ethGasProvider;
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);
+        }
+    }
+    historyClient(network) {
+        switch (network) {
+            case 'ETHEREUM':
+                return new EtherScanHistoryClient_1.EtherScanHistoryClient(this.localConfig.etherscanApiKey, 'ETHEREUM', this.loggerFactory);
+            case 'RINKEBY':
+                return new EtherScanHistoryClient_1.EtherScanHistoryClient(this.localConfig.etherscanApiKey, 'RINKEBY', this.loggerFactory);
+            default:
+                throw new Error('ChainClientFactory.historyClient: Unsupported network: ' + network);
         }
     }
     __name__() { return 'ChainClientFactory'; }

@@ -33,6 +33,7 @@ exports.TESTNET_CONFIG = {
     binanceChainUrl: 'https://testnet-dex.binance.org',
     networkStage: 'test',
     web3Provider: '',
+    etherscanApiKey: '',
     web3ProviderRinkeby: 'https://rinkeby.infura.io/v3/637d6212c3de438c845e2544baad58b7',
     binanceChainSeedNode: 'https://data-seed-pre-0-s3.binance.org',
     requiredEthConfirmations: 0,
@@ -42,6 +43,7 @@ const TEST_PROD_CONFIG = {
     web3Provider: 'https://mainnet.infura.io/v3/637d6212c3de438c845e2544baad58b7',
     web3ProviderRinkeby: 'https://rinkeby.infura.io/v3/637d6212c3de438c845e2544baad58b7',
     binanceChainUrl: 'https://dex.binance.org',
+    etherscanApiKey: '',
     binanceChainSeedNode: '',
     networkStage: 'test',
 };
@@ -62,7 +64,7 @@ function bitcoinClientForTest() {
 }
 exports.bitcoinClientForTest = bitcoinClientForTest;
 function testChainClientFactory() {
-    return new ChainClientFactory_1.ChainClientFactory(exports.TESTNET_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new GasPriceProvider_1.EthereumGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory());
+    return new ChainClientFactory_1.ChainClientFactory(exports.TESTNET_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new GasPriceProvider_1.EthereumGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(), new ferrum_plumbing_1.LoggerFactory(n => new ferrum_plumbing_1.ConsoleLogger(n)));
 }
 exports.testChainClientFactory = testChainClientFactory;
 class DummyGasPriceProvider extends GasPriceProvider_1.EthereumGasPriceProvider {
@@ -77,7 +79,7 @@ class DummyGasPriceProvider extends GasPriceProvider_1.EthereumGasPriceProvider 
     }
 }
 function testGanacheClientFactory() {
-    return new ChainClientFactory_1.ChainClientFactory(exports.GANACHE_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new DummyGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory());
+    return new ChainClientFactory_1.ChainClientFactory(exports.GANACHE_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new DummyGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(), new ferrum_plumbing_1.LoggerFactory(n => new ferrum_plumbing_1.ConsoleLogger(n)));
 }
 exports.testGanacheClientFactory = testGanacheClientFactory;
 //# sourceMappingURL=TestnetConfig.js.map

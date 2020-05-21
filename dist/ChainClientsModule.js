@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const ferrum_plumbing_1 = require("ferrum-plumbing");
 const ChainClientFactory_1 = require("./chainClient/ChainClientFactory");
 const GasPriceProvider_1 = require("./chainClient/GasPriceProvider");
 const CreateNewAddress_1 = require("./chainClient/CreateNewAddress");
@@ -18,7 +19,7 @@ const CreateNewAddress_1 = require("./chainClient/CreateNewAddress");
 class ChainClientsModule {
     configAsync(container) {
         return __awaiter(this, void 0, void 0, function* () {
-            container.register(ChainClientFactory_1.ChainClientFactory, c => new ChainClientFactory_1.ChainClientFactory(c.get('MultiChainConfig'), c.get(GasPriceProvider_1.BinanceGasPriceProvider), c.get(GasPriceProvider_1.EthereumGasPriceProvider), c.get(CreateNewAddress_1.CreateNewAddressFactory)));
+            container.register(ChainClientFactory_1.ChainClientFactory, c => new ChainClientFactory_1.ChainClientFactory(c.get('MultiChainConfig'), c.get(GasPriceProvider_1.BinanceGasPriceProvider), c.get(GasPriceProvider_1.EthereumGasPriceProvider), c.get(CreateNewAddress_1.CreateNewAddressFactory), c.get(ferrum_plumbing_1.LoggerFactory)));
             container.register(GasPriceProvider_1.BinanceGasPriceProvider, c => new GasPriceProvider_1.BinanceGasPriceProvider());
             container.register(GasPriceProvider_1.EthereumGasPriceProvider, c => new GasPriceProvider_1.EthereumGasPriceProvider());
             container.register(CreateNewAddress_1.CreateNewAddressFactory, c => new CreateNewAddress_1.CreateNewAddressFactory());

@@ -13,7 +13,7 @@ export interface IDecodedLog {
 }
 
 export interface SimpleTransferTransactionItem {
-  address: string; currency: string; amount: string; decimals?: number;
+  address: string; currency: string; amount: string; decimals?: number, symbol?: string;
 }
 
 export interface SimpleTransferTransaction {
@@ -77,6 +77,7 @@ export type NetworkStage = 'test' | 'prod';
 export interface MultiChainConfig {
   web3Provider: string;
   web3ProviderRinkeby: string;
+  etherscanApiKey: string;
   binanceChainUrl: string;
   binanceChainSeedNode: string;
   requiredEthConfirmations?: number;
@@ -113,6 +114,13 @@ export interface GasParameters {
 
 export interface ChainTransactionSigner {
   sign(skHexOrAddress: HexString, data: HexString, forceLow: boolean): Promise<EcSignature>;
+}
+
+export interface ChainHistoryClient {
+  providesHistory(): Boolean;
+  getNonBlockTransactions(fromBlock: number, toBlock: number, filter: any): Promise<SimpleTransferTransaction[]>;
+  getTransactionsForAddress(address: string, fromBlock: number, toBlock: number, filter: any):
+    Promise<SimpleTransferTransaction[]>;
 }
 
 export interface ChainClient extends ChainTransactionSigner {

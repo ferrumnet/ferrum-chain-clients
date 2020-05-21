@@ -9,7 +9,7 @@ import {FullEthereumClient} from "../../chainClient/ethereum/FullEthereumClient"
 import {BinanceChainClient} from "../../chainClient/BinanceChainClient";
 import {ChainClientFactory} from "../../chainClient/ChainClientFactory";
 import {BitcoinClient} from "../../chainClient/bitcoin/BitcoinClient";
-import {LocalCache} from "ferrum-plumbing";
+import {LocalCache, LoggerFactory, ConsoleLogger} from "ferrum-plumbing";
 import {BitcoinAddress} from "../../chainClient/bitcoin/BitcoinAddress";
 
 export const TEST_ACCOUNTS = {
@@ -30,6 +30,7 @@ export const TESTNET_CONFIG = {
     binanceChainUrl: 'https://testnet-dex.binance.org',
     networkStage: 'test',
     web3Provider: '',
+    etherscanApiKey: '',
     web3ProviderRinkeby: 'https://rinkeby.infura.io/v3/637d6212c3de438c845e2544baad58b7',
     binanceChainSeedNode: 'https://data-seed-pre-0-s3.binance.org',
     requiredEthConfirmations: 0,
@@ -46,6 +47,7 @@ const TEST_PROD_CONFIG = {
     web3Provider: 'https://mainnet.infura.io/v3/637d6212c3de438c845e2544baad58b7',
     web3ProviderRinkeby: 'https://rinkeby.infura.io/v3/637d6212c3de438c845e2544baad58b7',
     binanceChainUrl: 'https://dex.binance.org',
+    etherscanApiKey: '',
     binanceChainSeedNode: '',
     networkStage: 'test',
 } as MultiChainConfig;
@@ -72,6 +74,7 @@ export function testChainClientFactory() {
         new BinanceGasPriceProvider(),
         new EthereumGasPriceProvider(),
         new CreateNewAddressFactory(),
+        new LoggerFactory(n => new ConsoleLogger(n)),
     )
 }
 
@@ -91,6 +94,7 @@ export function testGanacheClientFactory() {
         GANACHE_CONFIG,
         new BinanceGasPriceProvider(),
         new DummyGasPriceProvider(),
-        new CreateNewAddressFactory()
+        new CreateNewAddressFactory(),
+        new LoggerFactory(n => new ConsoleLogger(n)),
     )
 }

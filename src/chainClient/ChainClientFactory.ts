@@ -1,6 +1,6 @@
-import {Injectable, LocalCache, Network} from 'ferrum-plumbing';
+import {Injectable, LocalCache, Network, LoggerFactory} from 'ferrum-plumbing';
 import {EthereumClient} from "./EthereumClient";
-import {ChainClient, MultiChainConfig, NetworkStage} from "./types";
+import {ChainClient, MultiChainConfig, NetworkStage, ChainHistoryClient} from "./types";
 import {BinanceChainClient} from './BinanceChainClient';
 import {BinanceGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
 import {CreateNewAddressFactory} from './CreateNewAddress';
@@ -9,6 +9,7 @@ import {RemoteClientWrapper} from "./remote/RemoteClientWrapper";
 import {FullEthereumClient} from "./ethereum/FullEthereumClient";
 import {BitcoinClient} from "./bitcoin/BitcoinClient";
 import {BitcoinAddress} from "./bitcoin/BitcoinAddress";
+import { EtherScanHistoryClient } from './ethereum/EtherScanHistoryClient';
 
 export class ChainClientFactory implements Injectable {
     private readonly cache: LocalCache;
@@ -16,6 +17,7 @@ export class ChainClientFactory implements Injectable {
                 private binanceGasProvider: BinanceGasPriceProvider,
                 private ethGasProvider: EthereumGasPriceProvider,
                 private newAddressFactory: CreateNewAddressFactory,
+                private loggerFactory: LoggerFactory,
                 private remoteSigner?: RemoteSignerClient,
                 cache?: LocalCache,
                 ) {
@@ -88,6 +90,19 @@ export class ChainClientFactory implements Injectable {
                 return this.ethGasProvider;
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);
+        }
+    }
+
+    historyClient(network: Network): ChainHistoryClient {
+        switch(network) {
+            case 'ETHEREUM':
+                return new EtherScanHistoryClient(this.localConfig.etherscanApiKey,
+                    'ETHEREUM', this.loggerFactory);
+            case 'RINKEBY':
+                return new EtherScanHistoryClient(this.localConfig.etherscanApiKey,
+                    'RINKEBY', this.loggerFactory);
+            default:
+                throw new Error('ChainClientFactory.historyClient: Unsupported network: ' + network);
         }
     }
 
