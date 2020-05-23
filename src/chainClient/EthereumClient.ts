@@ -386,10 +386,10 @@ export abstract class EthereumClient implements ChainClient {
                                        memo?: string, nonce?: number,
                                        ): Promise<SignableTransaction> {
         if (currency === this.feeCurrency()) {
-            return this.createSendEth(fromAddress, targetAddress, amount, gasOverride);
+            return this.createSendEth(fromAddress, targetAddress, amount, gasOverride, nonce);
         }
         return this.createErc20SendTransaction(currency, fromAddress, targetAddress, amount,
-          bal => this.getGas(true, currency, bal, gasOverride));
+          bal => this.getGas(true, currency, bal, gasOverride), nonce);
     }
 
     /**

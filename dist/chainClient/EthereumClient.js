@@ -388,9 +388,9 @@ class EthereumClient {
     createPaymentTransaction(fromAddress, targetAddress, currency, amount, gasOverride, memo, nonce) {
         return __awaiter(this, void 0, void 0, function* () {
             if (currency === this.feeCurrency()) {
-                return this.createSendEth(fromAddress, targetAddress, amount, gasOverride);
+                return this.createSendEth(fromAddress, targetAddress, amount, gasOverride, nonce);
             }
-            return this.createErc20SendTransaction(currency, fromAddress, targetAddress, amount, bal => this.getGas(true, currency, bal, gasOverride));
+            return this.createErc20SendTransaction(currency, fromAddress, targetAddress, amount, bal => this.getGas(true, currency, bal, gasOverride), nonce);
         });
     }
     /**
