@@ -63,7 +63,6 @@ class EtherScanHistoryClient {
                 byId[id].find(t => t.type === 'erc20') ||
                 byId[id][0];
             const gasPrice = (tx.gasPrice || '0');
-            console.log('GAP USED IS ', tx.gasPrice, tx.gasUsed);
             const fee = new bn_js_1.default(tx.gasPrice || '0').muln(Number(tx.gasUsed || '0')).toString();
             return {
                 id: tx.hash,
