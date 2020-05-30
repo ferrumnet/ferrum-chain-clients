@@ -293,7 +293,8 @@ class EthereumClient {
                 return [gasPriceBN.toString(), gasLimit];
             }
             if (!gasOverride) {
-                return [(yield this.gasService.getGasPrice()).medium, gasLimit];
+                const bestGasPrice = (yield this.gasService.getGasPrice()).medium;
+                return [ChainUtils_1.ChainUtils.toBigIntStr(bestGasPrice, ChainUtils_1.ETH_DECIMALS), gasLimit];
             }
             let gasPriceBN = new bn_js_1.default(ChainUtils_1.ChainUtils.toBigIntStr(gasOverride, ChainUtils_1.ETH_DECIMALS) || '0').divn(gasLimit);
             return [gasPriceBN.toString(), gasLimit];

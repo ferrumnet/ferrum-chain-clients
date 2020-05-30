@@ -286,7 +286,8 @@ export abstract class EthereumClient implements ChainClient {
         }
 
         if (!gasOverride) {
-            return [(await this.gasService.getGasPrice()).medium, gasLimit];
+            const bestGasPrice = (await this.gasService.getGasPrice()).medium;
+            return [ChainUtils.toBigIntStr(bestGasPrice, ETH_DECIMALS), gasLimit];
         }
         let gasPriceBN = new BN(ChainUtils.toBigIntStr(gasOverride, ETH_DECIMALS) || '0').divn(gasLimit);
         return [gasPriceBN.toString(), gasLimit];
