@@ -73,7 +73,8 @@ class EthereumGasPriceProvider {
         const tok = ChainUtils_1.ChainUtils.tokenPart(currency);
         const gasAmount = tok === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
             EthereumGasPriceProvider.gasLimiForErc20(currency, currentTargetBalance || '0');
-        return new bn_js_1.default(gasAmount).mul(new bn_js_1.default(ChainUtils_1.ChainUtils.toBigIntStr(gasPrice, ChainUtils_1.ETH_DECIMALS))).toString();
+        return ChainUtils_1.ChainUtils.toDecimalStr(new bn_js_1.default(gasAmount)
+            .mul(new bn_js_1.default(ChainUtils_1.ChainUtils.toBigIntStr(gasPrice, ChainUtils_1.ETH_DECIMALS))).toString(), ChainUtils_1.ETH_DECIMALS);
     }
     __name__() {
         return 'GasPriceProvider';

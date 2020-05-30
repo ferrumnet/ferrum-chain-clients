@@ -88,7 +88,8 @@ export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
         const tok = ChainUtils.tokenPart(currency);
         const gasAmount = tok === 'ETH' ? EthereumGasPriceProvider.ETH_TX_GAS :
                 EthereumGasPriceProvider.gasLimiForErc20(currency, currentTargetBalance || '0');
-        return new BN(gasAmount).mul(new BN(ChainUtils.toBigIntStr(gasPrice, ETH_DECIMALS))).toString();
+        return ChainUtils.toDecimalStr(new BN(gasAmount)
+            .mul(new BN(ChainUtils.toBigIntStr(gasPrice, ETH_DECIMALS))).toString(), ETH_DECIMALS);
     }
 
     __name__(): string {
