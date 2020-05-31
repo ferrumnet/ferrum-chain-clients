@@ -18,6 +18,15 @@ const ChainUtils_1 = require("../ChainUtils");
 const bn_js_1 = __importDefault(require("bn.js"));
 const BASE_URL_TEMPLATE = 'https://{PREFIX}.etherscan.io/api?module=account&action={ACTION}&{ADDRESS_PART}startblock={START_BLOCK}&endblock={END_BLOCK}&sort=asc&apikey={API_KEY}';
 const TIME_BETWEEN_CALLS = 250; // 4 calls per second
+function filterZero(items) {
+    if (items.length <= 1) {
+        return items;
+    }
+    return items.filter(item => item.amount === '0' || item.amount === '0.0' || !item.amount);
+}
+function calcAmount(val, decimals) {
+    return ChainUtils_1.ChainUtils.toDecimalStr(val, decimals);
+}
 class EtherScanHistoryClient {
     constructor(apiKey, network, logFac) {
         this.network = network;
@@ -47,6 +56,10 @@ class EtherScanHistoryClient {
             const res1 = yield this.api('txlistinternal', address, fromBlock.toString(), toBlock.toString());
             const res2 = yield this.api('tokentx', address, fromBlock.toString(), toBlock.toString());
             const res3 = yield this.api('txlist', address, fromBlock.toString(), toBlock.toString());
+            console.log(res1, res1.result, typeof res1.result, res1.result.map, res1.result.map((i) => { }));
+            (res1.result || []).map((i) => { i.type = 'internal'; });
+            (res2.result || []).map((i) => { i.type = 'erc20'; });
+            (res3.result || []).map((i) => { i.type = 'normal'; });
             const all = this.parseTxs((res3.result || []).concat(res2.result || []).concat(res1.result || []));
             // TODO: merge sort. All are already ascending
             return all;
@@ -70,25 +83,25 @@ class EtherScanHistoryClient {
                 confirmed: tx.isError !== '1',
                 failed: tx.isError === '1',
                 creationTime: Number(tx.timeStamp) * 1000,
-                fee,
+                fee: calcAmount(fee, ChainUtils_1.ETH_DECIMALS),
                 feeCurrency: `${this.network}:ETH`,
                 network: this.network,
                 singleItem: true,
                 feeDecimals: ChainUtils_1.ETH_DECIMALS,
-                fromItems: byId[id].map(i => ({
+                fromItems: filterZero(byId[id].map(i => ({
                     address: i.from,
-                    amount: i.value,
+                    amount: calcAmount(i.value, Number(i.tokenDecimal || ChainUtils_1.ETH_DECIMALS)),
                     currency: i.type === 'erc20' ? `${this.network}:${i.contractAddress}` : `${this.network}:ETH`,
                     decimals: i.tokenDecimal || ChainUtils_1.ETH_DECIMALS,
                     symbol: i.tokenSymbol,
-                })),
-                toItems: byId[id].map(i => ({
+                }))),
+                toItems: filterZero(byId[id].map(i => ({
                     address: i.to,
-                    amount: i.value,
+                    amount: calcAmount(i.value, Number(i.tokenDecimal || ChainUtils_1.ETH_DECIMALS)),
                     currency: i.type === 'erc20' ? `${this.network}:${i.contractAddress}` : `${this.network}:ETH`,
                     decimals: i.tokenDecimal || ChainUtils_1.ETH_DECIMALS,
                     symbol: i.tokenSymbol,
-                })),
+                }))),
             };
         });
     }
