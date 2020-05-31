@@ -18,6 +18,21 @@ test('Get transactions for address including FRM', async function() {
     expect(thaTx!.toItems[0].address).toBe('0xa178609bfa90ae975e1bfa07e16e9557f6695962');
 });
 
+test('Get transactions for address including FRM 2', async function() {
+    jest.setTimeout(100000);
+    const ethHis = new EtherScanHistoryClient(
+        TEST_KEY, 'ETHEREUM', new LoggerFactory(n => new ConsoleLogger(n)));
+    const txs = await ethHis.getTransactionsForAddress('0xa178609bfa90ae975e1bfa07e16e9557f6695962', 10162617, 10162618, '');
+    console.log('ALL TXS ARE ', txs.length);
+    const thaTx = txs.find(t => t.id === '0xa85444c5f1bb5fd9022ca6ae43f826b8b0ab78085bb1569dfb329fb974c630e5');
+    console.log('Token example', thaTx);
+    expect(thaTx!.fromItems.length).toBe(1);
+    expect(thaTx!.toItems.length).toBe(1);
+    expect(thaTx!.toItems[0].currency).toBe('ETHEREUM:0xe5caef4af8780e59df925470b050fb23c43ca68c');
+    expect(thaTx!.toItems[0].address).toBe('0xad22cd464034f4ecf1bfd5f83db8a045f3d24467');
+});
+
+
 test('Get internal txs', async function() {
     jest.setTimeout(100000);
     const ethHis = new EtherScanHistoryClient(

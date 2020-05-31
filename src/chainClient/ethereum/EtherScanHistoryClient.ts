@@ -9,10 +9,12 @@ const BASE_URL_TEMPLATE = 'https://{PREFIX}.etherscan.io/api?module=account&acti
 const TIME_BETWEEN_CALLS = 250; // 4 calls per second
 
 function filterZero(items: SimpleTransferTransactionItem[]) {
-    if (items.length <= 1) {
+    const returnItems = items.filter(item => 
+        !!item.amount && !/^[0\.]*$/.test(item.amount));
+    if (returnItems.length < 1) {
         return items;
     }
-    return items.filter(item => item.amount === '0' || item.amount === '0.0' || !item.amount);
+    return returnItems;
 }
 
 function calcAmount(val: string, decimals: number) {
