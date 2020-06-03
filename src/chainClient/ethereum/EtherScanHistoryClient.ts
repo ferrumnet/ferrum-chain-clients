@@ -3,6 +3,7 @@ import fetch from 'cross-fetch';
 import { Injectable, LoggerFactory, Logger, sleep, Network } from "ferrum-plumbing";
 import { ETH_DECIMALS, ChainUtils } from "../ChainUtils";
 import BN from 'bn.js';
+import { timeStamp } from "console";
 
 const BASE_URL_TEMPLATE = 'https://{PREFIX}.etherscan.io/api?module=account&action={ACTION}&{ADDRESS_PART}startblock={START_BLOCK}&endblock={END_BLOCK}&sort=asc&apikey={API_KEY}';
 
@@ -24,7 +25,7 @@ function calcAmount(val: string, decimals: number) {
 export class EtherScanHistoryClient implements ChainHistoryClient, Injectable {
     private readonly log: Logger;
     private readonly urlTemplate: string;
-    private lastCall: number = 0;
+    private nextSchedule: number = 0;
     constructor(apiKey: string, private network: Network, logFac: LoggerFactory) {
         this.log = logFac.getLogger(EtherScanHistoryClient);
         this.urlTemplate = BASE_URL_TEMPLATE.replace('{API_KEY}', apiKey)
@@ -133,13 +134,12 @@ export class EtherScanHistoryClient implements ChainHistoryClient, Injectable {
 
     private async throttle() {
         const now = Date.now();
-        const timePassed = now - this.lastCall;
-        if (TIME_BETWEEN_CALLS <= timePassed) {
-            this.lastCall = now;
-            return;
+        const executionTime = Math.max(now, this.nextSchedule)
+        this.nextSchedule = executionTime + TIME_BETWEEN_CALLS;
+        const sleepTime = executionTime - now;
+        if (sleepTime > 0) {
+            await sleep(sleepTime);
         }
-        await sleep(TIME_BETWEEN_CALLS - timePassed);
-        this.lastCall = now;
     }
 }
 

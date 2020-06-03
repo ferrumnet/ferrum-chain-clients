@@ -31,7 +31,7 @@ function calcAmount(val, decimals) {
 class EtherScanHistoryClient {
     constructor(apiKey, network, logFac) {
         this.network = network;
-        this.lastCall = 0;
+        this.nextSchedule = 0;
         this.log = logFac.getLogger(EtherScanHistoryClient);
         this.urlTemplate = BASE_URL_TEMPLATE.replace('{API_KEY}', apiKey)
             .replace('{PREFIX}', network === 'ETHEREUM' ? 'api' : 'api-rinkeby');
@@ -135,13 +135,12 @@ class EtherScanHistoryClient {
     throttle() {
         return __awaiter(this, void 0, void 0, function* () {
             const now = Date.now();
-            const timePassed = now - this.lastCall;
-            if (TIME_BETWEEN_CALLS <= timePassed) {
-                this.lastCall = now;
-                return;
+            const executionTime = Math.max(now, this.nextSchedule);
+            this.nextSchedule = executionTime + TIME_BETWEEN_CALLS;
+            const sleepTime = executionTime - now;
+            if (sleepTime > 0) {
+                yield ferrum_plumbing_1.sleep(sleepTime);
             }
-            yield ferrum_plumbing_1.sleep(TIME_BETWEEN_CALLS - timePassed);
-            this.lastCall = now;
         });
     }
 }

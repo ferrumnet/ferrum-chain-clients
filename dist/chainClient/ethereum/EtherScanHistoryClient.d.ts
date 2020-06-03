@@ -4,7 +4,7 @@ export declare class EtherScanHistoryClient implements ChainHistoryClient, Injec
     private network;
     private readonly log;
     private readonly urlTemplate;
-    private lastCall;
+    private nextSchedule;
     constructor(apiKey: string, network: Network, logFac: LoggerFactory);
     __name__(): string;
     providesHistory(): Boolean;
