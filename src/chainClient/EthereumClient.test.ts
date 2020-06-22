@@ -6,6 +6,7 @@ import {
 import {retry, sleep} from "ferrum-plumbing";
 import {ChainUtils} from "./ChainUtils";
 import {FRM} from "./GasPriceProvider";
+import { ContractCallRequest } from './types';
 
 const clientFac = testChainClientFactory();
 
@@ -271,6 +272,60 @@ test('Check transaction fee', async function() {
     console.log(tx);
     console.log(serverTx);
     console.log(JSON.stringify(serverTx));
+});
+
+const FRM = '0xe5caef4af8780e59df925470b050fb23c43ca68c';
+test('Create a bunch of txs and print them', async function() {
+    jest.setTimeout(100000);
+    const client = ethereumClientForProd();
+    let tx = await client.createPaymentTransaction(TEST_ACCOUNTS.mainAccountAddress,
+        TEST_ACCOUNTS.secondAccountAddress, 'ETHEREUM:ETH', '0.01234');
+    console.log(tx);
+    tx = await client.createPaymentTransaction(TEST_ACCOUNTS.mainAccountAddress,
+        TEST_ACCOUNTS.secondAccountAddress, `ETHEREUM:${FRM}`, '112.456001',
+        { gasPrice: '0.00004', gasLimit: '80000'});
+    console.log(tx);
+});
+
+test('Call multiple smart contracts', async function() {
+    // TODO: Complete
+    jest.setTimeout(100000);
+    const clientFact = testGanacheClientFactory();
+    const client = clientFact.forNetwork('ETHEREUM');
+
+    const sk = '6e56b0ec570646d9a27b1e091987293a4cbc034520bc0e59f44edc04367f4b64';
+    const from = '0xAbf3fBC38b759C552Bf9C0eaffE5d2F4F09Aab0a';
+
+    const contractData1 = '';
+    const contractAddress1 = '';
+    const contractData2 = '';
+    const contractAddress2 = '';
+    const res = await client.createSendData([
+        {
+            from,
+            amount: '0',
+            contract: contractAddress1,
+            data: contractData1,
+            gas: { gasPrice: '0.000000001', gasLimit: '100000' },
+        } as ContractCallRequest,
+        {
+            from,
+            amount: '0',
+            contract: contractAddress2,
+            data: contractData2,
+            gas: { gasPrice: '0.000000001', gasLimit: '100000' },
+        } as ContractCallRequest,
+    ]);
+    // broadcast both
+    const res1s = await client.signTransaction(sk, res[0]);
+    const res2s = await client.signTransaction(sk, res[1]);
+    const txId1 = await client.broadcastTransaction(res1s);
+    const txId2 = await client.broadcastTransaction(res2s);
+
+    // Inspect both transactions
+    const tx1 = await client.waitForTransaction(txId1);
+    const tx2 = await client.waitForTransaction(txId2);
+    console.log('Transactions ', tx1, tx2);
 });
 
 async function sendEth(eth: string, gas: string) {

@@ -112,6 +112,15 @@ export interface GasParameters {
   gasPrice: string;
 }
 
+export interface ContractCallRequest {
+  from: string;
+  contract: string;
+  amount: string;
+  data: string;
+  gas: GasParameters;
+  nonce?: number;
+}
+
 export interface ChainTransactionSigner {
   sign(skHexOrAddress: HexString, data: HexString, forceLow: boolean): Promise<EcSignature>;
 }
@@ -135,6 +144,8 @@ export interface ChainClient extends ChainTransactionSigner {
   createPaymentTransaction(fromAddress: string, targetAddress: string,
                            currency: any, amount: string,
                            gasOverride?: string | GasParameters, memo?: string, nonce?: number): Promise<SignableTransaction>;
+
+  createSendData(calls: ContractCallRequest[]) : Promise<SignableTransaction[]>;
 
   signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
 

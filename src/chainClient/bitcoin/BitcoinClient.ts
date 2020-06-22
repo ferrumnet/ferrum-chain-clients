@@ -231,6 +231,10 @@ export class BitcoinClient implements ChainClient, Injectable {
     return parseTrezorTx(this.network, tx);
   }
 
+  createSendData(calls: import("../types").ContractCallRequest[]): Promise<SignableTransaction[]> {
+    throw new Error("Method not implemented.");
+  }
+
   async processPaymentFromPrivateKey(skHex: string, targetAddress: string, currency: any, amount: string): Promise<string> {
     return this.processPaymentFromPrivateKeyWithGas(skHex, targetAddress, currency, amount,
       await this.getGasEstimate());

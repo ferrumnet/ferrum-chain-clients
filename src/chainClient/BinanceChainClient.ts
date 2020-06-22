@@ -91,6 +91,10 @@ export class BinanceChainClient implements ChainClient {
         return this.processPaymentFromPrivateKey(skHex, targetAddress, currency, amount);
     }
 
+    createSendData(calls: import("./types").ContractCallRequest[]): Promise<SignableTransaction[]> {
+        throw new Error("Method not implemented.");
+    }
+
     async createPaymentTransaction(fromAddress: string, targetAddress: string,
                                    currency: any, payAmount: string,
                                    gasOverride?: string | GasParameters,

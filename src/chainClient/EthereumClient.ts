@@ -6,7 +6,7 @@ import {
     MultiChainConfig,
     NetworkNativeCurrencies,
     NetworkStage, SignableTransaction,
-    SimpleTransferTransaction, SimpleTransferTransactionItem
+    SimpleTransferTransaction, SimpleTransferTransactionItem, ContractCallRequest
 } from "./types";
 // @ts-ignore
 import abiDecoder from 'abi-decoder';
@@ -293,6 +293,39 @@ export abstract class EthereumClient implements ChainClient {
         return [gasPriceBN.toString(), gasLimit];
     }
 
+    async createSendData(calls: ContractCallRequest[]) : Promise<SignableTransaction[]> {
+        ValidationUtils.isTrue(calls && !!calls.length, '"calls" must be provided');
+        const from = calls[0].from;
+        ValidationUtils.isTrue(!calls.find(c => c.from !== from), "all calls must have same 'from'");
+        const web3 = this.web3();
+        let nonce = calls[0].nonce || await web3.eth.getTransactionCount(from, 'pending');
+        const rv: SignableTransaction[] = [];
+        for (let i = 0; i < calls.length; i++) {
+            const call = calls[i];
+            ValidationUtils.isTrue(!!call.data, "call.data is required");
+            const gasPrice = new BN(ChainUtils.toBigIntStr(call.gas.gasPrice, ETH_DECIMALS));
+            const gasLimit = new BN(call.gas.gasLimit);
+            ValidationUtils.isTrue(gasPrice.gt(new BN(0)), "gasPrice must be provided for all calls");
+            ValidationUtils.isTrue(gasLimit.gt(new BN(0)), "gasLimit must be provided for all calls");
+            const value = new BN(ChainUtils.toBigIntStr(call.amount || '0', ETH_DECIMALS));
+            const params = {
+                nonce: call.nonce || (nonce + i),
+                gasPrice: '0x' + gasPrice.toString('hex'),
+                gasLimit: '0x' + gasLimit.toString('hex'),
+                to: call.contract,
+                value: '0x' + value.toString('hex'),
+                data: '0x' + call.data,
+            } as any;
+            const tx = new Transaction(params, this.getChainOptions());
+            const serialized = tx.serialize().toString('hex');
+            rv.push({
+                serializedTransaction: serialized,
+                signableHex: tx.hash(false).toString('hex'),
+                transaction: params,
+            } as SignableTransaction);
+        }
+        return rv;
+    }
 
     private async createSendEth(from: string,
                                 to: string,
@@ -303,8 +336,9 @@ export abstract class EthereumClient implements ChainClient {
         const web3 = this.web3();
         let sendAmount = toWei(ETH_DECIMALS, amount);
         const [gasPrice, gasLimit] = await this.getGas(false, this.feeCurrency(), '0', gasOverride);
+        const calcedNonce = nonce || await web3.eth.getTransactionCount(from, 'pending');
         const params = {
-            nonce: nonce || await web3.eth.getTransactionCount(from, 'pending'),
+            nonce: '0x' + new BN(calcedNonce).toString('hex'),
             gasPrice: '0x' + new BN(gasPrice).toString('hex'),
             gasLimit: '0x' + new BN(gasLimit).toString('hex'),
             to: to,
@@ -502,12 +536,13 @@ export abstract class EthereumClient implements ChainClient {
         const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
         const targetBalance = await this.getBalanceForContract(web3, to, contractAddress, 1);
         const [gasPrice, gasLimit] = await gasProvider(targetBalance);
+        const calcedNonce = nonce || await web3.eth.getTransactionCount(from, 'pending');
         const params = {
-            nonce: nonce || await web3.eth.getTransactionCount(from, 'pending'),
+            nonce: '0x' + new BN(calcedNonce).toString('hex'),
             gasPrice: '0x' + new BN(gasPrice).toString('hex'),
             gasLimit: '0x' + new BN(gasLimit).toString('hex'),
             to: contractAddress,
-            value: 0,
+            value: '0x',
             data: myData,
         };
         const tx = new Transaction(params,
