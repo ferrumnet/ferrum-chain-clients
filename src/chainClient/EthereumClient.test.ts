@@ -6,7 +6,8 @@ import {
 import {retry, sleep} from "ferrum-plumbing";
 import {ChainUtils} from "./ChainUtils";
 import {FRM} from "./GasPriceProvider";
-import { ContractCallRequest } from './types';
+import { ContractCallRequest, SignableTransaction } from './types';
+import { EthereumTransactionSerializer } from 'ferrum-crypto/dist/transaction/EthereumTransactionSerializer';
 
 const clientFac = testChainClientFactory();
 
@@ -274,7 +275,6 @@ test('Check transaction fee', async function() {
     console.log(JSON.stringify(serverTx));
 });
 
-const FRM = '0xe5caef4af8780e59df925470b050fb23c43ca68c';
 test('Create a bunch of txs and print them', async function() {
     jest.setTimeout(100000);
     const client = ethereumClientForProd();
@@ -327,6 +327,35 @@ test('Call multiple smart contracts', async function() {
     const tx2 = await client.waitForTransaction(txId2);
     console.log('Transactions ', tx1, tx2);
 });
+
+test('Broadcast rinkeby eth tx directly built ', async function() {
+    jest.setTimeout(100000);
+    const serializer = new EthereumTransactionSerializer(4);
+    const txPrams = serializer.createTransactionParams(
+        TEST_ACCOUNTS.secondAccountAddress.toLowerCase(),
+        '1000000000000',
+        '10000000000',
+        '30000',
+        '52',
+        '',
+    );
+    const res = serializer.serialize(txPrams);
+    let tx = {
+        serializedTransaction: res.serializedTransaction,
+        transaction: txPrams,
+        signableHex: res.signableHex,
+    } as SignableTransaction;
+    const client = ethereumClientForTest();
+    const sig = await client.sign(TEST_ACCOUNTS.mainAccountSk, tx.signableHex!, false);
+    tx.signature = sig;
+    tx = await client.signTransaction('', tx);
+    // Get a chain client
+    const txId =  await client.broadcastTransaction(tx)
+    console.log('Retuls' , {txId});
+    await sleep(1000);
+    const txAct = await client.waitForTransaction(txId)
+    console.log('Actual', txAct);
+})
 
 async function sendEth(eth: string, gas: string) {
     const clientFact = testGanacheClientFactory();
