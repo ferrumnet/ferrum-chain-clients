@@ -16,7 +16,6 @@ import {ChainUtils, ETH_DECIMALS, waitForTx} from './ChainUtils';
 import {EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
 import {Transaction} from "ethereumjs-tx";
 import {hexToUtf8} from "ferrum-crypto";
-import {ecsign} from 'ethereumjs-util';
 import {Log, TransactionReceipt} from 'web3-core/types';
 
 const BLOCK_CACH_TIMEOUT = 10 * 1000;
