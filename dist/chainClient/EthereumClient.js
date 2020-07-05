@@ -52,7 +52,7 @@ class EthereumClient {
         this.localCache = new ferrum_plumbing_1.LocalCache();
         const provider = networkStage === 'test' ? config.web3ProviderRinkeby : config.web3Provider;
         this.providerMux = new ferrum_plumbing_1.ServiceMultiplexer(provider.split(',').map(p => () => this.web3Instance(p)), logFac);
-        this.throttler = new ferrum_plumbing_1.Throttler(50); // TPS is 20 per second.
+        this.throttler = new ferrum_plumbing_1.Throttler(Math.round(1000 / (config.ethereumTps || 20)) || 50); // TPS is 20 per second.
         this.requiredConfirmations = config.requiredEthConfirmations !== undefined ? config.requiredEthConfirmations : 1;
         this.txWaitTimeout = config.pendingTransactionShowTimeout
             || ChainUtils_1.ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT * 10;

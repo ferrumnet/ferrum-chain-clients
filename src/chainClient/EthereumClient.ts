@@ -47,7 +47,8 @@ export abstract class EthereumClient implements ChainClient {
         const provider = networkStage === 'test' ? config.web3ProviderRinkeby : config.web3Provider;
         this.providerMux = new ServiceMultiplexer<Web3>(
             provider.split(',').map(p => () => this.web3Instance(p)), logFac);
-        this.throttler = new Throttler(50); // TPS is 20 per second.
+        this.throttler = new Throttler(
+            Math.round(1000 / (config.ethereumTps || 20)) || 50); // TPS is 20 per second.
         this.requiredConfirmations = config.requiredEthConfirmations !== undefined ? config.requiredEthConfirmations : 1;
         this.txWaitTimeout = config.pendingTransactionShowTimeout
           || ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT * 10;

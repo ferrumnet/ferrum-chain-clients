@@ -82,6 +82,7 @@ export interface MultiChainConfig {
   binanceChainSeedNode: string;
   requiredEthConfirmations?: number;
   pendingTransactionShowTimeout?: number;
+  ethereumTps?: number;
 }
 
 export const NetworkNativeCurrencies = {
