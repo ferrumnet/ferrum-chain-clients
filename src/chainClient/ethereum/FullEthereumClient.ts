@@ -2,12 +2,13 @@ import {EthereumClient} from "../EthereumClient";
 import {MultiChainConfig, NetworkStage} from "../types";
 import {GasPriceProvider} from "../GasPriceProvider";
 import {Erc20ReaderClient} from "./Erc20ReaderClient";
-import {LocalCache} from "ferrum-plumbing";
+import {LocalCache, LoggerFactory} from "ferrum-plumbing";
 
 export class FullEthereumClient extends EthereumClient {
   private readonly decimalsCache: LocalCache;
-  public constructor(networkStage: NetworkStage, config: MultiChainConfig, gasService: GasPriceProvider) {
-    super(networkStage, config, gasService);
+  public constructor(networkStage: NetworkStage, config: MultiChainConfig,
+    gasService: GasPriceProvider, logFac: LoggerFactory) {
+    super(networkStage, config, gasService, logFac);
     this.decimalsCache = new LocalCache();
   }
 

@@ -29,6 +29,7 @@ exports.TEST_ACCOUNTS = {
 };
 exports.TEST_FRM = '0x93698a057cec27508a9157a946e03e277b46fe56';
 exports.TEST_GUSD = '0x056fd409e1d7a124bd7017459dfea2f387b6d5cd';
+const dummyLogFac = new ferrum_plumbing_1.LoggerFactory(n => new ferrum_plumbing_1.ConsoleLogger(n));
 exports.TESTNET_CONFIG = {
     binanceChainUrl: 'https://testnet-dex.binance.org',
     networkStage: 'test',
@@ -48,7 +49,7 @@ const TEST_PROD_CONFIG = {
     networkStage: 'test',
 };
 function ethereumClientForProd() {
-    return new FullEthereumClient_1.FullEthereumClient('prod', TEST_PROD_CONFIG, new GasPriceProvider_1.EthereumGasPriceProvider());
+    return new FullEthereumClient_1.FullEthereumClient('prod', TEST_PROD_CONFIG, new GasPriceProvider_1.EthereumGasPriceProvider(), dummyLogFac);
 }
 exports.ethereumClientForProd = ethereumClientForProd;
 function binanceClientForProd() {

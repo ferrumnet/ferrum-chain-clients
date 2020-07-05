@@ -210,6 +210,9 @@ class BitcoinClient {
             return parseTrezorTx(this.network, tx);
         });
     }
+    createSendData(calls) {
+        throw new Error("Method not implemented.");
+    }
     processPaymentFromPrivateKey(skHex, targetAddress, currency, amount) {
         return __awaiter(this, void 0, void 0, function* () {
             return this.processPaymentFromPrivateKeyWithGas(skHex, targetAddress, currency, amount, yield this.getGasEstimate());

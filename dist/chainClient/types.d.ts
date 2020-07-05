@@ -102,6 +102,14 @@ export interface GasParameters {
     gasLimit: string;
     gasPrice: string;
 }
+export interface ContractCallRequest {
+    from: string;
+    contract: string;
+    amount: string;
+    data: string;
+    gas: GasParameters;
+    nonce?: number;
+}
 export interface ChainTransactionSigner {
     sign(skHexOrAddress: HexString, data: HexString, forceLow: boolean): Promise<EcSignature>;
 }
@@ -115,6 +123,7 @@ export interface ChainClient extends ChainTransactionSigner {
     processPaymentFromPrivateKey(skHex: HexString, targetAddress: string, expectedCurrencyElement: any, amount: string): Promise<string>;
     processPaymentFromPrivateKeyWithGas(skHex: HexString, targetAddress: string, currency: any, amount: string, gasOverride: string | GasParameters): Promise<string>;
     createPaymentTransaction(fromAddress: string, targetAddress: string, currency: any, amount: string, gasOverride?: string | GasParameters, memo?: string, nonce?: number): Promise<SignableTransaction>;
+    createSendData(calls: ContractCallRequest[]): Promise<SignableTransaction[]>;
     signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction>;
     getRecentTransactionsByAddress(address: string, currencies: string[]): Promise<SimpleTransferTransaction[] | undefined>;
     getBalance(address: string, currency: string): Promise<string | undefined>;

@@ -17,6 +17,7 @@ export class RemoteClientWrapper implements ChainClient {
         this.processPaymentFromPrivateKeyWithGas = this.client.processPaymentFromPrivateKeyWithGas.bind(this.client);
         this.waitForTransaction = this.client.waitForTransaction.bind(this.client);
         this.signTransaction = this.client.signTransaction.bind(this.client);
+        this.createSendData = this.client.createSendData.bind(this.client);
         client.sign = this.sign.bind(this);
     }
 
@@ -33,6 +34,7 @@ export class RemoteClientWrapper implements ChainClient {
     processPaymentFromPrivateKeyWithGas = this.client.processPaymentFromPrivateKeyWithGas;
     signTransaction = this.client.signTransaction;
     waitForTransaction = this.client.waitForTransaction;
+    createSendData = this.client.createSendData;
 
     sign(address: string, data: string, forceLow: boolean): Promise<EcSignature> {
         return this.signer.sign(this.network, address, data, forceLow);

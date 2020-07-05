@@ -19,6 +19,7 @@ export declare class BitcoinClient implements ChainClient, Injectable {
     getBlockNumber(): Promise<number>;
     getRecentTransactionsByAddress(address: string, currencies: string[]): Promise<SimpleTransferTransaction[] | undefined>;
     getTransactionById(tid: string): Promise<SimpleTransferTransaction | undefined>;
+    createSendData(calls: import("../types").ContractCallRequest[]): Promise<SignableTransaction[]>;
     processPaymentFromPrivateKey(skHex: string, targetAddress: string, currency: any, amount: string): Promise<string>;
     processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: any, amount: string, gasOverride: string | GasParameters): Promise<string>;
     sign(skHex: string, data: string, forceLow: boolean): Promise<EcSignature>;

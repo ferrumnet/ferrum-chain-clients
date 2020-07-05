@@ -34,12 +34,12 @@ class ChainClientFactory {
                 return this.wrap(this.bnbClientTestnet, 'BINANCE_TESTNET');
             case 'ETHEREUM':
                 if (!this.ethClient) {
-                    this.ethClient = new FullEthereumClient_1.FullEthereumClient('prod', this.localConfig, this.ethGasProvider);
+                    this.ethClient = new FullEthereumClient_1.FullEthereumClient('prod', this.localConfig, this.ethGasProvider, this.loggerFactory);
                 }
                 return this.wrap(this.ethClient, 'ETHEREUM');
             case 'RINKEBY':
                 if (!this.rinkebyClient) {
-                    this.rinkebyClient = new FullEthereumClient_1.FullEthereumClient('test', this.localConfig, this.ethGasProvider);
+                    this.rinkebyClient = new FullEthereumClient_1.FullEthereumClient('test', this.localConfig, this.ethGasProvider, this.loggerFactory);
                 }
                 return this.wrap(this.rinkebyClient, 'RINKEBY');
             case 'BITCOIN':

@@ -95,6 +95,9 @@ class BinanceChainClient {
     processPaymentFromPrivateKeyWithGas(skHex, targetAddress, currency, amount, gasOverride) {
         return this.processPaymentFromPrivateKey(skHex, targetAddress, currency, amount);
     }
+    createSendData(calls) {
+        throw new Error("Method not implemented.");
+    }
     createPaymentTransaction(fromAddress, targetAddress, currency, payAmount, gasOverride, memo, nonce) {
         return __awaiter(this, void 0, void 0, function* () {
             const amount = Number(ChainUtils_1.ChainUtils.toBigIntStr(payAmount, ChainUtils_1.BINANCE_DECIMALS));

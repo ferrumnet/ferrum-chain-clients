@@ -11,12 +11,13 @@ import {
 // @ts-ignore
 import abiDecoder from 'abi-decoder';
 import * as abi from '../resources/erc20-abi.json';
-import {ValidationUtils, HexString, retry, RetryableError} from 'ferrum-plumbing';
+import {ValidationUtils, HexString, RetryableError, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache} from 'ferrum-plumbing';
 import {ChainUtils, ETH_DECIMALS, waitForTx} from './ChainUtils';
 import {EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
 import {Transaction} from "ethereumjs-tx";
 import {hexToUtf8} from "ferrum-crypto";
 import {Log, TransactionReceipt} from 'web3-core/types';
+import { ecsign } from 'ethereumjs-util';
 
 const BLOCK_CACH_TIMEOUT = 10 * 1000;
 const ERC_20_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
@@ -37,11 +38,16 @@ function transactionLogHasErc20Transfer(log: Log) {
 }
 
 export abstract class EthereumClient implements ChainClient {
-    private readonly provider: string;
     private readonly requiredConfirmations: number;
     private readonly txWaitTimeout: number;
-    protected constructor(private networkStage: NetworkStage, config: MultiChainConfig, private gasService: GasPriceProvider) {
-        this.provider = networkStage === 'test' ? config.web3ProviderRinkeby : config.web3Provider;
+    providerMux: ServiceMultiplexer<Web3>;
+    throttler: Throttler;
+    protected constructor(private networkStage: NetworkStage, config: MultiChainConfig,
+        private gasService: GasPriceProvider, logFac: LoggerFactory) {
+        const provider = networkStage === 'test' ? config.web3ProviderRinkeby : config.web3Provider;
+        this.providerMux = new ServiceMultiplexer<Web3>(
+            provider.split(',').map(p => () => this.web3Instance(p)), logFac);
+        this.throttler = new Throttler(50); // TPS is 20 per second.
         this.requiredConfirmations = config.requiredEthConfirmations !== undefined ? config.requiredEthConfirmations : 1;
         this.txWaitTimeout = config.pendingTransactionShowTimeout
           || ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT * 10;
@@ -55,15 +61,16 @@ export abstract class EthereumClient implements ChainClient {
     feeDecimals(): number { return ETH_DECIMALS; }
 
     async getBlockByNumber(number: number): Promise<BlockData> {
-        const block = await this.web3().eth.getBlock(number);
+        await this.throttler.throttle();
+        const block = await this.providerMux.retryAsync(web3 => web3.eth.getBlock(number));
         const rv = {
-            hash: block.hash,
-            number: block.number,
-            timestamp: block.timestamp,
+            hash: block!.hash,
+            number: block!.number,
+            timestamp: block!.timestamp,
             transactionIds: [],
             transactions: [],
         } as BlockData;
-        const transactions = block.transactions as any as string[];
+        const transactions = block!.transactions as any as string[];
         // for(let tid of transactions) {
         //     const v = await this.getTransactionById(tid);
         //     if (v) {
@@ -72,11 +79,11 @@ export abstract class EthereumClient implements ChainClient {
         //         rv.transactions!.push(v);
         //     }
         // }
-        const transactionsF = transactions.map((tid: string) => this.getTransactionById(tid));
+        const transactionsF = transactions.map((tid: string) => this.getTransactionByIdWithBlock(tid, false, number));
         const allTransactions = await Promise.all(transactionsF);
         allTransactions.forEach((v) => {
             if (!!v) {
-                v.confirmationTime = (block.timestamp as number) * 1000;
+                v.confirmationTime = (block!.timestamp as number) * 1000;
                 rv.transactionIds.push(v.id);
                 rv.transactions!.push(v);
             }
@@ -85,23 +92,25 @@ export abstract class EthereumClient implements ChainClient {
     }
 
     async getBlockNumber(): Promise<number> {
-        return await this.web3().eth.getBlockNumber();
+        await this.throttler.throttle();
+        const bNo = await this.providerMux.retryAsync(async web3 => web3.eth.getBlockNumber());
+        return bNo!;
     }
 
-    private lastBlockNumber: number = 0;
-    private lastBlockRead: number = 0;
-
+    localCache = new LocalCache();
     async getCachedCurrentBlock(): Promise<number> {
-        if ((Date.now() - this.lastBlockRead) < BLOCK_CACH_TIMEOUT) {
-            return this.lastBlockNumber;
-        }
-        return this.getBlockNumber();
+        return this.localCache.getAsync('BLOCK_NO', () => this.getBlockNumber());
     }
 
     async getTransactionById(tid: string, includePending: boolean = false): Promise<SimpleTransferTransaction | undefined> {
-        return retry(async () => {
+        return this.getTransactionById(tid, includePending);
+    }
+
+    private async getTransactionByIdWithBlock(tid: string,
+            includePending: boolean = false, blockNo?: number): Promise<SimpleTransferTransaction | undefined> {
+        return this.providerMux.retryAsync(async web3 => {
             try {
-                const web3 = new Web3(new Web3.providers.HttpProvider(this.provider));
+                await this.throttler.throttle();
                 const transaction = await web3.eth.getTransaction(tid);
                 if (!transaction) {
                     return undefined;
@@ -109,6 +118,7 @@ export abstract class EthereumClient implements ChainClient {
                 if (!transaction.blockHash && !transaction.blockNumber && !includePending) {
                     return undefined;
                 }
+                await this.throttler.throttle();
                 let transactionReceipt = await web3.eth.getTransactionReceipt(tid);
                 if (!transactionReceipt) {
                     const fee = Web3.utils.fromWei(
@@ -134,7 +144,7 @@ export abstract class EthereumClient implements ChainClient {
                         singleItem: true,
                     } as SimpleTransferTransaction;
                 }
-                const currentBlock = await this.getCachedCurrentBlock();
+                const currentBlock = blockNo || await this.getCachedCurrentBlock();
                 let confirmed = transactionReceipt.blockNumber === null ? 0 : Math.max(1, currentBlock - transactionReceipt.blockNumber);
                 let is_confirmed = confirmed >= this.requiredConfirmations;
                 if (!transactionReceipt) {
@@ -335,6 +345,9 @@ export abstract class EthereumClient implements ChainClient {
         const web3 = this.web3();
         let sendAmount = toWei(ETH_DECIMALS, amount);
         const [gasPrice, gasLimit] = await this.getGas(false, this.feeCurrency(), '0', gasOverride);
+        if (!nonce) {
+            await this.throttler.throttle();
+        }
         const calcedNonce = nonce || await web3.eth.getTransactionCount(from, 'pending');
         const params = {
             nonce: '0x' + new BN(calcedNonce).toString('hex'),
@@ -478,15 +491,17 @@ export abstract class EthereumClient implements ChainClient {
     }
 
     async getBalance(address: string, currency: string) {
-        const web3 = this.web3();
-        if (currency === NetworkNativeCurrencies.ETHEREUM) {
-            const bal = await web3.eth.getBalance(address);
-            return web3.utils.fromWei(bal, 'ether');
-        } else {
-            const token = ChainUtils.tokenPart(currency);
-            const decimals = await this.getTokenDecimals(token);
-            return this.getBalanceForContract(web3, address, token, decimals);
-        }
+        return this.providerMux.retryAsync(async web3 => {
+            await this.throttler.throttle();
+            if (currency === NetworkNativeCurrencies.ETHEREUM) {
+                const bal = await web3.eth.getBalance(address);
+                return web3.utils.fromWei(bal, 'ether');
+            } else {
+                const token = ChainUtils.tokenPart(currency);
+                const decimals = await this.getTokenDecimals(token);
+                return this.getBalanceForContract(web3, address, token, decimals);
+            }
+        });
     }
 
     async getBalanceForContract(web3: Web3, address: string, contractAddress: string, decimals: number) {
@@ -501,8 +516,11 @@ export abstract class EthereumClient implements ChainClient {
     }
 
     web3() {
-        // console.log('Using http provider', this.provider);
-        return new Web3(new Web3.providers.HttpProvider(this.provider));
+        return this.providerMux.get();
+    }
+
+    private web3Instance(provider: string) {
+        return new Web3(new Web3.providers.HttpProvider(provider));
     }
 
     private getChainId() {
@@ -535,6 +553,9 @@ export abstract class EthereumClient implements ChainClient {
         const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
         const targetBalance = await this.getBalanceForContract(web3, to, contractAddress, 1);
         const [gasPrice, gasLimit] = await gasProvider(targetBalance);
+        if (!nonce) {
+            await this.throttler.throttle();
+        }
         const calcedNonce = nonce || await web3.eth.getTransactionCount(from, 'pending');
         const params = {
             nonce: '0x' + new BN(calcedNonce).toString('hex'),

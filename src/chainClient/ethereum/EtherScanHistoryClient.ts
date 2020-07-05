@@ -3,7 +3,6 @@ import fetch from 'cross-fetch';
 import { Injectable, LoggerFactory, Logger, sleep, Network } from "ferrum-plumbing";
 import { ETH_DECIMALS, ChainUtils } from "../ChainUtils";
 import BN from 'bn.js';
-import { timeStamp } from "console";
 
 const BASE_URL_TEMPLATE = 'https://{PREFIX}.etherscan.io/api?module=account&action={ACTION}&{ADDRESS_PART}startblock={START_BLOCK}&endblock={END_BLOCK}&sort=asc&apikey={API_KEY}';
 
@@ -29,7 +28,7 @@ export class EtherScanHistoryClient implements ChainHistoryClient, Injectable {
     constructor(apiKey: string, private network: Network, logFac: LoggerFactory) {
         this.log = logFac.getLogger(EtherScanHistoryClient);
         this.urlTemplate = BASE_URL_TEMPLATE.replace('{API_KEY}', apiKey)
-        .replace('{PREFIX}', network === 'ETHEREUM' ? 'api' : 'api-rinkeby');
+            .replace('{PREFIX}', network === 'ETHEREUM' ? 'api' : 'api-rinkeby');
         this.throttle = this.throttle.bind(this);
         this.api = this.api.bind(this);
     }
@@ -142,7 +141,6 @@ export class EtherScanHistoryClient implements ChainHistoryClient, Injectable {
         }
     }
 }
-
 
 interface EtherScanTx {
     type: 'normal' | 'internal' | 'erc20';

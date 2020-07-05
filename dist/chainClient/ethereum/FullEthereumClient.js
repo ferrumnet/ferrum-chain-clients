@@ -13,8 +13,8 @@ const EthereumClient_1 = require("../EthereumClient");
 const Erc20ReaderClient_1 = require("./Erc20ReaderClient");
 const ferrum_plumbing_1 = require("ferrum-plumbing");
 class FullEthereumClient extends EthereumClient_1.EthereumClient {
-    constructor(networkStage, config, gasService) {
-        super(networkStage, config, gasService);
+    constructor(networkStage, config, gasService, logFac) {
+        super(networkStage, config, gasService, logFac);
         this.decimalsCache = new ferrum_plumbing_1.LocalCache();
     }
     getTokenDecimals(tok) {

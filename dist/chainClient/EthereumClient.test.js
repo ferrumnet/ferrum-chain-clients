@@ -13,6 +13,7 @@ const TestnetConfig_1 = require("../testUtils/configs/TestnetConfig");
 const ferrum_plumbing_1 = require("ferrum-plumbing");
 const ChainUtils_1 = require("./ChainUtils");
 const GasPriceProvider_1 = require("./GasPriceProvider");
+const EthereumTransactionSerializer_1 = require("ferrum-crypto/dist/transaction/EthereumTransactionSerializer");
 const clientFac = TestnetConfig_1.testChainClientFactory();
 function ethereumClientForTest() { return clientFac.forNetwork('RINKEBY'); }
 test('send tx', function () {
@@ -274,6 +275,78 @@ test('Check transaction fee', function () {
         console.log(tx);
         console.log(serverTx);
         console.log(JSON.stringify(serverTx));
+    });
+});
+test('Create a bunch of txs and print them', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(100000);
+        const client = TestnetConfig_1.ethereumClientForProd();
+        let tx = yield client.createPaymentTransaction(TestnetConfig_1.TEST_ACCOUNTS.mainAccountAddress, TestnetConfig_1.TEST_ACCOUNTS.secondAccountAddress, 'ETHEREUM:ETH', '0.01234');
+        console.log(tx);
+        tx = yield client.createPaymentTransaction(TestnetConfig_1.TEST_ACCOUNTS.mainAccountAddress, TestnetConfig_1.TEST_ACCOUNTS.secondAccountAddress, `ETHEREUM:${GasPriceProvider_1.FRM}`, '112.456001', { gasPrice: '0.00004', gasLimit: '80000' });
+        console.log(tx);
+    });
+});
+test('Call multiple smart contracts', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        // TODO: Complete
+        jest.setTimeout(100000);
+        const clientFact = TestnetConfig_1.testGanacheClientFactory();
+        const client = clientFact.forNetwork('ETHEREUM');
+        const sk = '6e56b0ec570646d9a27b1e091987293a4cbc034520bc0e59f44edc04367f4b64';
+        const from = '0xAbf3fBC38b759C552Bf9C0eaffE5d2F4F09Aab0a';
+        const contractData1 = '';
+        const contractAddress1 = '';
+        const contractData2 = '';
+        const contractAddress2 = '';
+        const res = yield client.createSendData([
+            {
+                from,
+                amount: '0',
+                contract: contractAddress1,
+                data: contractData1,
+                gas: { gasPrice: '0.000000001', gasLimit: '100000' },
+            },
+            {
+                from,
+                amount: '0',
+                contract: contractAddress2,
+                data: contractData2,
+                gas: { gasPrice: '0.000000001', gasLimit: '100000' },
+            },
+        ]);
+        // broadcast both
+        const res1s = yield client.signTransaction(sk, res[0]);
+        const res2s = yield client.signTransaction(sk, res[1]);
+        const txId1 = yield client.broadcastTransaction(res1s);
+        const txId2 = yield client.broadcastTransaction(res2s);
+        // Inspect both transactions
+        const tx1 = yield client.waitForTransaction(txId1);
+        const tx2 = yield client.waitForTransaction(txId2);
+        console.log('Transactions ', tx1, tx2);
+    });
+});
+test('Broadcast rinkeby eth tx directly built ', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(100000);
+        const serializer = new EthereumTransactionSerializer_1.EthereumTransactionSerializer(4);
+        const txPrams = serializer.createTransactionParams(TestnetConfig_1.TEST_ACCOUNTS.secondAccountAddress.toLowerCase(), '1000000000000', '10000000000', '30000', '52', '');
+        const res = serializer.serialize(txPrams);
+        let tx = {
+            serializedTransaction: res.serializedTransaction,
+            transaction: txPrams,
+            signableHex: res.signableHex,
+        };
+        const client = ethereumClientForTest();
+        const sig = yield client.sign(TestnetConfig_1.TEST_ACCOUNTS.mainAccountSk, tx.signableHex, false);
+        tx.signature = sig;
+        tx = yield client.signTransaction('', tx);
+        // Get a chain client
+        const txId = yield client.broadcastTransaction(tx);
+        console.log('Retuls', { txId });
+        yield ferrum_plumbing_1.sleep(1000);
+        const txAct = yield client.waitForTransaction(txId);
+        console.log('Actual', txAct);
     });
 });
 function sendEth(eth, gas) {

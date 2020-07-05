@@ -25,6 +25,7 @@ export const TEST_ACCOUNTS = {
 
 export const TEST_FRM = '0x93698a057cec27508a9157a946e03e277b46fe56';
 export const TEST_GUSD = '0x056fd409e1d7a124bd7017459dfea2f387b6d5cd';
+const dummyLogFac = new LoggerFactory(n => new ConsoleLogger(n));
 
 export const TESTNET_CONFIG = {
     binanceChainUrl: 'https://testnet-dex.binance.org',
@@ -53,7 +54,7 @@ const TEST_PROD_CONFIG = {
 } as MultiChainConfig;
 
 export function ethereumClientForProd() {
-    return new FullEthereumClient('prod', TEST_PROD_CONFIG, new EthereumGasPriceProvider());
+    return new FullEthereumClient('prod', TEST_PROD_CONFIG, new EthereumGasPriceProvider(), dummyLogFac);
 }
 
 export function binanceClientForProd() {

@@ -18,6 +18,7 @@ class RemoteClientWrapper {
         this.processPaymentFromPrivateKeyWithGas = this.client.processPaymentFromPrivateKeyWithGas;
         this.signTransaction = this.client.signTransaction;
         this.waitForTransaction = this.client.waitForTransaction;
+        this.createSendData = this.client.createSendData;
         this.broadcastTransaction = this.client.broadcastTransaction.bind(this.client);
         this.createPaymentTransaction = this.client.createPaymentTransaction.bind(this.client);
         this.feeCurrency = this.client.feeCurrency.bind(this.client);
@@ -31,6 +32,7 @@ class RemoteClientWrapper {
         this.processPaymentFromPrivateKeyWithGas = this.client.processPaymentFromPrivateKeyWithGas.bind(this.client);
         this.waitForTransaction = this.client.waitForTransaction.bind(this.client);
         this.signTransaction = this.client.signTransaction.bind(this.client);
+        this.createSendData = this.client.createSendData.bind(this.client);
         client.sign = this.sign.bind(this);
     }
     sign(address, data, forceLow) {
