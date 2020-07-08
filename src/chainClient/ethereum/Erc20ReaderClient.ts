@@ -1,7 +1,7 @@
 import {EthereumClient} from '../EthereumClient';
 import * as abi from '../../resources/erc20-abi.json';
 import {ContractClientBase} from './ContractClientBase';
-import {Injectable, TypeUtils} from 'ferrum-plumbing';
+import {Injectable, TypeUtils, ValidationUtils} from 'ferrum-plumbing';
 import {ChainUtils} from "../ChainUtils";
 
 export class Erc20ReaderClient extends ContractClientBase implements Injectable {
@@ -17,7 +17,11 @@ export class Erc20ReaderClient extends ContractClientBase implements Injectable 
     __name__(): string { return 'Erc20ReaderClient'; }
 
     async decimals(): Promise<number> {
-        return TypeUtils.meomize<number>(this, '_decimals', () => this.call(m => m.decimals()));
+        return TypeUtils.meomize<number>(this, '_decimals', async () => {
+            const dec =await this.call(m => m.decimals());
+            ValidationUtils.isTrue(dec !== undefined, 'Could not read "decimals" for ' + this.contract);
+            return dec;
+        });
     }
 
     async name(): Promise<string> {

@@ -220,7 +220,7 @@ test('Get erc20 transaction by id', function () {
 test('Get another erc20 transaction by id', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);
-        const txid = '0x94b46e2c81af39d2da3ed691ee08482d905dfaf8016d44a7565fb8d5acd7fa61';
+        const txid = '0xa20b5976754b6a6bd757d79303d26b80fd6ff057834704385d4a1590b82e33d2';
         const client = TestnetConfig_1.ethereumClientForProd();
         const usdcTx = yield client.getTransactionById(txid);
         expect(usdcTx.fromItems[0].amount).toBe('85619.0');

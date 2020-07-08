@@ -104,7 +104,7 @@ export abstract class EthereumClient implements ChainClient {
     }
 
     async getTransactionById(tid: string, includePending: boolean = false): Promise<SimpleTransferTransaction | undefined> {
-        return this.getTransactionById(tid, includePending);
+        return this.getTransactionByIdWithBlock(tid, includePending);
     }
 
     private async getTransactionByIdWithBlock(tid: string,

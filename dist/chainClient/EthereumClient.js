@@ -108,7 +108,7 @@ class EthereumClient {
     }
     getTransactionById(tid, includePending = false) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.getTransactionById(tid, includePending);
+            return this.getTransactionByIdWithBlock(tid, includePending);
         });
     }
     getTransactionByIdWithBlock(tid, includePending = false, blockNo) {

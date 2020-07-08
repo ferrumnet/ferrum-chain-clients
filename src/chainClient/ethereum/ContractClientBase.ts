@@ -1,9 +1,7 @@
 import {EthereumClient} from '../EthereumClient';
 import * as abi from '../../resources/erc20-abi.json';
-import Web3 from 'web3';
 
 export abstract class ContractClientBase {
-    private _web3: Web3 | undefined;
     protected constructor(protected readonly client: EthereumClient,
                           protected readonly contract: string,
                           protected readonly abi: Object) {
@@ -16,9 +14,6 @@ export abstract class ContractClientBase {
     }
 
     protected web3() {
-        if (!this._web3) {
-            this._web3 = this.client.web3();
-        }
-        return this._web3!;
+        return this.client.web3();
     }
 }

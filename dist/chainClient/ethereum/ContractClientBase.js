@@ -31,10 +31,7 @@ class ContractClientBase {
         });
     }
     web3() {
-        if (!this._web3) {
-            this._web3 = this.client.web3();
-        }
-        return this._web3;
+        return this.client.web3();
     }
 }
 exports.ContractClientBase = ContractClientBase;

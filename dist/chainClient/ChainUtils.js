@@ -70,11 +70,12 @@ class ChainUtils {
         };
         items.push(feeItem);
         tx.fromItems.forEach(i => {
+            ferrum_plumbing_1.ValidationUtils.isTrue(!!i.decimals, "'decimals' is required on all items");
             items.push({
                 address: i.address,
                 currency: i.currency,
                 addressType: 'ADDRESS',
-                amount: toServerAmount(i.amount, i.currency, i.decimals || exports.ETH_DECIMALS, true),
+                amount: toServerAmount(i.amount, i.currency, i.decimals, true),
             });
         });
         tx.toItems.forEach(i => {
@@ -82,7 +83,7 @@ class ChainUtils {
                 address: i.address,
                 currency: i.currency,
                 addressType: 'ADDRESS',
-                amount: toServerAmount(i.amount, i.currency, i.decimals || exports.ETH_DECIMALS),
+                amount: toServerAmount(i.amount, i.currency, i.decimals),
             });
         });
         return {

@@ -27,7 +27,11 @@ class Erc20ReaderClient extends ContractClientBase_1.ContractClientBase {
     __name__() { return 'Erc20ReaderClient'; }
     decimals() {
         return __awaiter(this, void 0, void 0, function* () {
-            return ferrum_plumbing_1.TypeUtils.meomize(this, '_decimals', () => this.call(m => m.decimals()));
+            return ferrum_plumbing_1.TypeUtils.meomize(this, '_decimals', () => __awaiter(this, void 0, void 0, function* () {
+                const dec = yield this.call(m => m.decimals());
+                ferrum_plumbing_1.ValidationUtils.isTrue(dec !== undefined, 'Could not read "decimals" for ' + this.contract);
+                return dec;
+            }));
         });
     }
     name() {

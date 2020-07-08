@@ -19,6 +19,7 @@ class FullEthereumClient extends EthereumClient_1.EthereumClient {
     }
     getTokenDecimals(tok) {
         return __awaiter(this, void 0, void 0, function* () {
+            ferrum_plumbing_1.ValidationUtils.isTrue(!tok, "'tok' cannot be empty");
             return this.decimalsCache.getAsync(tok, () => __awaiter(this, void 0, void 0, function* () {
                 const client = new Erc20ReaderClient_1.Erc20ReaderClient(this, tok);
                 try {
@@ -26,6 +27,7 @@ class FullEthereumClient extends EthereumClient_1.EthereumClient {
                 }
                 catch (e) {
                     if (e.toString().indexOf('eturned values aren\'t valid')) {
+                        console.warn('Returning zero for decimal. ', tok, e);
                         return 0;
                     }
                     console.warn('Error calling decimal on contract', tok, e);
