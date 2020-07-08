@@ -13,7 +13,7 @@ export class FullEthereumClient extends EthereumClient {
   }
 
   protected async getTokenDecimals(tok: string): Promise<number> {
-    ValidationUtils.isTrue(!tok, "'tok' cannot be empty");
+    ValidationUtils.isTrue(!!tok, "'tok' cannot be empty");
     return this.decimalsCache.getAsync(tok, async () => {
       const client = new Erc20ReaderClient(this, tok);
       try {

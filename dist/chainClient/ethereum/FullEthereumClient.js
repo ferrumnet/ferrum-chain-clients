@@ -19,7 +19,7 @@ class FullEthereumClient extends EthereumClient_1.EthereumClient {
     }
     getTokenDecimals(tok) {
         return __awaiter(this, void 0, void 0, function* () {
-            ferrum_plumbing_1.ValidationUtils.isTrue(!tok, "'tok' cannot be empty");
+            ferrum_plumbing_1.ValidationUtils.isTrue(!!tok, "'tok' cannot be empty");
             return this.decimalsCache.getAsync(tok, () => __awaiter(this, void 0, void 0, function* () {
                 const client = new Erc20ReaderClient_1.Erc20ReaderClient(this, tok);
                 try {
