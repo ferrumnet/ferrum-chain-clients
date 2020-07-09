@@ -226,6 +226,27 @@ test('Get another erc20 transaction by id', function () {
         expect(usdcTx.fromItems[0].amount).toBe('85619.0');
     });
 });
+test('get balances ', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        const client = TestnetConfig_1.ethereumClientForProd();
+        const address = '0xa178609bfa90ae975e1bfa07e16e9557f6695962';
+        const curs = ['ETHEREUM:ETH',
+            'ETHEREUM:0xdac17f958d2ee523a2206206994597c13d831ec7',
+            'ETHEREUM:0xe5caef4af8780e59df925470b050fb23c43ca68c',
+            'ETHEREUM:0x9e35b147d4bf95983ffcb527ad04fbb3a9f121a4',
+            'ETHEREUM:0x6b175474e89094c44da98b954eedeac495271d0f',
+            'ETHEREUM:0x8e870d67f660d95d5be530380d0ec0bd388289e1',
+            'ETHEREUM:0x4a220e6096b25eadb88358cb44068a3248254675',
+            'ETHEREUM:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+            'ETHEREUM:0x8290333cef9e6d528dd5618fb97a76f268f3edd4',
+            'ETHEREUM:0xdf1d6405df92d981a2fb3ce68f6a03bac6c0e41f',
+            'ETHEREUM:0x514910771af9ca656af840dff83e8264ecf986ca',
+            'ETHEREUM:0x056fd409e1d7a124bd7017459dfea2f387b6d5cd'];
+        const balancesF = curs.map(currency => client.getBalance(address, currency).then(balance => ({ balance, address, currency })));
+        const balances = yield Promise.all(balancesF);
+        console.log('balances', balances);
+    });
+});
 test('Get block by number', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(10000000);

@@ -1,8 +1,8 @@
 import Web3 from 'web3';
 import { BlockData, ChainClient, EcSignature, GasParameters, MultiChainConfig, NetworkStage, SignableTransaction, SimpleTransferTransaction, ContractCallRequest } from "./types";
-import { HexString, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache } from 'ferrum-plumbing';
+import { HexString, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache, UsesServiceMultiplexer } from 'ferrum-plumbing';
 import { GasPriceProvider } from './GasPriceProvider';
-export declare abstract class EthereumClient implements ChainClient {
+export declare abstract class EthereumClient implements ChainClient, UsesServiceMultiplexer {
     private networkStage;
     private gasService;
     private readonly requiredConfirmations;
@@ -10,6 +10,7 @@ export declare abstract class EthereumClient implements ChainClient {
     providerMux: ServiceMultiplexer<Web3>;
     throttler: Throttler;
     protected constructor(networkStage: NetworkStage, config: MultiChainConfig, gasService: GasPriceProvider, logFac: LoggerFactory);
+    setMode(mode: 'load-balance' | 'one-hot'): void;
     protected network(): "ETHEREUM" | "RINKEBY";
     feeCurrency(): string;
     feeDecimals(): number;

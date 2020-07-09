@@ -45,18 +45,25 @@ function transactionLogHasErc20Transfer(log) {
     const nonZeroData = log.data && log.data !== '0x' && log.data !== '0X';
     return nonZeroData && topics.length > 1 && topics[0] === ERC_20_TOPIC;
 }
+function dontRetryError(e) {
+    const msg = e.toString();
+    return !!['VM execution', ' gas'].find(m => msg.indexOf(m) > 0);
+}
 class EthereumClient {
     constructor(networkStage, config, gasService, logFac) {
         this.networkStage = networkStage;
         this.gasService = gasService;
         this.localCache = new ferrum_plumbing_1.LocalCache();
         const provider = networkStage === 'test' ? config.web3ProviderRinkeby : config.web3Provider;
-        this.providerMux = new ferrum_plumbing_1.ServiceMultiplexer(provider.split(',').map(p => () => this.web3Instance(p)), logFac);
+        this.providerMux = new ferrum_plumbing_1.ServiceMultiplexer(provider.split(',').map(p => () => this.web3Instance(p)), logFac, dontRetryError);
         this.throttler = new ferrum_plumbing_1.Throttler(Math.round(1000 / (config.ethereumTps || 20)) || 50); // TPS is 20 per second.
         this.requiredConfirmations = config.requiredEthConfirmations !== undefined ? config.requiredEthConfirmations : 1;
         this.txWaitTimeout = config.pendingTransactionShowTimeout
             || ChainUtils_1.ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT * 10;
         abi_decoder_1.default.addABI(abi.abi);
+    }
+    setMode(mode) {
+        this.providerMux.updateMode(mode);
     }
     network() { return this.networkStage === 'prod' ? 'ETHEREUM' : 'RINKEBY'; }
     ;

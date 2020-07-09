@@ -11,7 +11,7 @@ import {
 // @ts-ignore
 import abiDecoder from 'abi-decoder';
 import * as abi from '../resources/erc20-abi.json';
-import {ValidationUtils, HexString, RetryableError, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache} from 'ferrum-plumbing';
+import {ValidationUtils, HexString, RetryableError, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache, UsesServiceMultiplexer} from 'ferrum-plumbing';
 import {ChainUtils, ETH_DECIMALS, waitForTx} from './ChainUtils';
 import {EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
 import {Transaction} from "ethereumjs-tx";
@@ -37,7 +37,12 @@ function transactionLogHasErc20Transfer(log: Log) {
     return nonZeroData && topics.length > 1 && topics[0] === ERC_20_TOPIC
 }
 
-export abstract class EthereumClient implements ChainClient {
+function dontRetryError(e: Error) {
+    const msg = e.toString();
+    return !!['VM execution', ' gas'].find(m => msg.indexOf(m) > 0);
+}
+
+export abstract class EthereumClient implements ChainClient, UsesServiceMultiplexer {
     private readonly requiredConfirmations: number;
     private readonly txWaitTimeout: number;
     providerMux: ServiceMultiplexer<Web3>;
@@ -46,13 +51,17 @@ export abstract class EthereumClient implements ChainClient {
         private gasService: GasPriceProvider, logFac: LoggerFactory) {
         const provider = networkStage === 'test' ? config.web3ProviderRinkeby : config.web3Provider;
         this.providerMux = new ServiceMultiplexer<Web3>(
-            provider.split(',').map(p => () => this.web3Instance(p)), logFac);
+            provider.split(',').map(p => () => this.web3Instance(p)), logFac, dontRetryError);
         this.throttler = new Throttler(
             Math.round(1000 / (config.ethereumTps || 20)) || 50); // TPS is 20 per second.
         this.requiredConfirmations = config.requiredEthConfirmations !== undefined ? config.requiredEthConfirmations : 1;
         this.txWaitTimeout = config.pendingTransactionShowTimeout
           || ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT * 10;
         abiDecoder.addABI(abi.abi);
+    }
+
+    setMode(mode: 'load-balance' | 'one-hot'): void {
+        this.providerMux.updateMode(mode);
     }
 
     protected network(){ return this.networkStage === 'prod' ? 'ETHEREUM' : 'RINKEBY'};
