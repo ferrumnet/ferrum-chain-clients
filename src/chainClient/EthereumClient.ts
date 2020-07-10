@@ -47,11 +47,15 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
     private readonly txWaitTimeout: number;
     providerMux: ServiceMultiplexer<Web3>;
     throttler: Throttler;
+    private web3Instances: {[p: string]: Web3} = {};
     protected constructor(private networkStage: NetworkStage, config: MultiChainConfig,
         private gasService: GasPriceProvider, logFac: LoggerFactory) {
         const provider = networkStage === 'test' ? config.web3ProviderRinkeby : config.web3Provider;
+        provider.split(',').map(p => {
+            this.web3Instances[p] = this.web3Instance(p);
+        });
         this.providerMux = new ServiceMultiplexer<Web3>(
-            provider.split(',').map(p => () => this.web3Instance(p)), logFac, dontRetryError);
+            provider.split(',').map(p => () => this.web3Instances[p]), logFac, dontRetryError);
         this.throttler = new Throttler(
             Math.round(1000 / (config.ethereumTps || 20)) || 50); // TPS is 20 per second.
         this.requiredConfirmations = config.requiredEthConfirmations !== undefined ? config.requiredEthConfirmations : 1;

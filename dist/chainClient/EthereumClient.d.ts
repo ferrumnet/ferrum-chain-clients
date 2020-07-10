@@ -9,6 +9,7 @@ export declare abstract class EthereumClient implements ChainClient, UsesService
     private readonly txWaitTimeout;
     providerMux: ServiceMultiplexer<Web3>;
     throttler: Throttler;
+    private web3Instances;
     protected constructor(networkStage: NetworkStage, config: MultiChainConfig, gasService: GasPriceProvider, logFac: LoggerFactory);
     setMode(mode: 'load-balance' | 'one-hot'): void;
     protected network(): "ETHEREUM" | "RINKEBY";

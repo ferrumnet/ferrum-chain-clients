@@ -53,9 +53,13 @@ class EthereumClient {
     constructor(networkStage, config, gasService, logFac) {
         this.networkStage = networkStage;
         this.gasService = gasService;
+        this.web3Instances = {};
         this.localCache = new ferrum_plumbing_1.LocalCache();
         const provider = networkStage === 'test' ? config.web3ProviderRinkeby : config.web3Provider;
-        this.providerMux = new ferrum_plumbing_1.ServiceMultiplexer(provider.split(',').map(p => () => this.web3Instance(p)), logFac, dontRetryError);
+        provider.split(',').map(p => {
+            this.web3Instances[p] = this.web3Instance(p);
+        });
+        this.providerMux = new ferrum_plumbing_1.ServiceMultiplexer(provider.split(',').map(p => () => this.web3Instances[p]), logFac, dontRetryError);
         this.throttler = new ferrum_plumbing_1.Throttler(Math.round(1000 / (config.ethereumTps || 20)) || 50); // TPS is 20 per second.
         this.requiredConfirmations = config.requiredEthConfirmations !== undefined ? config.requiredEthConfirmations : 1;
         this.txWaitTimeout = config.pendingTransactionShowTimeout
