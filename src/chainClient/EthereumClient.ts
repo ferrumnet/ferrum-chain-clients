@@ -482,13 +482,13 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
                     fee: '0',
                     feeCurrency: this.feeCurrency(),
                     fromItems: [{
-                        address: event.returnValues.from,
+                        address: event.returnValues.from.toLowerCase(),
                         currency: currency,
                         amount: amount,
                         decimals
                     }],
                     toItems: [{
-                        address: event.returnValues.to,
+                        address: event.returnValues.to.toLowerCase(),
                         currency: currency,
                         amount: amount,
                         decimals
