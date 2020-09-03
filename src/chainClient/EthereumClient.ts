@@ -475,6 +475,7 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
 
             pastEvents.forEach((event: any) => {
                 const decimals = _decimals[tok] as number;
+                const currency = `${this.network()}:${tok}`
                 const amount = toDecimal(event.returnValues.value, decimals);
                 res.push({
                     network: this.network(),
@@ -482,13 +483,13 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
                     feeCurrency: this.feeCurrency(),
                     fromItems: [{
                         address: event.returnValues.from,
-                        currency: tok,
+                        currency: currency,
                         amount: amount,
                         decimals
                     }],
                     toItems: [{
                         address: event.returnValues.to,
-                        currency: tok,
+                        currency: currency,
                         amount: amount,
                         decimals
                     }],
