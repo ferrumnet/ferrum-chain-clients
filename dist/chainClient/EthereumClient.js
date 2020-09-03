@@ -306,7 +306,7 @@ class EthereumClient {
                         ` Limit was ${gasLimit} but the calculated price ${gasPriceBN.toString()} generates a higher gas than overriden limit`);
                 }
                 if (!gasOverride) {
-                    return [(yield this.gasService.getGasPrice()).medium, gasLimit];
+                    return [ChainUtils_1.ChainUtils.toBigIntStr((yield this.gasService.getGasPrice()).medium, ChainUtils_1.ETH_DECIMALS), gasLimit];
                 }
                 return [gasPriceBN.toString(), gasLimit];
             }

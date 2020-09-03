@@ -67,6 +67,15 @@ test('get address', function () {
         expect(a2.address).toBe(TestnetConfig_1.TEST_ACCOUNTS.mainAccountAddressBtc);
     });
 });
+test('address created from sk matches kudi algorithm', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(100000);
+        const addr = new BitcoinAddress_1.BitcoinAddress('prod');
+        const a2 = yield addr.addressFromSk('63694c95e509f2252bdb30a266338e1e90feaff0609aa51c0293f11b8e93f053');
+        console.log('Created address is', a2);
+        expect(a2.address).toBe('1DoRPcwqq5oxAGGBT442gzf9kFmhcNUUXE');
+    });
+});
 test('Send some BTC to someone else', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);

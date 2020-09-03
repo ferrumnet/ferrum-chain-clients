@@ -303,7 +303,7 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
                   ` Limit was ${gasLimit} but the calculated price ${gasPriceBN.toString()} generates a higher gas than overriden limit`);
             }
             if (!gasOverride) {
-                return [(await this.gasService.getGasPrice()).medium, gasLimit];
+                return [ChainUtils.toBigIntStr((await this.gasService.getGasPrice()).medium, ETH_DECIMALS), gasLimit];
             }
             return [gasPriceBN.toString(), gasLimit];
         }

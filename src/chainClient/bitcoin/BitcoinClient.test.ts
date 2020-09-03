@@ -46,6 +46,14 @@ test('get address', async function() {
   expect(a2.address).toBe(TEST_ACCOUNTS.mainAccountAddressBtc);
 });
 
+test('address created from sk matches kudi algorithm', async function() {
+  jest.setTimeout(100000);
+  const addr = new BitcoinAddress('prod');
+  const a2 = await addr.addressFromSk('63694c95e509f2252bdb30a266338e1e90feaff0609aa51c0293f11b8e93f053');
+  console.log('Created address is', a2);
+  expect(a2.address).toBe('1DoRPcwqq5oxAGGBT442gzf9kFmhcNUUXE');
+});
+
 test('Send some BTC to someone else', async function() {
   jest.setTimeout(100000);
   const client = bitcoinClientForTest();
