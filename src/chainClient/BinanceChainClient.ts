@@ -147,8 +147,8 @@ export class BinanceChainClient implements ChainClient {
     async signTransaction<T>(skHex: HexString, transaction: SignableTransaction): Promise<SignableTransaction> {
         ValidationUtils.isTrue(!!transaction.signableHex, 'transaction.signableHex must be provided');
         const signature = await this.sign(skHex, transaction.signableHex!);
-        const publicKey = crypto.generatePubKey(Buffer.from(skHex, 'hex'));
-        const publicKeyHex = publicKey.encode('hex');
+        const publicKey = !!signature.publicKeyHex ? undefined : crypto.generatePubKey(Buffer.from(skHex, 'hex'));
+        const publicKeyHex = signature.publicKeyHex || publicKey.encode('hex');
         return {...transaction, signature, publicKeyHex};
     }
 
@@ -184,7 +184,9 @@ export class BinanceChainClient implements ChainClient {
     }
 
     async sign(skHex: HexString, data: HexString, forceLow: boolean = true): Promise<EcSignature> {
-        return ChainUtils.sign(data, skHex, true);
+        const publicKey = crypto.generatePubKey(Buffer.from(skHex, 'hex'));
+        const publicKeyHex = publicKey.encode('hex');
+        return {...ChainUtils.sign(data, skHex, true), publicKeyHex};
     }
 
     async processPaymentFromPrivateKey(sk: HexString, targetAddress: string, currency: string, amount: string): Promise<string> {

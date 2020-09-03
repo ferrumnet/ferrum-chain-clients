@@ -94,6 +94,7 @@ export interface EcSignature {
   r: HexString;
   s: HexString;
   v: number;
+  publicKeyHex?: HexString;
 }
 
 /**

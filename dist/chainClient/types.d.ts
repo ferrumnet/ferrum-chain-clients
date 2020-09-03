@@ -87,6 +87,7 @@ export interface EcSignature {
     r: HexString;
     s: HexString;
     v: number;
+    publicKeyHex?: HexString;
 }
 /**
  * Represents a signable or signed transaction. If signed, signatureHex will have a value, otherwise signableHex will

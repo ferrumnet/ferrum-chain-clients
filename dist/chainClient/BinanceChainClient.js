@@ -145,8 +145,8 @@ class BinanceChainClient {
         return __awaiter(this, void 0, void 0, function* () {
             ferrum_plumbing_1.ValidationUtils.isTrue(!!transaction.signableHex, 'transaction.signableHex must be provided');
             const signature = yield this.sign(skHex, transaction.signableHex);
-            const publicKey = javascript_sdk_1.crypto.generatePubKey(Buffer.from(skHex, 'hex'));
-            const publicKeyHex = publicKey.encode('hex');
+            const publicKey = !!signature.publicKeyHex ? undefined : javascript_sdk_1.crypto.generatePubKey(Buffer.from(skHex, 'hex'));
+            const publicKeyHex = signature.publicKeyHex || publicKey.encode('hex');
             return Object.assign(Object.assign({}, transaction), { signature, publicKeyHex });
         });
     }
@@ -185,7 +185,9 @@ class BinanceChainClient {
     }
     sign(skHex, data, forceLow = true) {
         return __awaiter(this, void 0, void 0, function* () {
-            return ChainUtils_1.ChainUtils.sign(data, skHex, true);
+            const publicKey = javascript_sdk_1.crypto.generatePubKey(Buffer.from(skHex, 'hex'));
+            const publicKeyHex = publicKey.encode('hex');
+            return Object.assign(Object.assign({}, ChainUtils_1.ChainUtils.sign(data, skHex, true)), { publicKeyHex });
         });
     }
     processPaymentFromPrivateKey(sk, targetAddress, currency, amount) {
