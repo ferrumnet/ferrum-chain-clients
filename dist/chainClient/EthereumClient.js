@@ -472,6 +472,7 @@ class EthereumClient {
                 });
                 pastEvents.forEach((event) => {
                     const decimals = _decimals[tok];
+                    const currency = `${this.network()}:${tok}`;
                     const amount = toDecimal(event.returnValues.value, decimals);
                     res.push({
                         network: this.network(),
@@ -479,13 +480,13 @@ class EthereumClient {
                         feeCurrency: this.feeCurrency(),
                         fromItems: [{
                                 address: event.returnValues.from,
-                                currency: tok,
+                                currency: currency,
                                 amount: amount,
                                 decimals
                             }],
                         toItems: [{
                                 address: event.returnValues.to,
-                                currency: tok,
+                                currency: currency,
                                 amount: amount,
                                 decimals
                             }],
