@@ -9,6 +9,7 @@ export declare class ChainUtils {
      * @return Formatter
      */
     static sign(data: HexString, sk: HexString, forceLow: boolean): EcSignature;
+    static signatureToHexNoV(sig: EcSignature): HexString;
     static signatureToHex(sig: EcSignature): HexString;
     static addressesAreEqual(network: Network, a1: string, a2: string): boolean;
     static simpleTransactionToServer(tx: SimpleTransferTransaction): ServerTransaction;

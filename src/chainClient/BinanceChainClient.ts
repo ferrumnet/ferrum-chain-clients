@@ -14,7 +14,7 @@ import {BINANCE_DECIMALS, ChainUtils, normalizeBnbAmount, waitForTx} from './Cha
 import {BinanceTxParser} from "./binance/BinanceTxParser";
 import {BINANCE_FEE} from "./GasPriceProvider";
 import {ec} from 'elliptic';
-import {sha256sync} from "ferrum-crypto";
+import {hexToArrayBuffer, sha256sync} from "ferrum-crypto";
 
 export class BinanceChainClient implements ChainClient {
     private readonly url: string;
@@ -160,12 +160,10 @@ export class BinanceChainClient implements ChainClient {
         const curve = new ec('secp256k1');
         const publicKey = curve.keyFromPublic(Buffer.from(transaction.publicKeyHex!, 'hex'));
         const txOptions = this.deserializeTx(transaction.serializedTransaction!);
-        const signature = Buffer.from(ChainUtils.signatureToHex(transaction.signature! as EcSignature), 'hex');
-        // const verif = curve.verify(Buffer.from(transaction.signableHex!, 'hex'), {r, s},
-        //   Buffer.from(transaction.publicKeyHex!, 'hex'));
-        // ValidationUtils.isTrue(verif, 'Error verifying signature using public key');
+        const signature = Buffer.from(ChainUtils.signatureToHexNoV(transaction.signature! as EcSignature), 'hex');
         const tx = new Transaction(txOptions);
         tx.addSignature(publicKey.getPublic(), signature);
+        crypto.verifySignature(signature.toString('hex'), transaction.signableHex!, transaction.publicKeyHex);
         try {
             console.log(`About to execute transaction: `, transaction.serializedTransaction);
             const res = await this.bnbClient.sendRawTransaction(tx.serialize(), true);

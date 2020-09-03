@@ -20,6 +20,7 @@ export const TEST_ACCOUNTS = {
     mainAccountAddressBnb: 'tbnb1mm8t4rexcz44wrhxv2ac94lpmjdsjx73jkyhzr',
     secondAccountSk: 'ec2a2b02f465f7e77d1b6128c564748eee8bdca22cce008dbce4e6dc1a44d993',
     secondAccountAddress: '0x8017877A1C06efbc7f444AC709119C1e209F26Ee',
+    secondAccountAddressBnb: 'tbnb1qqrk3pj9nyw6sm42eaylnkgym40302fjjqu4pk',
     secondAccountAddressBtcTestnet: 'mfX7AnsMaAk9GMhN2Z3iuHSTT5UYrkWWVK',
 };
 

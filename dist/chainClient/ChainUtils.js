@@ -42,6 +42,14 @@ class ChainUtils {
             };
         }
     }
+    static signatureToHexNoV(sig) {
+        const cBuf = Buffer.alloc(64);
+        const r = Buffer.from(sig.r, 'hex');
+        const s = Buffer.from(sig.s, 'hex');
+        r.copy(cBuf, 0, 0, 32);
+        s.copy(cBuf, 32, 0, 32);
+        return cBuf.toString('hex');
+    }
     static signatureToHex(sig) {
         const i = sig.v + 27 + 4;
         const cBuf = Buffer.alloc(66);

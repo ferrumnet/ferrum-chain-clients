@@ -158,12 +158,10 @@ class BinanceChainClient {
             const curve = new elliptic_1.ec('secp256k1');
             const publicKey = curve.keyFromPublic(Buffer.from(transaction.publicKeyHex, 'hex'));
             const txOptions = this.deserializeTx(transaction.serializedTransaction);
-            const signature = Buffer.from(ChainUtils_1.ChainUtils.signatureToHex(transaction.signature), 'hex');
-            // const verif = curve.verify(Buffer.from(transaction.signableHex!, 'hex'), {r, s},
-            //   Buffer.from(transaction.publicKeyHex!, 'hex'));
-            // ValidationUtils.isTrue(verif, 'Error verifying signature using public key');
+            const signature = Buffer.from(ChainUtils_1.ChainUtils.signatureToHexNoV(transaction.signature), 'hex');
             const tx = new javascript_sdk_1.Transaction(txOptions);
             tx.addSignature(publicKey.getPublic(), signature);
+            javascript_sdk_1.crypto.verifySignature(signature.toString('hex'), transaction.signableHex, transaction.publicKeyHex);
             try {
                 console.log(`About to execute transaction: `, transaction.serializedTransaction);
                 const res = yield this.bnbClient.sendRawTransaction(tx.serialize(), true);

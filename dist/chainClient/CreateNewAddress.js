@@ -83,7 +83,7 @@ class BinanceChainAddress {
             }
             return {
                 address: address.toString('hex'),
-                network: 'BINANCE',
+                network: this.network === 'test' ? 'BINANCE_TESTNEET' : 'BINANCE',
                 privateKeyHex: sk,
                 createdAt: Date.now(),
             };

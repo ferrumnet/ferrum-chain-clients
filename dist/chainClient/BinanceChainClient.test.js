@@ -16,6 +16,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const javascript_sdk_1 = __importDefault(require("@binance-chain/javascript-sdk"));
 const BinanceChainClient_1 = require("./BinanceChainClient");
 const TestnetConfig_1 = require("../testUtils/configs/TestnetConfig");
+const CreateNewAddress_1 = require("./CreateNewAddress");
 const conf = {
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
     binanceChainUrl: 'https://testnet-dex.binance.org',
@@ -100,6 +101,25 @@ test('get block test', function () {
         expect(tx.fromItems[0].currency).toBe('BINANCE_TESTNET:BNB');
         expect(tx.fee).toBe('0.000375');
         expect(tx.memo).toBe('Test transaction');
+    });
+});
+test('Address from sk', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(1000000);
+        const am = new CreateNewAddress_1.BinanceChainAddress('test');
+        console.log(am.addressFromSk(TestnetConfig_1.TEST_ACCOUNTS.secondAccountSk));
+    });
+});
+test('send out test token', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(1000000);
+        const client = new BinanceChainClient_1.BinanceChainClient('test', conf);
+        const txSig = yield client.createPaymentTransaction(TestnetConfig_1.TEST_ACCOUNTS.mainAccountAddressBnb, TestnetConfig_1.TEST_ACCOUNTS.secondAccountAddressBnb, 'BINANCE_TESTNET:BNB', '0.00001');
+        console.log({ txSig });
+        const signed = yield client.signTransaction(TestnetConfig_1.TEST_ACCOUNTS.mainAccountSk, txSig);
+        console.log({ signed });
+        const txId = yield client.broadcastTransaction(signed);
+        console.log('TX ID IS ', txId);
     });
 });
 //# sourceMappingURL=BinanceChainClient.test.js.map

@@ -81,7 +81,7 @@ export class BinanceChainAddress implements CreateNewAddress, Injectable {
         }
         return {
             address: address.toString('hex'),
-            network: 'BINANCE' as Network,
+            network: this.network === 'test' ? 'BINANCE_TESTNEET' : 'BINANCE',
             privateKeyHex: sk,
             createdAt: Date.now(),
         } as AddressWithSecretKeys;

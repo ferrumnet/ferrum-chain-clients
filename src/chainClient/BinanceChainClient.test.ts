@@ -3,6 +3,7 @@ import sdk from '@binance-chain/javascript-sdk';
 import {MultiChainConfig} from './types';
 import {BinanceChainClient} from './BinanceChainClient';
 import {binanceClientForProd, TEST_ACCOUNTS, testChainClientFactory} from '../testUtils/configs/TestnetConfig';
+import { BinanceChainAddress } from './CreateNewAddress';
 
 const conf = {
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
@@ -92,4 +93,22 @@ test('get block test', async function() {
     expect(tx.fromItems[0].currency).toBe('BINANCE_TESTNET:BNB');
     expect(tx.fee).toBe('0.000375');
     expect(tx.memo).toBe('Test transaction');
+});
+
+test('Address from sk', async function() {
+    jest.setTimeout(1000000);
+    const am = new BinanceChainAddress('test');
+    console.log(am.addressFromSk(TEST_ACCOUNTS.secondAccountSk));
+})
+
+test('send out test token', async function() {
+    jest.setTimeout(1000000);
+    const client = new BinanceChainClient('test', conf);
+    const txSig = await client.createPaymentTransaction(TEST_ACCOUNTS.mainAccountAddressBnb,
+        TEST_ACCOUNTS.secondAccountAddressBnb, 'BINANCE_TESTNET:BNB', '0.00001');
+    console.log({txSig})
+    const signed = await client.signTransaction(TEST_ACCOUNTS.mainAccountSk, txSig);
+    console.log({signed})
+    const txId = await client.broadcastTransaction(signed);
+    console.log('TX ID IS ', txId)
 });

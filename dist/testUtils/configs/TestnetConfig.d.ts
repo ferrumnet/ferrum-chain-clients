@@ -11,6 +11,7 @@ export declare const TEST_ACCOUNTS: {
     mainAccountAddressBnb: string;
     secondAccountSk: string;
     secondAccountAddress: string;
+    secondAccountAddressBnb: string;
     secondAccountAddressBtcTestnet: string;
 };
 export declare const TEST_FRM = "0x93698a057cec27508a9157a946e03e277b46fe56";
