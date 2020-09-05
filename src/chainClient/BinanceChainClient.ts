@@ -14,7 +14,7 @@ import {BINANCE_DECIMALS, ChainUtils, normalizeBnbAmount, waitForTx} from './Cha
 import {BinanceTxParser} from "./binance/BinanceTxParser";
 import {BINANCE_FEE} from "./GasPriceProvider";
 import {ec} from 'elliptic';
-import {hexToArrayBuffer, sha256sync} from "ferrum-crypto";
+import {sha256sync} from "ferrum-crypto";
 
 export class BinanceChainClient implements ChainClient {
     private readonly url: string;
@@ -22,8 +22,9 @@ export class BinanceChainClient implements ChainClient {
     private seedNodeUrl: string;
     bnbClient: any;
     constructor(private networkStage: NetworkStage, config: MultiChainConfig) {
-        this.url = config.binanceChainUrl;
-        this.seedNodeUrl = config.binanceChainSeedNode;
+        this.url = networkStage === 'prod' ? config.binanceChainUrl : config.binanceChainTestnetUrl!;
+        this.seedNodeUrl = networkStage === 'prod' ? config.binanceChainSeedNode :
+            config.binanceChainTestnetSeedNode!;
         this.txWaitTimeout = config.pendingTransactionShowTimeout || ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT;
         this.addFeeToRawParsedTx = this.addFeeToRawParsedTx.bind(this);
         this.getBlockByNumber = this.getBlockByNumber.bind(this);

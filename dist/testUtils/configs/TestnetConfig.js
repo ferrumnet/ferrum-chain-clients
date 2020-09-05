@@ -45,8 +45,10 @@ const TEST_PROD_CONFIG = {
     web3Provider: 'https://mainnet.infura.io/v3/637d6212c3de438c845e2544baad58b7',
     web3ProviderRinkeby: 'https://rinkeby.infura.io/v3/637d6212c3de438c845e2544baad58b7',
     binanceChainUrl: 'https://dex.binance.org',
+    binanceChainTestnetUrl: "https://testnet-dex.binance.org",
     etherscanApiKey: '',
-    binanceChainSeedNode: '',
+    binanceChainSeedNode: "https://dataseed3.ninicoin.io",
+    binanceChainTestnetSeedNode: "https://data-seed-pre-0-s1.binance.org",
     networkStage: 'test',
 };
 function ethereumClientForProd() {

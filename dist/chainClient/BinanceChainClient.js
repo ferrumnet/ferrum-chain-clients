@@ -31,8 +31,9 @@ const ferrum_crypto_1 = require("ferrum-crypto");
 class BinanceChainClient {
     constructor(networkStage, config) {
         this.networkStage = networkStage;
-        this.url = config.binanceChainUrl;
-        this.seedNodeUrl = config.binanceChainSeedNode;
+        this.url = networkStage === 'prod' ? config.binanceChainUrl : config.binanceChainTestnetUrl;
+        this.seedNodeUrl = networkStage === 'prod' ? config.binanceChainSeedNode :
+            config.binanceChainTestnetSeedNode;
         this.txWaitTimeout = config.pendingTransactionShowTimeout || ChainUtils_1.ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT;
         this.addFeeToRawParsedTx = this.addFeeToRawParsedTx.bind(this);
         this.getBlockByNumber = this.getBlockByNumber.bind(this);

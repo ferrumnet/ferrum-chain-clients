@@ -79,7 +79,9 @@ export interface MultiChainConfig {
   web3ProviderRinkeby: string;
   etherscanApiKey: string;
   binanceChainUrl: string;
+  binanceChainTestnetUrl?: string;
   binanceChainSeedNode: string;
+  binanceChainTestnetSeedNode?: string;
   requiredEthConfirmations?: number;
   pendingTransactionShowTimeout?: number;
   ethereumTps?: number;
