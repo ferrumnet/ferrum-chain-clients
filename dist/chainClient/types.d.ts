@@ -83,7 +83,9 @@ export interface MultiChainConfig {
 }
 export declare const NetworkNativeCurrencies: {
     'ETHEREUM': string;
+    'RINKEBY': string;
     'BINANCE': string;
+    'BINANCE_TESTNET': string;
 };
 export interface EcSignature {
     r: HexString;

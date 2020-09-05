@@ -164,7 +164,7 @@ class BinanceChainClient {
             tx.addSignature(publicKey.getPublic(), signature);
             javascript_sdk_1.crypto.verifySignature(signature.toString('hex'), transaction.signableHex, transaction.publicKeyHex);
             try {
-                console.log(`About to execute transaction: `, transaction.serializedTransaction);
+                console.log(`About to execute transaction: `, JSON.stringify(transaction.serializedTransaction));
                 const res = yield this.bnbClient.sendRawTransaction(tx.serialize(), true);
                 if (res.status !== 200) {
                     console.error('Error executing transaction', transaction.serializedTransaction, res);

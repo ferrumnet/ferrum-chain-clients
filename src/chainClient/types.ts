@@ -89,7 +89,9 @@ export interface MultiChainConfig {
 
 export const NetworkNativeCurrencies = {
   'ETHEREUM': 'ETHEREUM:ETH',
+  'RINKEBY': 'RINKEBY:ETH',
   'BINANCE': 'BINANCE:BNB',
+  'BINANCE_TESTNET': 'BINANCE_TESTNET:BNB',
 };
 
 export interface EcSignature {
