@@ -506,7 +506,7 @@ class EthereumClient {
         return __awaiter(this, void 0, void 0, function* () {
             return this.providerMux.retryAsync((web3) => __awaiter(this, void 0, void 0, function* () {
                 yield this.throttler.throttle();
-                if (currency === types_1.NetworkNativeCurrencies.ETHEREUM) {
+                if (currency === types_1.NetworkNativeCurrencies[this.network()]) {
                     const bal = yield web3.eth.getBalance(address);
                     return web3.utils.fromWei(bal, 'ether');
                 }

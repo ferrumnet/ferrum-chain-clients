@@ -508,7 +508,7 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
     async getBalance(address: string, currency: string) {
         return this.providerMux.retryAsync(async web3 => {
             await this.throttler.throttle();
-            if (currency === NetworkNativeCurrencies.ETHEREUM) {
+            if (currency === NetworkNativeCurrencies[this.network()]) {
                 const bal = await web3.eth.getBalance(address);
                 return web3.utils.fromWei(bal, 'ether');
             } else {
