@@ -28,12 +28,13 @@ const ECDSA = bitcore_lib_1.crypto.ECDSA;
 test('get btc mainnet transaction', function () {
     return __awaiter(this, void 0, void 0, function* () {
         jest.setTimeout(100000);
-        const txId = 'd360583fe967a79fd9dc71bb1fa2f10c681a7b82f45c0a115f0d4666c7bf2b57';
+        const txId = 'cfc1133033fe30c6e25d3d52b3a3446918d02625ed7418701599e0f30d94a8d7';
         const client = TestnetConfig_1.bitcoinClientForProd();
         const tx = (yield client.getTransactionById(txId));
-        expect(tx.fromItems[0].amount).toBe('0.09292872');
-        expect(tx.toItems[1].amount).toBe('0.00115487');
-        expect(tx.fee).toBe('0.00001328');
+        expect(tx.fromItems[0].amount).toBe('0.00131800');
+        expect(tx.toItems[0].amount).toBe('0.08675899');
+        expect(tx.toItems[0].address).toBe('3LBYDUHNvqm1abLXyELqJmfRVtXFQga94D');
+        expect(tx.fee).toBe('0.00075090');
     });
 });
 test('get block by number', function () {

@@ -74,7 +74,7 @@ function parseTrezorTx(network, tx) {
         amount: fromSatoshi(i.value),
         decimals: BTC_DECIMALS,
         currency: `${network}:BTC`,
-        address: ((i.scriptPubKey || {}).addresses || [''])[0] || '',
+        address: i.isAddress ? (i.addresses || [''])[0] || '' : '',
     }));
     return {
         id: tx.txid,
