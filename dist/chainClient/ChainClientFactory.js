@@ -79,6 +79,12 @@ class ChainClientFactory {
                 return new EtherScanHistoryClient_1.EtherScanHistoryClient(this.localConfig.etherscanApiKey, 'ETHEREUM', this.loggerFactory);
             case 'RINKEBY':
                 return new EtherScanHistoryClient_1.EtherScanHistoryClient(this.localConfig.etherscanApiKey, 'RINKEBY', this.loggerFactory);
+            case 'BITCOIN':
+            case 'BITCOIN_TESTNET':
+                if (!this.bitcoinClient) {
+                    this.bitcoinClient = new BitcoinClient_1.BitcoinClient('prod', this.cache, new BitcoinAddress_1.BitcoinAddress('prod'));
+                }
+                return this.bitcoinClient;
             default:
                 throw new Error('ChainClientFactory.historyClient: Unsupported network: ' + network);
         }

@@ -101,6 +101,13 @@ export class ChainClientFactory implements Injectable {
             case 'RINKEBY':
                 return new EtherScanHistoryClient(this.localConfig.etherscanApiKey,
                     'RINKEBY', this.loggerFactory);
+            case 'BITCOIN':
+            case 'BITCOIN_TESTNET':
+                 if (!this.bitcoinClient) {
+                     this.bitcoinClient = new BitcoinClient('prod',
+                       this.cache, new BitcoinAddress('prod'));
+                 }
+                 return this.bitcoinClient!;
             default:
                 throw new Error('ChainClientFactory.historyClient: Unsupported network: ' + network);
         }
