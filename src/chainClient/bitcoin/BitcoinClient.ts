@@ -89,7 +89,7 @@ function parseTrezorTx(network: Network, tx: any): SimpleTransferTransaction {
     amount: fromSatoshi(i.value),
     decimals: BTC_DECIMALS,
     currency: `${network}:BTC`,
-    address: ((i.scriptPubKey || {}).addresses || ['']) [0] || '',
+    address: i.isAddress ? (i.addresses || ['']) [0] || '' : '',
   } as SimpleTransferTransactionItem));
   return  {
     id: tx.txid,
