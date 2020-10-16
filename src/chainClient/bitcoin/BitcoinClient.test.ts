@@ -14,6 +14,12 @@ test('get btc mainnet transaction', async function() {
   expect(tx.toItems[0].amount).toBe('0.08675899');
   expect(tx.toItems[0].address).toBe('3LBYDUHNvqm1abLXyELqJmfRVtXFQga94D');
   expect(tx.fee).toBe('0.00075090');
+  const stx = ChainUtils.simpleTransactionToServer(tx);
+  console.log("TX IS ", stx)
+  const sumVal = stx.items.map(i => new BN(i.amount)).reduce((p, c) => p.add(c));
+  const fee = new BN(stx.fee);
+  console.log("SUM ITO ", sumVal.toString(), fee.toString())
+
 });
 
 test('get block by number', async function() {

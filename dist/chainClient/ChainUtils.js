@@ -73,7 +73,7 @@ class ChainUtils {
             address: tx.fromItems[0].address,
             currency: tx.feeCurrency,
             addressType: 'ADDRESS',
-            amount: toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals || exports.ETH_DECIMALS, true),
+            amount: tx.feeCurrency === 'BITCOIN:BTC' ? '0' : toServerAmount(tx.fee, tx.feeCurrency, tx.feeDecimals || exports.ETH_DECIMALS, true),
             itemType: 'FEE',
         };
         items.push(feeItem);
