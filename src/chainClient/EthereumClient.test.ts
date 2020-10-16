@@ -3,11 +3,13 @@ import {
     TEST_ACCOUNTS, TEST_FRM,
     testChainClientFactory, testGanacheClientFactory,
 } from '../testUtils/configs/TestnetConfig';
-import {retry, sleep} from "ferrum-plumbing";
+import {ConsoleLogger, LoggerFactory, retry, sleep} from "ferrum-plumbing";
 import {ChainUtils} from "./ChainUtils";
-import {FRM} from "./GasPriceProvider";
+import {EthereumGasPriceProvider, FRM} from "./GasPriceProvider";
 import { ContractCallRequest, SignableTransaction } from './types';
 import { EthereumTransactionSerializer } from 'ferrum-crypto/dist/transaction/EthereumTransactionSerializer';
+import { FullEthereumClient } from './ethereum/FullEthereumClient';
+import Web3 from 'web3';
 
 const clientFac = testChainClientFactory();
 
@@ -377,6 +379,19 @@ test('Broadcast rinkeby eth tx directly built ', async function() {
     const txAct = await client.waitForTransaction(txId)
     console.log('Actual', txAct);
 })
+
+test('Connecting to node with basic auth 11', async function() {
+    jest.setTimeout(100000);
+    const dummyLogFac = new LoggerFactory(n => new ConsoleLogger(n));
+    const url = 'ferrum_user:PW@http://127.0.0.1';
+    const client = new FullEthereumClient(
+        'prod', {web3Provider: url} as any,
+            new EthereumGasPriceProvider(), dummyLogFac);
+            await sleep(3000)
+
+    const b = await client.getBlockNumber();
+    console.log('B IS ', {b})
+});
 
 async function sendEth(eth: string, gas: string) {
     const clientFact = testGanacheClientFactory();

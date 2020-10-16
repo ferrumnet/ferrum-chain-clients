@@ -1,7 +1,7 @@
-import { BlockData, ChainClient, EcSignature, GasParameters, NetworkStage, SignableTransaction, SimpleTransferTransaction } from "../types";
+import { BlockData, ChainClient, ChainHistoryClient, EcSignature, GasParameters, NetworkStage, SignableTransaction, SimpleTransferTransaction } from "../types";
 import { Injectable, LocalCache } from "ferrum-plumbing";
 import { CreateNewAddress } from "../CreateNewAddress";
-export declare class BitcoinClient implements ChainClient, Injectable {
+export declare class BitcoinClient implements ChainClient, ChainHistoryClient, Injectable {
     private networkStage;
     private cache;
     private addressGen;
@@ -25,6 +25,9 @@ export declare class BitcoinClient implements ChainClient, Injectable {
     sign(skHex: string, data: string, forceLow: boolean): Promise<EcSignature>;
     signTransaction<T>(skHex: string, transaction: SignableTransaction): Promise<SignableTransaction>;
     waitForTransaction(transactionId: string): Promise<SimpleTransferTransaction | undefined>;
+    providesHistory(): Boolean;
+    getNonBlockTransactions(fromBlock: number, toBlock: number, filter: any): Promise<SimpleTransferTransaction[]>;
+    getTransactionsForAddress(address: string, fromBlock: number, toBlock: number, filter: any): Promise<SimpleTransferTransaction[]>;
     private getUtxos;
     private get;
     private static calcSendUtxos;

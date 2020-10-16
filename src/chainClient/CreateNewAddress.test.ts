@@ -31,3 +31,14 @@ test('can create new eth address prod', async () => {
    expect(addr.address.length).toBe(42);
    expect(addr.privateKeyHex.length).toBe(64)
 });
+
+test('create address for both eth and bnb from same sk', async () => {
+   const bc = new EthereumAddress('prod');
+   const addr = await bc.newAddress();
+   console.log('Created new eth address prod', addr);
+   const bnb = new BinanceChainAddress('prod');
+   const bnbAddr = await bnb.addressFromSk(addr.privateKeyHex);
+   console.log('Created', {bnbAddr, addr});
+   expect(addr.address.length).toBe(42);
+   expect(addr.privateKeyHex.length).toBe(64)
+})

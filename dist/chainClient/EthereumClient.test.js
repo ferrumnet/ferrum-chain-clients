@@ -14,6 +14,7 @@ const ferrum_plumbing_1 = require("ferrum-plumbing");
 const ChainUtils_1 = require("./ChainUtils");
 const GasPriceProvider_1 = require("./GasPriceProvider");
 const EthereumTransactionSerializer_1 = require("ferrum-crypto/dist/transaction/EthereumTransactionSerializer");
+const FullEthereumClient_1 = require("./ethereum/FullEthereumClient");
 const clientFac = TestnetConfig_1.testChainClientFactory();
 function ethereumClientForTest() { return clientFac.forNetwork('RINKEBY'); }
 test('send tx', function () {
@@ -368,6 +369,17 @@ test('Broadcast rinkeby eth tx directly built ', function () {
         yield ferrum_plumbing_1.sleep(1000);
         const txAct = yield client.waitForTransaction(txId);
         console.log('Actual', txAct);
+    });
+});
+test('Connecting to node with basic auth 11', function () {
+    return __awaiter(this, void 0, void 0, function* () {
+        jest.setTimeout(100000);
+        const dummyLogFac = new ferrum_plumbing_1.LoggerFactory(n => new ferrum_plumbing_1.ConsoleLogger(n));
+        const url = 'ferrum_user:PW@http://127.0.0.1';
+        const client = new FullEthereumClient_1.FullEthereumClient('prod', { web3Provider: url }, new GasPriceProvider_1.EthereumGasPriceProvider(), dummyLogFac);
+        yield ferrum_plumbing_1.sleep(3000);
+        const b = yield client.getBlockNumber();
+        console.log('B IS ', { b });
     });
 });
 function sendEth(eth, gas) {

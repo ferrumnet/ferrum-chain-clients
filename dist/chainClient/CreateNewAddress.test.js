@@ -38,4 +38,14 @@ test('can create new eth address prod', () => __awaiter(void 0, void 0, void 0, 
     expect(addr.address.length).toBe(42);
     expect(addr.privateKeyHex.length).toBe(64);
 }));
+test('create address for both eth and bnb from same sk', () => __awaiter(void 0, void 0, void 0, function* () {
+    const bc = new CreateNewAddress_1.EthereumAddress('prod');
+    const addr = yield bc.newAddress();
+    console.log('Created new eth address prod', addr);
+    const bnb = new CreateNewAddress_1.BinanceChainAddress('prod');
+    const bnbAddr = yield bnb.addressFromSk(addr.privateKeyHex);
+    console.log('Created', { bnbAddr, addr });
+    expect(addr.address.length).toBe(42);
+    expect(addr.privateKeyHex.length).toBe(64);
+}));
 //# sourceMappingURL=CreateNewAddress.test.js.map

@@ -1,6 +1,7 @@
 import {
   BlockData,
   ChainClient,
+  ChainHistoryClient,
   EcSignature,
   GasParameters, NetworkStage,
   SignableTransaction,
@@ -107,7 +108,7 @@ function parseTrezorTx(network: Network, tx: any): SimpleTransferTransaction {
   } as SimpleTransferTransaction;
 }
 
-export class BitcoinClient implements ChainClient, Injectable {
+export class BitcoinClient implements ChainClient, ChainHistoryClient, Injectable {
   private readonly network: Network;
   private readonly baseUrl: string;
   constructor(private networkStage: NetworkStage, private cache: LocalCache,
@@ -295,6 +296,20 @@ export class BitcoinClient implements ChainClient, Injectable {
   waitForTransaction(transactionId: string): Promise<SimpleTransferTransaction | undefined> {
     return waitForTx(this, transactionId, BITCOIN_TX_FETCH_TIMEOUT,
       ChainUtils.TX_FETCH_TIMEOUT * 10)
+  }
+
+  // Chain history client implementation 
+
+  providesHistory(): Boolean {
+    return false;
+  }
+
+  async getNonBlockTransactions(fromBlock: number, toBlock: number, filter: any): Promise<SimpleTransferTransaction[]> {
+    return [];
+  }
+
+  async getTransactionsForAddress(address: string, fromBlock: number, toBlock: number, filter: any): Promise<SimpleTransferTransaction[]> {
+    throw new Error("Method not implemented.");
   }
 
   private async getUtxos(address: string): Promise<Utxo[]> {

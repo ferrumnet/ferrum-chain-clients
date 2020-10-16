@@ -275,6 +275,20 @@ class BitcoinClient {
     waitForTransaction(transactionId) {
         return ChainUtils_1.waitForTx(this, transactionId, BITCOIN_TX_FETCH_TIMEOUT, ChainUtils_1.ChainUtils.TX_FETCH_TIMEOUT * 10);
     }
+    // Chain history client implementation 
+    providesHistory() {
+        return false;
+    }
+    getNonBlockTransactions(fromBlock, toBlock, filter) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return [];
+        });
+    }
+    getTransactionsForAddress(address, fromBlock, toBlock, filter) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error("Method not implemented.");
+        });
+    }
     getUtxos(address) {
         return __awaiter(this, void 0, void 0, function* () {
             const res = yield this.get(`utxo/${address}`);

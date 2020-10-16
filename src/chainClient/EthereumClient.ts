@@ -42,6 +42,11 @@ function dontRetryError(e: Error) {
     return !!['VM execution', ' gas'].find(m => msg.indexOf(m) > 0);
 }
 
+function base64(data: string) {
+    let buff = Buffer.from(data);
+    return buff.toString('base64');
+}
+
 export abstract class EthereumClient implements ChainClient, UsesServiceMultiplexer {
     private readonly requiredConfirmations: number;
     private readonly txWaitTimeout: number;
@@ -535,7 +540,19 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
     }
 
     private web3Instance(provider: string) {
-        return new Web3(new Web3.providers.HttpProvider(provider));
+        if (provider.toLocaleLowerCase().indexOf('@http') > 0) {
+            const [cred, url] = provider.split('@', 2);
+            const [user, pw] = (cred || '').split(':');
+            ValidationUtils.isTrue(!!user && !!pw && !!url, 'Invalid basic auth provider url: ' + provider);
+            const headers = [{
+                  name: "Authorization",
+                  value: "Basic " + base64(`${user}:${pw}`)
+                }];
+            const actualProvider = new Web3.providers.HttpProvider(url, {headers}); 
+            return new Web3(actualProvider);
+        } else {
+            return new Web3(new Web3.providers.HttpProvider(provider));
+        }
     }
 
     private getChainId() {

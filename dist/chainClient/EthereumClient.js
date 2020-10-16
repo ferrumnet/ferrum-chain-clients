@@ -49,6 +49,10 @@ function dontRetryError(e) {
     const msg = e.toString();
     return !!['VM execution', ' gas'].find(m => msg.indexOf(m) > 0);
 }
+function base64(data) {
+    let buff = Buffer.from(data);
+    return buff.toString('base64');
+}
 class EthereumClient {
     constructor(networkStage, config, gasService, logFac) {
         this.networkStage = networkStage;
@@ -535,7 +539,20 @@ class EthereumClient {
         return this.providerMux.get();
     }
     web3Instance(provider) {
-        return new web3_1.default(new web3_1.default.providers.HttpProvider(provider));
+        if (provider.toLocaleLowerCase().indexOf('@http') > 0) {
+            const [cred, url] = provider.split('@', 2);
+            const [user, pw] = (cred || '').split(':');
+            ferrum_plumbing_1.ValidationUtils.isTrue(!!user && !!pw && !!url, 'Invalid basic auth provider url: ' + provider);
+            const headers = [{
+                    name: "Authorization",
+                    value: "Basic " + base64(`${user}:${pw}`)
+                }];
+            const actualProvider = new web3_1.default.providers.HttpProvider(url, { headers });
+            return new web3_1.default(actualProvider);
+        }
+        else {
+            return new web3_1.default(new web3_1.default.providers.HttpProvider(provider));
+        }
     }
     getChainId() {
         return this.networkStage === 'test' ? 4 : 1;
