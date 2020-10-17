@@ -136,11 +136,15 @@ export class BitcoinClient implements ChainClient, ChainHistoryClient, Injectabl
     // ValidationUtils.isTrue(!!gasOverride, '"gasOverride" is required');
     const allUtxos = (await this.getUtxos(fromAddress) || []).filter(u => u.confirmations > 0 && Number(u.value) > 0);
     const bal = allUtxos.map(u => new BN(u.value)).reduce((p, c) => p.add(c), new BN(0)) || new BN(0);
-    const fee = await this.calcFee(gasOverride);
+    const utxoGasRatio = Math.max(allUtxos.length / 2, 1);
+    const overridedGas = gasOverride && (gasOverride as GasParameters).gasPrice ?
+      new BN(toSatoshi((gasOverride as GasParameters).gasPrice)).muln(utxoGasRatio) :
+      new BN(toSatoshi(gasOverride as string || '0'));
+    const fee = gasOverride ? overridedGas : await this.calcFee(utxoGasRatio);
     const satoshis = new BN(toSatoshi(amount));
     const balRequired = fee.add(satoshis);
     ValidationUtils.isTrue(bal.gte(balRequired),
-      `Not enough balance (expected ${balRequired.toString()} but had ${bal.toString()})`);
+      `Not enough balance (expected ${fromSatoshi(balRequired.toString())} but had ${bal.toString()})`);
     const [utxos, change] = BitcoinClient.calcSendUtxos(allUtxos, satoshis, fee);
     const tx = {
       utxos: utxos,
@@ -357,18 +361,8 @@ export class BitcoinClient implements ChainClient, ChainHistoryClient, Injectabl
     }, EthereumGasPriceProvider.GasTimeout * 4);
   }
 
-  private async calcFee(gasOverwrite: string | GasParameters | undefined): Promise<BN> {
-    if (!!gasOverwrite) {
-      if (typeof gasOverwrite === 'string') { return new BN(toSatoshi(gasOverwrite)); }
-      return BitcoinClient.calFeeFromGas(gasOverwrite);
-    }
+  private async calcFee(utxosCnt: number): Promise<BN> {
     // const gasLimit = (180 * utxosCnt + 2 * 34 + 10 + 40).toString();
-    return  new BN(toSatoshi(await this.getGasEstimate()));
-  }
-
-  private static calFeeFromGas(gas: GasParameters) {
-    ValidationUtils.isTrue(!!gas.gasPrice, '"gasOverwrite.gasPrice" must be provided');
-    ValidationUtils.isTrue(!!gas.gasLimit, '"gasOverwrite.gasLimit" must be provided');
-    return new BN(toSatoshi(gas.gasPrice)).muln(Number(gas.gasLimit || '1'));
+    return  new BN(toSatoshi(await this.getGasEstimate())).muln(utxosCnt);
   }
 }

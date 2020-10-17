@@ -116,10 +116,14 @@ class BitcoinClient {
             // ValidationUtils.isTrue(!!gasOverride, '"gasOverride" is required');
             const allUtxos = ((yield this.getUtxos(fromAddress)) || []).filter(u => u.confirmations > 0 && Number(u.value) > 0);
             const bal = allUtxos.map(u => new bn_js_1.default(u.value)).reduce((p, c) => p.add(c), new bn_js_1.default(0)) || new bn_js_1.default(0);
-            const fee = yield this.calcFee(gasOverride);
+            const utxoGasRatio = Math.max(allUtxos.length / 2, 1);
+            const overridedGas = gasOverride && gasOverride.gasPrice ?
+                new bn_js_1.default(toSatoshi(gasOverride.gasPrice)).muln(utxoGasRatio) :
+                new bn_js_1.default(toSatoshi(gasOverride || '0'));
+            const fee = gasOverride ? overridedGas : yield this.calcFee(utxoGasRatio);
             const satoshis = new bn_js_1.default(toSatoshi(amount));
             const balRequired = fee.add(satoshis);
-            ferrum_plumbing_1.ValidationUtils.isTrue(bal.gte(balRequired), `Not enough balance (expected ${balRequired.toString()} but had ${bal.toString()})`);
+            ferrum_plumbing_1.ValidationUtils.isTrue(bal.gte(balRequired), `Not enough balance (expected ${fromSatoshi(balRequired.toString())} but had ${bal.toString()})`);
             const [utxos, change] = BitcoinClient.calcSendUtxos(allUtxos, satoshis, fee);
             const tx = {
                 utxos: utxos,
@@ -336,22 +340,11 @@ class BitcoinClient {
             }), GasPriceProvider_1.EthereumGasPriceProvider.GasTimeout * 4);
         });
     }
-    calcFee(gasOverwrite) {
+    calcFee(utxosCnt) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!!gasOverwrite) {
-                if (typeof gasOverwrite === 'string') {
-                    return new bn_js_1.default(toSatoshi(gasOverwrite));
-                }
-                return BitcoinClient.calFeeFromGas(gasOverwrite);
-            }
             // const gasLimit = (180 * utxosCnt + 2 * 34 + 10 + 40).toString();
-            return new bn_js_1.default(toSatoshi(yield this.getGasEstimate()));
+            return new bn_js_1.default(toSatoshi(yield this.getGasEstimate())).muln(utxosCnt);
         });
-    }
-    static calFeeFromGas(gas) {
-        ferrum_plumbing_1.ValidationUtils.isTrue(!!gas.gasPrice, '"gasOverwrite.gasPrice" must be provided');
-        ferrum_plumbing_1.ValidationUtils.isTrue(!!gas.gasLimit, '"gasOverwrite.gasLimit" must be provided');
-        return new bn_js_1.default(toSatoshi(gas.gasPrice)).muln(Number(gas.gasLimit || '1'));
     }
 }
 exports.BitcoinClient = BitcoinClient;

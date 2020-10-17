@@ -33,6 +33,5 @@ export declare class BitcoinClient implements ChainClient, ChainHistoryClient, I
     private static calcSendUtxos;
     private getGasEstimate;
     private calcFee;
-    private static calFeeFromGas;
 }
 //# sourceMappingURL=BitcoinClient.d.ts.map
