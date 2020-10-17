@@ -2,7 +2,7 @@ import {Injectable, LocalCache, Network, LoggerFactory} from 'ferrum-plumbing';
 import {EthereumClient} from "./EthereumClient";
 import {ChainClient, MultiChainConfig, NetworkStage, ChainHistoryClient} from "./types";
 import {BinanceChainClient} from './BinanceChainClient';
-import {BinanceGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
+import {BinanceGasPriceProvider, BitcoinGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
 import {CreateNewAddressFactory} from './CreateNewAddress';
 import {RemoteSignerClient} from "./remote/RemoteSignerClient";
 import {RemoteClientWrapper} from "./remote/RemoteClientWrapper";
@@ -13,6 +13,7 @@ import { EtherScanHistoryClient } from './ethereum/EtherScanHistoryClient';
 
 export class ChainClientFactory implements Injectable {
     private readonly cache: LocalCache;
+    private readonly bitcoinGasProvider: BitcoinGasPriceProvider;
     constructor(private localConfig: MultiChainConfig,
                 private binanceGasProvider: BinanceGasPriceProvider,
                 private ethGasProvider: EthereumGasPriceProvider,
@@ -22,6 +23,7 @@ export class ChainClientFactory implements Injectable {
                 cache?: LocalCache,
                 ) {
         this.cache = cache || new LocalCache();
+        this.bitcoinGasProvider = new BitcoinGasPriceProvider();
     }
 
     private bnbClient: BinanceChainClient | undefined;
@@ -88,6 +90,9 @@ export class ChainClientFactory implements Injectable {
                 return this.ethGasProvider;
             case 'RINKEBY':
                 return this.ethGasProvider;
+            case 'BITCOIN':
+            case 'BITCOIN_TESTNET':
+                return this.bitcoinGasProvider;
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);
         }
