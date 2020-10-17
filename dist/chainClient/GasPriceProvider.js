@@ -21,6 +21,7 @@ function gweiToEth(gweiNum) {
     return web3_1.default.utils.fromWei(web3_1.default.utils.toWei(new bn_js_1.default(gweiNum), 'gwei'), 'ether');
 }
 exports.BINANCE_FEE = '0.000375';
+exports.BITCOIN_FEE = '0.0001';
 class BinanceGasPriceProvider {
     getGasPrice() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -39,6 +40,24 @@ class BinanceGasPriceProvider {
     }
 }
 exports.BinanceGasPriceProvider = BinanceGasPriceProvider;
+class BitcoinGasPriceProvider {
+    getGasPrice() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return {
+                low: exports.BITCOIN_FEE,
+                medium: exports.BITCOIN_FEE,
+                high: exports.BITCOIN_FEE,
+            };
+        });
+    }
+    getTransactionGas(currency, _, __) {
+        return exports.BITCOIN_FEE;
+    }
+    __name__() {
+        return 'BitcoinGasPriceProvider';
+    }
+}
+exports.BitcoinGasPriceProvider = BitcoinGasPriceProvider;
 class EthereumGasPriceProvider {
     constructor() {
         this.lastUpdate = 0;

@@ -23,6 +23,8 @@ function gweiToEth(gweiNum: number) {
 
 export const BINANCE_FEE = '0.000375';
 
+export const BITCOIN_FEE = '0.0001';
+
 export class BinanceGasPriceProvider implements GasPriceProvider, Injectable {
     async getGasPrice(): Promise<EthGasPrice> {
         return {
@@ -38,6 +40,24 @@ export class BinanceGasPriceProvider implements GasPriceProvider, Injectable {
 
     __name__(): string {
         return 'BinanceGasPriceProvider';
+    }
+}
+
+export class BitcoinGasPriceProvider implements GasPriceProvider, Injectable {
+    async getGasPrice(): Promise<EthGasPrice> {
+        return {
+            low: BITCOIN_FEE,
+            medium: BITCOIN_FEE,
+            high: BITCOIN_FEE,
+        };
+    }
+
+    getTransactionGas(currency: string, _: string, __?: string) {
+        return BITCOIN_FEE;
+    }
+
+    __name__(): string {
+        return 'BitcoinGasPriceProvider';
     }
 }
 
