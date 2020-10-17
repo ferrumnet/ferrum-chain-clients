@@ -179,7 +179,7 @@ export class BitcoinClient implements ChainClient, ChainHistoryClient, Injectabl
       ValidationUtils.isTrue(res && res.balance,
         '"Error getting balance for address ' + address + ':' + (res || '').toString())
     }
-    return res.balance;
+    return fromSatoshi(res.balance || '0');
   }
 
   async getBlockByNumber(number: number): Promise<BlockData> {

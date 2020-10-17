@@ -153,7 +153,7 @@ class BitcoinClient {
             if (!res || !res.balance) {
                 ferrum_plumbing_1.ValidationUtils.isTrue(res && res.balance, '"Error getting balance for address ' + address + ':' + (res || '').toString());
             }
-            return res.balance;
+            return fromSatoshi(res.balance || '0');
         });
     }
     getBlockByNumber(number) {
