@@ -70,7 +70,7 @@ class ChainClientFactory {
             case 'RINKEBY':
                 return this.ethGasProvider;
             case 'BITCOIN':
-                return this.binanceGasProvider;
+                return this.bitcoinClient;
             case 'BITCOIN_TESTNET':
                 return this.bitcoinTestnetClient;
             default:
