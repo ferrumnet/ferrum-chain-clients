@@ -11,7 +11,6 @@ export declare class ChainClientFactory implements Injectable {
     private loggerFactory;
     private remoteSigner?;
     private readonly cache;
-    private readonly bitcoinGasProvider;
     constructor(localConfig: MultiChainConfig, binanceGasProvider: BinanceGasPriceProvider, ethGasProvider: EthereumGasPriceProvider, newAddressFactory: CreateNewAddressFactory, loggerFactory: LoggerFactory, remoteSigner?: RemoteSignerClient | undefined, cache?: LocalCache);
     private bnbClient;
     private bnbClientTestnet;

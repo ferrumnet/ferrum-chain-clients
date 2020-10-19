@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const ferrum_plumbing_1 = require("ferrum-plumbing");
 const BinanceChainClient_1 = require("./BinanceChainClient");
-const GasPriceProvider_1 = require("./GasPriceProvider");
 const RemoteClientWrapper_1 = require("./remote/RemoteClientWrapper");
 const FullEthereumClient_1 = require("./ethereum/FullEthereumClient");
 const BitcoinClient_1 = require("./bitcoin/BitcoinClient");
@@ -17,7 +16,6 @@ class ChainClientFactory {
         this.loggerFactory = loggerFactory;
         this.remoteSigner = remoteSigner;
         this.cache = cache || new ferrum_plumbing_1.LocalCache();
-        this.bitcoinGasProvider = new GasPriceProvider_1.BitcoinGasPriceProvider();
     }
     wrap(client, network) {
         return this.remoteSigner ? new RemoteClientWrapper_1.RemoteClientWrapper(client, this.remoteSigner, network) : client;
@@ -72,8 +70,9 @@ class ChainClientFactory {
             case 'RINKEBY':
                 return this.ethGasProvider;
             case 'BITCOIN':
+                return this.binanceGasProvider;
             case 'BITCOIN_TESTNET':
-                return this.bitcoinGasProvider;
+                return this.bitcoinTestnetClient;
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);
         }

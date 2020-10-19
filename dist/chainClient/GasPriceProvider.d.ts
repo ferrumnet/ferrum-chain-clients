@@ -16,11 +16,6 @@ export declare class BinanceGasPriceProvider implements GasPriceProvider, Inject
     getTransactionGas(currency: string, _: string, __?: string): string;
     __name__(): string;
 }
-export declare class BitcoinGasPriceProvider implements GasPriceProvider, Injectable {
-    getGasPrice(): Promise<EthGasPrice>;
-    getTransactionGas(currency: string, _: string, __?: string): string;
-    __name__(): string;
-}
 export declare class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
     private static GasStationUrl;
     static readonly GasTimeout = 30000;

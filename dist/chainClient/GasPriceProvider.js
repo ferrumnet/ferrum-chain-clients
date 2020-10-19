@@ -40,24 +40,6 @@ class BinanceGasPriceProvider {
     }
 }
 exports.BinanceGasPriceProvider = BinanceGasPriceProvider;
-class BitcoinGasPriceProvider {
-    getGasPrice() {
-        return __awaiter(this, void 0, void 0, function* () {
-            return {
-                low: exports.BITCOIN_FEE,
-                medium: exports.BITCOIN_FEE,
-                high: exports.BITCOIN_FEE,
-            };
-        });
-    }
-    getTransactionGas(currency, _, __) {
-        return exports.BITCOIN_FEE;
-    }
-    __name__() {
-        return 'BitcoinGasPriceProvider';
-    }
-}
-exports.BitcoinGasPriceProvider = BitcoinGasPriceProvider;
 class EthereumGasPriceProvider {
     constructor() {
         this.lastUpdate = 0;

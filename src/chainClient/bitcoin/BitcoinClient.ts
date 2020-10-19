@@ -10,7 +10,7 @@ import {
 import {Injectable, LocalCache, Network, ValidationUtils} from "ferrum-plumbing";
 import {ChainUtils, waitForTx} from "../ChainUtils";
 import BN from "bn.js";
-import {EthereumGasPriceProvider} from "../GasPriceProvider";
+import {EthereumGasPriceProvider, EthGasPrice, GasPriceProvider} from "../GasPriceProvider";
 import * as bitcore from 'bitcore-lib';
 import {CreateNewAddress} from "../CreateNewAddress";
 import fetch from "cross-fetch";
@@ -108,7 +108,7 @@ function parseTrezorTx(network: Network, tx: any): SimpleTransferTransaction {
   } as SimpleTransferTransaction;
 }
 
-export class BitcoinClient implements ChainClient, ChainHistoryClient, Injectable {
+export class BitcoinClient implements ChainClient, GasPriceProvider, ChainHistoryClient, Injectable {
   private readonly network: Network;
   private readonly baseUrl: string;
   constructor(private networkStage: NetworkStage, private cache: LocalCache,
@@ -253,7 +253,11 @@ export class BitcoinClient implements ChainClient, ChainHistoryClient, Injectabl
   }
 
   async sign(skHex: string, data: string, forceLow: boolean): Promise<EcSignature> {
-    return ChainUtils.sign(data, skHex, true);
+    const sig = ChainUtils.sign(data, skHex, true);
+    return {
+      ...sig,
+      publicKeyHex: this.getPublicKeyFromSigOrSk({} as any, skHex),
+    }
   }
 
   async signTransaction<T>(skHex: string, transaction: SignableTransaction): Promise<SignableTransaction> {
@@ -275,15 +279,15 @@ export class BitcoinClient implements ChainClient, ChainHistoryClient, Injectabl
     }
     ValidationUtils.isTrue(sigHex.length === tx.inputs.length, `Wrong number of signatures.
     Expected ${tx.inputs.length}, but got ${sigHex.length}`);
-    const sk = new PrivateKey(skHex,
-      this.networkStage === 'test' ? bitcore.Networks.testnet : bitcore.Networks.mainnet);
     sigHex.forEach((sig,idx) => {
       // @ts-ignore
       const signature = bitcore.crypto.Signature.fromCompact(Buffer.from(ChainUtils.signatureToHex(sig), 'hex'));
+      const publicKeyHex = this.getPublicKeyFromSigOrSk(sig, skHex); 
+      const publicKey = new bitcore.PublicKey(publicKeyHex);
       // @ts-ignore
       signature.inputIndex = idx;
       const siggg = new TransactionSignature({
-        publicKey: sk.publicKey,
+        publicKey,
         prevTxId: tx.inputs[idx].prevTxId,
         outputIndex: tx.inputs[idx].outputIndex,
         inputIndex: idx,
@@ -295,6 +299,15 @@ export class BitcoinClient implements ChainClient, ChainHistoryClient, Injectabl
 
     // @ts-ignore
     return {...transaction, serializedTransaction: tx.serialize({disableDustOutputs: true})};
+  }
+
+  getPublicKeyFromSigOrSk(sig: EcSignature, skHex: string) {
+    if (sig.publicKeyHex) {
+      return sig.publicKeyHex;
+    }
+    const sk = new PrivateKey(skHex,
+      this.networkStage === 'test' ? bitcore.Networks.testnet : bitcore.Networks.mainnet);
+    return sk.publicKey.toBuffer().toString('hex');
   }
 
   waitForTransaction(transactionId: string): Promise<SimpleTransferTransaction | undefined> {
@@ -314,6 +327,19 @@ export class BitcoinClient implements ChainClient, ChainHistoryClient, Injectabl
 
   async getTransactionsForAddress(address: string, fromBlock: number, toBlock: number, filter: any): Promise<SimpleTransferTransaction[]> {
     throw new Error("Method not implemented.");
+  }
+  
+  async getGasPrice(): Promise<EthGasPrice> {
+    const gas = fromSatoshi((await this.calcFee(1)).toString());
+      return {
+          low: gas,
+          medium: gas,
+          high: gas,
+      };
+  }
+
+  getTransactionGas(currency: string, gasPrice: string, __?: string) {
+      return gasPrice;
   }
 
   private async getUtxos(address: string): Promise<Utxo[]> {

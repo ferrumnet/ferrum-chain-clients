@@ -43,24 +43,6 @@ export class BinanceGasPriceProvider implements GasPriceProvider, Injectable {
     }
 }
 
-export class BitcoinGasPriceProvider implements GasPriceProvider, Injectable {
-    async getGasPrice(): Promise<EthGasPrice> {
-        return {
-            low: BITCOIN_FEE,
-            medium: BITCOIN_FEE,
-            high: BITCOIN_FEE,
-        };
-    }
-
-    getTransactionGas(currency: string, _: string, __?: string) {
-        return BITCOIN_FEE;
-    }
-
-    __name__(): string {
-        return 'BitcoinGasPriceProvider';
-    }
-}
-
 export class EthereumGasPriceProvider implements GasPriceProvider, Injectable {
     private static GasStationUrl = 'https://ethgasstation.info/json/ethgasAPI.json';
     static readonly GasTimeout = 30000;

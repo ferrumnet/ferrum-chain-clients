@@ -1,7 +1,8 @@
 import { BlockData, ChainClient, ChainHistoryClient, EcSignature, GasParameters, NetworkStage, SignableTransaction, SimpleTransferTransaction } from "../types";
 import { Injectable, LocalCache } from "ferrum-plumbing";
+import { EthGasPrice, GasPriceProvider } from "../GasPriceProvider";
 import { CreateNewAddress } from "../CreateNewAddress";
-export declare class BitcoinClient implements ChainClient, ChainHistoryClient, Injectable {
+export declare class BitcoinClient implements ChainClient, GasPriceProvider, ChainHistoryClient, Injectable {
     private networkStage;
     private cache;
     private addressGen;
@@ -24,10 +25,13 @@ export declare class BitcoinClient implements ChainClient, ChainHistoryClient, I
     processPaymentFromPrivateKeyWithGas(skHex: string, targetAddress: string, currency: any, amount: string, gasOverride: string | GasParameters): Promise<string>;
     sign(skHex: string, data: string, forceLow: boolean): Promise<EcSignature>;
     signTransaction<T>(skHex: string, transaction: SignableTransaction): Promise<SignableTransaction>;
+    getPublicKeyFromSigOrSk(sig: EcSignature, skHex: string): string;
     waitForTransaction(transactionId: string): Promise<SimpleTransferTransaction | undefined>;
     providesHistory(): Boolean;
     getNonBlockTransactions(fromBlock: number, toBlock: number, filter: any): Promise<SimpleTransferTransaction[]>;
     getTransactionsForAddress(address: string, fromBlock: number, toBlock: number, filter: any): Promise<SimpleTransferTransaction[]>;
+    getGasPrice(): Promise<EthGasPrice>;
+    getTransactionGas(currency: string, gasPrice: string, __?: string): string;
     private getUtxos;
     private get;
     private static calcSendUtxos;

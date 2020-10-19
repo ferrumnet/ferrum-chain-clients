@@ -232,7 +232,8 @@ class BitcoinClient {
     }
     sign(skHex, data, forceLow) {
         return __awaiter(this, void 0, void 0, function* () {
-            return ChainUtils_1.ChainUtils.sign(data, skHex, true);
+            const sig = ChainUtils_1.ChainUtils.sign(data, skHex, true);
+            return Object.assign(Object.assign({}, sig), { publicKeyHex: this.getPublicKeyFromSigOrSk({}, skHex) });
         });
     }
     signTransaction(skHex, transaction) {
@@ -256,14 +257,15 @@ class BitcoinClient {
             }
             ferrum_plumbing_1.ValidationUtils.isTrue(sigHex.length === tx.inputs.length, `Wrong number of signatures.
     Expected ${tx.inputs.length}, but got ${sigHex.length}`);
-            const sk = new bitcore_lib_1.PrivateKey(skHex, this.networkStage === 'test' ? bitcore.Networks.testnet : bitcore.Networks.mainnet);
             sigHex.forEach((sig, idx) => {
                 // @ts-ignore
                 const signature = bitcore.crypto.Signature.fromCompact(Buffer.from(ChainUtils_1.ChainUtils.signatureToHex(sig), 'hex'));
+                const publicKeyHex = this.getPublicKeyFromSigOrSk(sig, skHex);
+                const publicKey = new bitcore.PublicKey(publicKeyHex);
                 // @ts-ignore
                 signature.inputIndex = idx;
                 const siggg = new signature_1.default({
-                    publicKey: sk.publicKey,
+                    publicKey,
                     prevTxId: tx.inputs[idx].prevTxId,
                     outputIndex: tx.inputs[idx].outputIndex,
                     inputIndex: idx,
@@ -275,6 +277,13 @@ class BitcoinClient {
             // @ts-ignore
             return Object.assign(Object.assign({}, transaction), { serializedTransaction: tx.serialize({ disableDustOutputs: true }) });
         });
+    }
+    getPublicKeyFromSigOrSk(sig, skHex) {
+        if (sig.publicKeyHex) {
+            return sig.publicKeyHex;
+        }
+        const sk = new bitcore_lib_1.PrivateKey(skHex, this.networkStage === 'test' ? bitcore.Networks.testnet : bitcore.Networks.mainnet);
+        return sk.publicKey.toBuffer().toString('hex');
     }
     waitForTransaction(transactionId) {
         return ChainUtils_1.waitForTx(this, transactionId, BITCOIN_TX_FETCH_TIMEOUT, ChainUtils_1.ChainUtils.TX_FETCH_TIMEOUT * 10);
@@ -292,6 +301,19 @@ class BitcoinClient {
         return __awaiter(this, void 0, void 0, function* () {
             throw new Error("Method not implemented.");
         });
+    }
+    getGasPrice() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const gas = fromSatoshi((yield this.calcFee(1)).toString());
+            return {
+                low: gas,
+                medium: gas,
+                high: gas,
+            };
+        });
+    }
+    getTransactionGas(currency, gasPrice, __) {
+        return gasPrice;
     }
     getUtxos(address) {
         return __awaiter(this, void 0, void 0, function* () {
