@@ -369,6 +369,7 @@ export class BinanceChainClient implements ChainClient {
             feeDecimals: BINANCE_DECIMALS,
             singleItem: true,
             confirmed: true, // If you see the transaction it is confirmed!
+            memo: tx.memo,
         } as SimpleTransferTransaction) : undefined;
     }
 
