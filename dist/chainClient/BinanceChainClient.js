@@ -370,6 +370,7 @@ class BinanceChainClient {
             feeDecimals: ChainUtils_1.BINANCE_DECIMALS,
             singleItem: true,
             confirmed: true,
+            memo: tx.memo,
         } : undefined;
     }
     getBnbClient() {

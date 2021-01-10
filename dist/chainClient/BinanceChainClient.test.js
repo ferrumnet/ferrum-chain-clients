@@ -19,7 +19,7 @@ const TestnetConfig_1 = require("../testUtils/configs/TestnetConfig");
 const CreateNewAddress_1 = require("./CreateNewAddress");
 const conf = {
     web3Provider: 'https://rinkeby.infura.io/v3/d7fb8b4b80a04950aac6d835a3c790aa',
-    binanceChainUrl: 'https://testnet-dex.binance.org',
+    binanceChainTestnetUrl: 'https://testnet-dex.binance.org',
     binanceChainSeedNode: 'https://data-seed-pre-0-s3.binance.org',
 };
 const CURRENCY = 'BINANCE_TESTNET:FRM-410';
@@ -41,7 +41,7 @@ test('get tx', () => __awaiter(void 0, void 0, void 0, function* () {
     console.log(tx);
 }));
 test('get txt for user', () => __awaiter(void 0, void 0, void 0, function* () {
-    const address = 'tbnb136zj94xtalc7tp6pcp73r4zx9csdh8cyn7re2d';
+    const address = 'tbnb1et0p704a9w7a8403m5s8sedwxnaysstjvhwydq';
     const client = new BinanceChainClient_1.BinanceChainClient('test', conf);
     const tx = yield client.getRecentTransactionsByAddress(address);
     console.log(tx);
