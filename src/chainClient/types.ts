@@ -77,6 +77,8 @@ export type NetworkStage = 'test' | 'prod';
 export interface MultiChainConfig {
   web3Provider: string;
   web3ProviderRinkeby: string;
+  web3ProviderBsc?: string;
+  web3ProviderBscTestnet?: string;
   etherscanApiKey: string;
   binanceChainUrl: string;
   binanceChainTestnetUrl?: string;

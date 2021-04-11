@@ -1,6 +1,5 @@
 import {Container, Module, LoggerFactory} from "ferrum-plumbing";
 import {ChainClientFactory} from "./chainClient/ChainClientFactory";
-import {MultiChainConfig} from "./chainClient/types";
 import {BinanceGasPriceProvider, EthereumGasPriceProvider} from "./chainClient/GasPriceProvider";
 import {CreateNewAddressFactory} from "./chainClient/CreateNewAddress";
 
