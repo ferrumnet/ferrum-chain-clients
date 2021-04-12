@@ -107,7 +107,8 @@ export class ChainUtils {
 
     static canonicalAddress(network: Network, address: string) {
         // TODO: Turn address to byte and back instead of lowercase.
-        if (['ETHEREUM', 'RINKEBY', 'BINANCE', 'BINANCE_TESTNET'].indexOf(network) >= 0) {
+        if (['ETHEREUM', 'RINKEBY', 'BINANCE', 'BINANCE_TESTNET', 'BSC', 'BSC_TESTNET'
+                ].indexOf(network) >= 0) {
             return address.toLowerCase();
         } else {
             return address;
