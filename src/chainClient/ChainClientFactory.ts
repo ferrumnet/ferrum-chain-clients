@@ -2,7 +2,7 @@ import {Injectable, LocalCache, Network, LoggerFactory} from 'ferrum-plumbing';
 import {EthereumClient} from "./EthereumClient";
 import {ChainClient, MultiChainConfig, NetworkStage, ChainHistoryClient} from "./types";
 import {BinanceChainClient} from './BinanceChainClient';
-import {BinanceGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
+import {BinanceGasPriceProvider, BscGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
 import {CreateNewAddressFactory} from './CreateNewAddress';
 import {RemoteSignerClient} from "./remote/RemoteSignerClient";
 import {RemoteClientWrapper} from "./remote/RemoteClientWrapper";
@@ -16,6 +16,7 @@ export class ChainClientFactory implements Injectable {
     constructor(private localConfig: MultiChainConfig,
                 private binanceGasProvider: BinanceGasPriceProvider,
                 private ethGasProvider: EthereumGasPriceProvider,
+                private bscGasProvider: BscGasPriceProvider,
                 private newAddressFactory: CreateNewAddressFactory,
                 private loggerFactory: LoggerFactory,
                 private remoteSigner?: RemoteSignerClient,
@@ -28,6 +29,8 @@ export class ChainClientFactory implements Injectable {
     private bnbClientTestnet: BinanceChainClient | undefined;
     private ethClient: EthereumClient | undefined;
     private rinkebyClient: EthereumClient | undefined;
+    private bscClient: EthereumClient | undefined;
+    private bscTestnetClient: EthereumClient | undefined;
     private bitcoinClient: BitcoinClient | undefined;
     private bitcoinTestnetClient: BitcoinClient | undefined;
 
@@ -49,12 +52,27 @@ export class ChainClientFactory implements Injectable {
                 return this.wrap(this.bnbClientTestnet, 'BINANCE_TESTNET');
             case 'ETHEREUM':
                 if (!this.ethClient) {
-                    this.ethClient = new FullEthereumClient('prod' as NetworkStage, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                    this.ethClient = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
                 }
                 return this.wrap(this.ethClient, 'ETHEREUM');
             case 'RINKEBY':
                 if (!this.rinkebyClient) {
-                    this.rinkebyClient = new FullEthereumClient('test', this.localConfig, this.ethGasProvider, this.loggerFactory);
+                    this.rinkebyClient = new FullEthereumClient(network, this.localConfig, this.bscGasProvider, this.loggerFactory);
+                }
+                return this.wrap(this.rinkebyClient, 'RINKEBY');
+            case 'BSC':
+                if (!this.bscClient) {
+                    this.bscClient = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                }
+                return this.wrap(this.bscClient, 'RINKEBY');
+            case 'BSC_TESTNET':
+                if (!this.bscTestnetClient) {
+                    this.bscTestnetClient = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                }
+                return this.wrap(this.bscTestnetClient, 'RINKEBY');
+            case 'RINKEBY':
+                if (!this.rinkebyClient) {
+                    this.rinkebyClient = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
                 }
                 return this.wrap(this.rinkebyClient, 'RINKEBY');
             case 'BITCOIN':
@@ -88,6 +106,10 @@ export class ChainClientFactory implements Injectable {
                 return this.ethGasProvider;
             case 'RINKEBY':
                 return this.ethGasProvider;
+            case 'BSC':
+                return this.bscGasProvider!;
+            case 'BSC_TESTNET':
+                return this.bscGasProvider!;
             case 'BITCOIN':
                 return this.bitcoinClient!;
             case 'BITCOIN_TESTNET':
@@ -105,6 +127,12 @@ export class ChainClientFactory implements Injectable {
             case 'RINKEBY':
                 return new EtherScanHistoryClient(this.localConfig.etherscanApiKey,
                     'RINKEBY', this.loggerFactory);
+            case 'BSC':
+                return new EtherScanHistoryClient(this.localConfig.bscscanApiKey!,
+                    'BSC', this.loggerFactory);
+            case 'BSC_TESTNET':
+                return new EtherScanHistoryClient(this.localConfig.bscscanApiKey!,
+                    'BSC_TESTNET', this.loggerFactory);
             case 'BITCOIN':
             case 'BITCOIN_TESTNET':
                  if (!this.bitcoinClient) {

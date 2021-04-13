@@ -11,7 +11,7 @@ import {
 // @ts-ignore
 import abiDecoder from 'abi-decoder';
 import * as abi from '../resources/erc20-abi.json';
-import {ValidationUtils, HexString, RetryableError, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache, UsesServiceMultiplexer} from 'ferrum-plumbing';
+import {ValidationUtils, HexString, RetryableError, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache, UsesServiceMultiplexer, Network} from 'ferrum-plumbing';
 import {ChainUtils, ETH_DECIMALS, waitForTx} from './ChainUtils';
 import {EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
 import {Transaction} from "ethereumjs-tx";
@@ -22,6 +22,30 @@ import { ecsign } from 'ethereumjs-util';
 const BLOCK_CACH_TIMEOUT = 10 * 1000;
 const ERC_20_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const HACK_ZERO_REPLACEMENT = '0x0000000000000000000000000000000000000001';
+import Common from 'ethereumjs-common';
+import transaction from 'ethereumjs-tx';
+
+export const ETHEREUM_CHAIN_ID_FOR_NETWORK = {
+    'ETHEREUM': 1,
+    'RINKEBY': 4,
+    'BSC': 56,
+    'BSC_TESTNET': 97,
+} as any;
+
+const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
+    'ETHEREUM': 'mainnet',
+    'RINKEBY': 'rinkeby',
+    'BSC': 'mainnet',
+    'BSC_TESTNET': 'testnet',
+} as any;
+
+const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
+    'ETHEREUM': 'eth',
+    'RINKEBY': 'eth',
+    'BSC': 'bnb',
+    'BSC_TESTNET': 'bnb',
+} as any;
+
 
 function toDecimal(amount: any, decimals: number): string {
     return ChainUtils.toDecimalStr(amount, decimals);
@@ -53,9 +77,26 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
     providerMux: ServiceMultiplexer<Web3>;
     throttler: Throttler;
     private web3Instances: {[p: string]: Web3} = {};
-    protected constructor(private networkStage: NetworkStage, config: MultiChainConfig,
+    private _network: Network;
+    protected constructor(net: Network, config: MultiChainConfig,
         private gasService: GasPriceProvider, logFac: LoggerFactory) {
-        const provider = networkStage === 'test' ? config.web3ProviderRinkeby : config.web3Provider;
+        let provider = '';
+        this._network = net;
+        switch(net) {
+            case 'ETHEREUM':
+                provider = config.web3Provider;
+                break;
+            case 'RINKEBY':
+                provider = config.web3ProviderRinkeby;
+                break;
+            case 'BSC':
+                provider = config.web3ProviderBsc!;
+                break;
+            case 'BSC_TESTNET':
+                provider = config.web3ProviderBscTestnet!;
+                break;
+        }
+        ValidationUtils.isTrue(!!provider, `No provider is configured for '${net}'`);
         provider.split(',').map(p => {
             this.web3Instances[p] = this.web3Instance(p);
         });
@@ -73,9 +114,9 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
         this.providerMux.updateMode(mode);
     }
 
-    protected network(){ return this.networkStage === 'prod' ? 'ETHEREUM' : 'RINKEBY'};
+    protected network(){ return this._network; };
 
-    feeCurrency(): string { return this.networkStage === 'prod' ? 'ETHEREUM:ETH' : 'RINKEBY:ETH'; }
+    feeCurrency(): string { return (NetworkNativeCurrencies as any)[this._network]; }
 
     feeDecimals(): number { return ETH_DECIMALS; }
 
@@ -275,31 +316,36 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
             tx = await this.createSendEth(addressFrom.address, targetAddress, amount, gasOverride);
         } else {
             tx = await this.createErc20SendTransaction(currency, addressFrom.address, targetAddress, amount,
-              (bal: string) => this.getGas(true, currency, bal, gasOverride));
+              () => this.getGas(true, currency, addressFrom.address, targetAddress, amount, gasOverride));
         }
         const signed = await this.signTransaction(skHex, tx!);
         return this.broadcastTransaction(signed);
     }
 
-    private static async getGasLimit(erc20: boolean, currency: string, targetBalance: string): Promise<number> {
+    private async getGasLimit(erc20: boolean, currency: string, from: string, to: string,
+            amount: string): Promise<number> {
         if (erc20) {
-            return EthereumGasPriceProvider.gasLimiForErc20(currency, targetBalance || '0');
+            return await this.erc20GasLimit(currency, from, to, amount); // To be calculated later
         } else {
             return EthereumGasPriceProvider.ETH_TX_GAS;
         }
     }
 
-    private async getGas(erc20: boolean, currency: string, targetBalance: string,
+    protected async erc20GasLimit(currency: string, from: string, to: string, amountInt: string): Promise<number> {
+        return 0;
+    }
+
+    private async getGas(erc20: boolean, currency: string, from: string, to: string, amount: string,
                          gasOverride?: string | GasParameters,): Promise<[string, number]> {
         if (!!gasOverride && typeof gasOverride === 'object') {
             const go = gasOverride as GasParameters;
             const gasLimit = go.gasLimit && Number.isFinite(Number(go.gasLimit)) ?
-              Number(go.gasLimit) : await EthereumClient.getGasLimit(erc20, currency, targetBalance);
+              Number(go.gasLimit) : await this.getGasLimit(erc20, currency, from, to, amount);;
             const gasPrice = ChainUtils.toBigIntStr(go.gasPrice, ETH_DECIMALS);
             return [gasPrice, gasLimit];
         }
 
-        const gasLimit = await EthereumClient.getGasLimit(erc20, currency, targetBalance);
+        const gasLimit = await this.getGasLimit(erc20, currency, from, to, amount);
         if (erc20) {
             const gasOverrideBN = new BN(Web3.utils.toWei(gasOverride || '0', 'ether'));
             let gasPriceBN = gasOverrideBN.divn(gasLimit);
@@ -363,7 +409,7 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
                                 ): Promise<SignableTransaction> {
         const web3 = this.web3();
         let sendAmount = toWei(ETH_DECIMALS, amount);
-        const [gasPrice, gasLimit] = await this.getGas(false, this.feeCurrency(), '0', gasOverride);
+        const [gasPrice, gasLimit] = await this.getGas(false, this.feeCurrency(), from, to, '0', gasOverride);
         if (!nonce) {
             await this.throttler.throttle();
         }
@@ -455,7 +501,7 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
             return this.createSendEth(fromAddress, targetAddress, amount, gasOverride, nonce);
         }
         return this.createErc20SendTransaction(currency, fromAddress, targetAddress, amount,
-          bal => this.getGas(true, currency, bal, gasOverride), nonce);
+          () => this.getGas(true, currency, fromAddress, targetAddress, amount, gasOverride), nonce);
     }
 
     /**
@@ -513,7 +559,7 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
     async getBalance(address: string, currency: string) {
         return this.providerMux.retryAsync(async web3 => {
             await this.throttler.throttle();
-            if (currency === NetworkNativeCurrencies[this.network()]) {
+            if (currency === (NetworkNativeCurrencies as any)[this.network()]) {
                 const bal = await web3.eth.getBalance(address);
                 return web3.utils.fromWei(bal, 'ether');
             } else {
@@ -556,11 +602,17 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
     }
 
     private getChainId() {
-        return this.networkStage === 'test' ? 4 : 1;
+        return ETHEREUM_CHAIN_ID_FOR_NETWORK[this.network()];
     }
 
     private getChainOptions() {
-        return {chain: this.networkStage === 'test' ? 'rinkeby' : 'mainnet', hardfork: 'petersburg'};
+        const chainName = ETHEREUM_CHAIN_NAME_FOR_NETWORK[this.network()];
+        const common = Common.forCustomChain(chainName, {
+        name: ETHEREUM_CHAIN_NAME_FOR_NETWORK[this.network()],
+        networkId: this.getChainId(),
+        chainId: this.getChainId(),
+        }, 'petersburg');
+        return {common};
     }
 
     private static async getTransactionError(web3: Web3, transaction: any) {
@@ -576,15 +628,14 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
 
     private async createErc20SendTransaction(
       currency: string, from: string, to: string, amount: string,
-      gasProvider: (bal: string) => Promise<[string, number]>, nonce?: number): Promise<SignableTransaction> {
+      gasProvider: () => Promise<[string, number]>, nonce?: number): Promise<SignableTransaction> {
         const web3 = this.web3();
         const contractAddress = ChainUtils.tokenPart(currency);
         const consumerContract = new web3.eth.Contract(abi.abi as any, contractAddress);
         const decimals = await this.getTokenDecimals(contractAddress);
         let sendAmount = new BN(ChainUtils.toBigIntStr(amount, decimals));
         const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
-        const targetBalance = await this.getBalanceForContract(web3, to, contractAddress, 1);
-        const [gasPrice, gasLimit] = await gasProvider(targetBalance);
+        const [gasPrice, gasLimit] = await gasProvider();
         if (!nonce) {
             await this.throttler.throttle();
         }
@@ -597,6 +648,7 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
             value: '0x',
             data: myData,
         };
+
         const tx = new Transaction(params,
           this.getChainOptions());
 

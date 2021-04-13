@@ -1,6 +1,6 @@
 import {Container, Module, LoggerFactory} from "ferrum-plumbing";
 import {ChainClientFactory} from "./chainClient/ChainClientFactory";
-import {BinanceGasPriceProvider, EthereumGasPriceProvider} from "./chainClient/GasPriceProvider";
+import {BinanceGasPriceProvider, BscGasPriceProvider, EthereumGasPriceProvider} from "./chainClient/GasPriceProvider";
 import {CreateNewAddressFactory} from "./chainClient/CreateNewAddress";
 
 /**
@@ -12,11 +12,13 @@ export class ChainClientsModule implements Module {
             c.get('MultiChainConfig'),
             c.get(BinanceGasPriceProvider),
             c.get(EthereumGasPriceProvider),
+            c.get(BscGasPriceProvider),
             c.get(CreateNewAddressFactory),
             c.get(LoggerFactory),
             ));
         container.register(BinanceGasPriceProvider, c => new BinanceGasPriceProvider());
         container.register(EthereumGasPriceProvider, c => new EthereumGasPriceProvider());
         container.register(CreateNewAddressFactory, c => new CreateNewAddressFactory());
+        container.register(BscGasPriceProvider, c => new BscGasPriceProvider());
     }
 }

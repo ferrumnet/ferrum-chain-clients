@@ -48,19 +48,24 @@ export class Erc20ReaderClient extends ContractClientBase implements Injectable 
         return this.rawToAmount(allow);
     }
 
+    public async estimateTransferGas(from: string, to: string, amount: string): Promise<number|undefined> {
+        const amountInt = await this.amountToRaw(amount);
+        return await this.estimateGas(from, m => m.transfer(from, to, amountInt));
+    }
+
     private async rawToAmount(raw?: string) {
-            if (!raw) {
-                return undefined;
-            }
-            const decimals = await this.decimals();
-            return ChainUtils.toDecimalStr(raw, decimals);
+        if (!raw) {
+            return undefined;
         }
+        const decimals = await this.decimals();
+        return ChainUtils.toDecimalStr(raw, decimals);
+    }
 
     private async amountToRaw(amount?: string) {
-            if (!amount) {
-                return undefined;
-            }
-            const decimals = await this.decimals();
-            return ChainUtils.toBigIntStr(amount, decimals);
+        if (!amount) {
+            return undefined;
         }
+        const decimals = await this.decimals();
+        return ChainUtils.toBigIntStr(amount, decimals);
     }
+}

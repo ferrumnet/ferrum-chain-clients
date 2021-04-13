@@ -13,6 +13,16 @@ export abstract class ContractClientBase {
         return await methodFun(erc20Contract.methods).call();
     }
 
+    protected async estimateGas(from: string, methodFun: (m: any) => any) {
+        try {
+            const web3 = this.web3();
+            let erc20Contract = new web3.eth.Contract(abi.abi as any, this.contract);
+            return await methodFun(erc20Contract.methods).estimateGas({from});
+        } catch(e) {
+            return 0; // Could not estimate the gas
+        }
+    }
+
     protected web3() {
         return this.client.web3();
     }

@@ -4,7 +4,14 @@ import { Injectable, LoggerFactory, Logger, sleep, Network } from "ferrum-plumbi
 import { ETH_DECIMALS, ChainUtils } from "../ChainUtils";
 import BN from 'bn.js';
 
-const BASE_URL_TEMPLATE = 'https://{PREFIX}.etherscan.io/api?module=account&action={ACTION}&{ADDRESS_PART}startblock={START_BLOCK}&endblock={END_BLOCK}&sort=asc&apikey={API_KEY}';
+const URI_HOST_PER_NET = {
+    'ETHEREUM': 'api.etherscan.io',
+    'RINKEBY': 'api-rinkeby.etherscan.io',
+    'BSC': 'api.bscscan.com',
+    'BSC_TESTNET': 'api-testnet.bscscan.com',
+} as any;
+
+const BASE_URL_TEMPLATE = 'https://{URI_HOST}/api?module=account&action={ACTION}&{ADDRESS_PART}startblock={START_BLOCK}&endblock={END_BLOCK}&sort=asc&apikey={API_KEY}';
 
 const TIME_BETWEEN_CALLS = 250; // 4 calls per second
 
@@ -28,7 +35,7 @@ export class EtherScanHistoryClient implements ChainHistoryClient, Injectable {
     constructor(apiKey: string, private network: Network, logFac: LoggerFactory) {
         this.log = logFac.getLogger(EtherScanHistoryClient);
         this.urlTemplate = BASE_URL_TEMPLATE.replace('{API_KEY}', apiKey)
-            .replace('{PREFIX}', network === 'ETHEREUM' ? 'api' : 'api-rinkeby');
+            .replace('{URI_HOST}',  URI_HOST_PER_NET[network]);
         this.throttle = this.throttle.bind(this);
         this.api = this.api.bind(this);
     }
