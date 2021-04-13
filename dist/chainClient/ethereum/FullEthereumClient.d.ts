@@ -1,10 +1,13 @@
 import { EthereumClient } from "../EthereumClient";
-import { MultiChainConfig, NetworkStage } from "../types";
+import { MultiChainConfig } from "../types";
 import { GasPriceProvider } from "../GasPriceProvider";
-import { LoggerFactory } from "ferrum-plumbing";
+import { LoggerFactory, Network } from "ferrum-plumbing";
 export declare class FullEthereumClient extends EthereumClient {
+    private readonly clientCache;
     private readonly decimalsCache;
-    constructor(networkStage: NetworkStage, config: MultiChainConfig, gasService: GasPriceProvider, logFac: LoggerFactory);
+    constructor(net: Network, config: MultiChainConfig, gasService: GasPriceProvider, logFac: LoggerFactory);
     protected getTokenDecimals(tok: string): Promise<number>;
+    private getClient;
+    protected erc20GasLimit(currency: string, from: string, to: string, amount: string): Promise<number>;
 }
 //# sourceMappingURL=FullEthereumClient.d.ts.map

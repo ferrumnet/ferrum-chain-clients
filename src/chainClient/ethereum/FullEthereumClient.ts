@@ -37,7 +37,7 @@ export class FullEthereumClient extends EthereumClient {
         });
   }
 
-  protected override async erc20GasLimit(currency: string, from: string, to: string, amount: string): Promise<number> {
+  protected async erc20GasLimit(currency: string, from: string, to: string, amount: string): Promise<number> {
     const tok = currency.split(':')[1];
     const client = await this.getClient(tok);
     return (await client.estimateTransferGas(from, to, amount)) || 0;

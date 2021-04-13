@@ -75,6 +75,7 @@ export interface MultiChainConfig {
     web3ProviderBsc?: string;
     web3ProviderBscTestnet?: string;
     etherscanApiKey: string;
+    bscscanApiKey?: string;
     binanceChainUrl: string;
     binanceChainTestnetUrl?: string;
     binanceChainSeedNode: string;
@@ -86,6 +87,8 @@ export interface MultiChainConfig {
 export declare const NetworkNativeCurrencies: {
     'ETHEREUM': string;
     'RINKEBY': string;
+    'BSC': string;
+    'BSC_TESTNET': string;
     'BINANCE': string;
     'BINANCE_TESTNET': string;
 };

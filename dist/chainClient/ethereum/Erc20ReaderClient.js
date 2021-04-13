@@ -62,6 +62,12 @@ class Erc20ReaderClient extends ContractClientBase_1.ContractClientBase {
             return this.rawToAmount(allow);
         });
     }
+    estimateTransferGas(from, to, amount) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const amountInt = yield this.amountToRaw(amount);
+            return yield this.estimateGas(from, m => m.transfer(from, to, amountInt));
+        });
+    }
     rawToAmount(raw) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!raw) {

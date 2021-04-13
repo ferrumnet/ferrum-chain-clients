@@ -22,6 +22,25 @@ function gweiToEth(gweiNum) {
 }
 exports.BINANCE_FEE = '0.000375';
 exports.BITCOIN_FEE = '0.0001';
+exports.BSC_FEE = '0.00000002';
+class BscGasPriceProvider {
+    getGasPrice() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return {
+                low: exports.BSC_FEE,
+                medium: exports.BSC_FEE,
+                high: exports.BSC_FEE,
+            };
+        });
+    }
+    getTransactionGas(currency, _, __) {
+        return exports.BSC_FEE;
+    }
+    __name__() {
+        return 'BscGasPriceProvider';
+    }
+}
+exports.BscGasPriceProvider = BscGasPriceProvider;
 class BinanceGasPriceProvider {
     getGasPrice() {
         return __awaiter(this, void 0, void 0, function* () {

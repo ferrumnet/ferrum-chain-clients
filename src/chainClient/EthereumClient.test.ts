@@ -9,7 +9,6 @@ import {EthereumGasPriceProvider, FRM} from "./GasPriceProvider";
 import { ContractCallRequest, SignableTransaction } from './types';
 import { EthereumTransactionSerializer } from 'ferrum-crypto/dist/transaction/EthereumTransactionSerializer';
 import { FullEthereumClient } from './ethereum/FullEthereumClient';
-import Web3 from 'web3';
 
 const clientFac = testChainClientFactory();
 
@@ -385,7 +384,7 @@ test('Connecting to node with basic auth 11', async function() {
     const dummyLogFac = new LoggerFactory(n => new ConsoleLogger(n));
     const url = 'ferrum_user:PW@http://127.0.0.1';
     const client = new FullEthereumClient(
-        'prod', {web3Provider: url} as any,
+        'ETHEREUM', {web3Provider: url} as any,
             new EthereumGasPriceProvider(), dummyLogFac);
             await sleep(3000)
 

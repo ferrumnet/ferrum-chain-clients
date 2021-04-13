@@ -19,10 +19,11 @@ const CreateNewAddress_1 = require("./chainClient/CreateNewAddress");
 class ChainClientsModule {
     configAsync(container) {
         return __awaiter(this, void 0, void 0, function* () {
-            container.register(ChainClientFactory_1.ChainClientFactory, c => new ChainClientFactory_1.ChainClientFactory(c.get('MultiChainConfig'), c.get(GasPriceProvider_1.BinanceGasPriceProvider), c.get(GasPriceProvider_1.EthereumGasPriceProvider), c.get(CreateNewAddress_1.CreateNewAddressFactory), c.get(ferrum_plumbing_1.LoggerFactory)));
+            container.register(ChainClientFactory_1.ChainClientFactory, c => new ChainClientFactory_1.ChainClientFactory(c.get('MultiChainConfig'), c.get(GasPriceProvider_1.BinanceGasPriceProvider), c.get(GasPriceProvider_1.EthereumGasPriceProvider), c.get(GasPriceProvider_1.BscGasPriceProvider), c.get(CreateNewAddress_1.CreateNewAddressFactory), c.get(ferrum_plumbing_1.LoggerFactory)));
             container.register(GasPriceProvider_1.BinanceGasPriceProvider, c => new GasPriceProvider_1.BinanceGasPriceProvider());
             container.register(GasPriceProvider_1.EthereumGasPriceProvider, c => new GasPriceProvider_1.EthereumGasPriceProvider());
             container.register(CreateNewAddress_1.CreateNewAddressFactory, c => new CreateNewAddress_1.CreateNewAddressFactory());
+            container.register(GasPriceProvider_1.BscGasPriceProvider, c => new GasPriceProvider_1.BscGasPriceProvider());
         });
     }
 }

@@ -13,16 +13,17 @@ const EthereumClient_1 = require("../EthereumClient");
 const Erc20ReaderClient_1 = require("./Erc20ReaderClient");
 const ferrum_plumbing_1 = require("ferrum-plumbing");
 class FullEthereumClient extends EthereumClient_1.EthereumClient {
-    constructor(networkStage, config, gasService, logFac) {
-        super(networkStage, config, gasService, logFac);
+    constructor(net, config, gasService, logFac) {
+        super(net, config, gasService, logFac);
+        this.clientCache = new ferrum_plumbing_1.LocalCache();
         this.decimalsCache = new ferrum_plumbing_1.LocalCache();
     }
     getTokenDecimals(tok) {
         return __awaiter(this, void 0, void 0, function* () {
             ferrum_plumbing_1.ValidationUtils.isTrue(!!tok, "'tok' cannot be empty");
             return this.decimalsCache.getAsync(tok, () => __awaiter(this, void 0, void 0, function* () {
-                const client = new Erc20ReaderClient_1.Erc20ReaderClient(this, tok);
                 try {
+                    const client = yield this.getClient(tok);
                     return yield client.decimals();
                 }
                 catch (e) {
@@ -34,6 +35,20 @@ class FullEthereumClient extends EthereumClient_1.EthereumClient {
                     throw e;
                 }
             }));
+        });
+    }
+    getClient(tok) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.clientCache.getAsync(tok, () => __awaiter(this, void 0, void 0, function* () {
+                return new Erc20ReaderClient_1.Erc20ReaderClient(this, tok);
+            }));
+        });
+    }
+    erc20GasLimit(currency, from, to, amount) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const tok = currency.split(':')[1];
+            const client = yield this.getClient(tok);
+            return (yield client.estimateTransferGas(from, to, amount)) || 0;
         });
     }
 }

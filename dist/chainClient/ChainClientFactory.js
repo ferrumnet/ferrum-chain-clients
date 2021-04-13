@@ -8,10 +8,11 @@ const BitcoinClient_1 = require("./bitcoin/BitcoinClient");
 const BitcoinAddress_1 = require("./bitcoin/BitcoinAddress");
 const EtherScanHistoryClient_1 = require("./ethereum/EtherScanHistoryClient");
 class ChainClientFactory {
-    constructor(localConfig, binanceGasProvider, ethGasProvider, newAddressFactory, loggerFactory, remoteSigner, cache) {
+    constructor(localConfig, binanceGasProvider, ethGasProvider, bscGasProvider, newAddressFactory, loggerFactory, remoteSigner, cache) {
         this.localConfig = localConfig;
         this.binanceGasProvider = binanceGasProvider;
         this.ethGasProvider = ethGasProvider;
+        this.bscGasProvider = bscGasProvider;
         this.newAddressFactory = newAddressFactory;
         this.loggerFactory = loggerFactory;
         this.remoteSigner = remoteSigner;
@@ -34,12 +35,27 @@ class ChainClientFactory {
                 return this.wrap(this.bnbClientTestnet, 'BINANCE_TESTNET');
             case 'ETHEREUM':
                 if (!this.ethClient) {
-                    this.ethClient = new FullEthereumClient_1.FullEthereumClient('prod', this.localConfig, this.ethGasProvider, this.loggerFactory);
+                    this.ethClient = new FullEthereumClient_1.FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
                 }
                 return this.wrap(this.ethClient, 'ETHEREUM');
             case 'RINKEBY':
                 if (!this.rinkebyClient) {
-                    this.rinkebyClient = new FullEthereumClient_1.FullEthereumClient('test', this.localConfig, this.ethGasProvider, this.loggerFactory);
+                    this.rinkebyClient = new FullEthereumClient_1.FullEthereumClient(network, this.localConfig, this.bscGasProvider, this.loggerFactory);
+                }
+                return this.wrap(this.rinkebyClient, 'RINKEBY');
+            case 'BSC':
+                if (!this.bscClient) {
+                    this.bscClient = new FullEthereumClient_1.FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                }
+                return this.wrap(this.bscClient, 'RINKEBY');
+            case 'BSC_TESTNET':
+                if (!this.bscTestnetClient) {
+                    this.bscTestnetClient = new FullEthereumClient_1.FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                }
+                return this.wrap(this.bscTestnetClient, 'RINKEBY');
+            case 'RINKEBY':
+                if (!this.rinkebyClient) {
+                    this.rinkebyClient = new FullEthereumClient_1.FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
                 }
                 return this.wrap(this.rinkebyClient, 'RINKEBY');
             case 'BITCOIN':
@@ -69,6 +85,10 @@ class ChainClientFactory {
                 return this.ethGasProvider;
             case 'RINKEBY':
                 return this.ethGasProvider;
+            case 'BSC':
+                return this.bscGasProvider;
+            case 'BSC_TESTNET':
+                return this.bscGasProvider;
             case 'BITCOIN':
                 return this.bitcoinClient;
             case 'BITCOIN_TESTNET':
@@ -83,6 +103,10 @@ class ChainClientFactory {
                 return new EtherScanHistoryClient_1.EtherScanHistoryClient(this.localConfig.etherscanApiKey, 'ETHEREUM', this.loggerFactory);
             case 'RINKEBY':
                 return new EtherScanHistoryClient_1.EtherScanHistoryClient(this.localConfig.etherscanApiKey, 'RINKEBY', this.loggerFactory);
+            case 'BSC':
+                return new EtherScanHistoryClient_1.EtherScanHistoryClient(this.localConfig.bscscanApiKey, 'BSC', this.loggerFactory);
+            case 'BSC_TESTNET':
+                return new EtherScanHistoryClient_1.EtherScanHistoryClient(this.localConfig.bscscanApiKey, 'BSC_TESTNET', this.loggerFactory);
             case 'BITCOIN':
             case 'BITCOIN_TESTNET':
                 if (!this.bitcoinClient) {

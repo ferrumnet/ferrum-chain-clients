@@ -1,1 +1,1 @@
-{"version":3,"file":"types.js","sourceRoot":"","sources":["../../src/chainClient/types.ts"],"names":[],"mappings":";;AA2Fa,QAAA,uBAAuB,GAAG;IACrC,UAAU,EAAE,cAAc;IAC1B,SAAS,EAAE,aAAa;IACxB,SAAS,EAAE,aAAa;IACxB,iBAAiB,EAAE,qBAAqB;CACzC,CAAC"}
+{"version":3,"file":"types.js","sourceRoot":"","sources":["../../src/chainClient/types.ts"],"names":[],"mappings":";;AA4Fa,QAAA,uBAAuB,GAAG;IACrC,UAAU,EAAE,cAAc;IAC1B,SAAS,EAAE,aAAa;IACxB,KAAK,EAAE,SAAS;IAChB,aAAa,EAAE,iBAAiB;IAChC,SAAS,EAAE,aAAa;IACxB,iBAAiB,EAAE,qBAAqB;CACzC,CAAC"}

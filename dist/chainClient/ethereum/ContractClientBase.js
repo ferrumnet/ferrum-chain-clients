@@ -30,6 +30,18 @@ class ContractClientBase {
             return yield methodFun(erc20Contract.methods).call();
         });
     }
+    estimateGas(from, methodFun) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const web3 = this.web3();
+                let erc20Contract = new web3.eth.Contract(abi.abi, this.contract);
+                return yield methodFun(erc20Contract.methods).estimateGas({ from });
+            }
+            catch (e) {
+                return 0; // Could not estimate the gas
+            }
+        });
+    }
     web3() {
         return this.client.web3();
     }

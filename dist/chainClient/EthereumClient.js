@@ -34,6 +34,25 @@ const ethereumjs_util_1 = require("ethereumjs-util");
 const BLOCK_CACH_TIMEOUT = 10 * 1000;
 const ERC_20_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const HACK_ZERO_REPLACEMENT = '0x0000000000000000000000000000000000000001';
+const ethereumjs_common_1 = __importDefault(require("ethereumjs-common"));
+exports.ETHEREUM_CHAIN_ID_FOR_NETWORK = {
+    'ETHEREUM': 1,
+    'RINKEBY': 4,
+    'BSC': 56,
+    'BSC_TESTNET': 97,
+};
+const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
+    'ETHEREUM': 'mainnet',
+    'RINKEBY': 'rinkeby',
+    'BSC': 'mainnet',
+    'BSC_TESTNET': 'testnet',
+};
+const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
+    'ETHEREUM': 'eth',
+    'RINKEBY': 'eth',
+    'BSC': 'bnb',
+    'BSC_TESTNET': 'bnb',
+};
 function toDecimal(amount, decimals) {
     return ChainUtils_1.ChainUtils.toDecimalStr(amount, decimals);
 }
@@ -54,12 +73,27 @@ function base64(data) {
     return buff.toString('base64');
 }
 class EthereumClient {
-    constructor(networkStage, config, gasService, logFac) {
-        this.networkStage = networkStage;
+    constructor(net, config, gasService, logFac) {
         this.gasService = gasService;
         this.web3Instances = {};
         this.localCache = new ferrum_plumbing_1.LocalCache();
-        const provider = networkStage === 'test' ? config.web3ProviderRinkeby : config.web3Provider;
+        let provider = '';
+        this._network = net;
+        switch (net) {
+            case 'ETHEREUM':
+                provider = config.web3Provider;
+                break;
+            case 'RINKEBY':
+                provider = config.web3ProviderRinkeby;
+                break;
+            case 'BSC':
+                provider = config.web3ProviderBsc;
+                break;
+            case 'BSC_TESTNET':
+                provider = config.web3ProviderBscTestnet;
+                break;
+        }
+        ferrum_plumbing_1.ValidationUtils.isTrue(!!provider, `No provider is configured for '${net}'`);
         provider.split(',').map(p => {
             this.web3Instances[p] = this.web3Instance(p);
         });
@@ -73,9 +107,9 @@ class EthereumClient {
     setMode(mode) {
         this.providerMux.updateMode(mode);
     }
-    network() { return this.networkStage === 'prod' ? 'ETHEREUM' : 'RINKEBY'; }
+    network() { return this._network; }
     ;
-    feeCurrency() { return this.networkStage === 'prod' ? 'ETHEREUM:ETH' : 'RINKEBY:ETH'; }
+    feeCurrency() { return types_1.NetworkNativeCurrencies[this._network]; }
     feeDecimals() { return ChainUtils_1.ETH_DECIMALS; }
     getBlockByNumber(number) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -276,32 +310,38 @@ class EthereumClient {
                 tx = yield this.createSendEth(addressFrom.address, targetAddress, amount, gasOverride);
             }
             else {
-                tx = yield this.createErc20SendTransaction(currency, addressFrom.address, targetAddress, amount, (bal) => this.getGas(true, currency, bal, gasOverride));
+                tx = yield this.createErc20SendTransaction(currency, addressFrom.address, targetAddress, amount, () => this.getGas(true, currency, addressFrom.address, targetAddress, amount, gasOverride));
             }
             const signed = yield this.signTransaction(skHex, tx);
             return this.broadcastTransaction(signed);
         });
     }
-    static getGasLimit(erc20, currency, targetBalance) {
+    getGasLimit(erc20, currency, from, to, amount) {
         return __awaiter(this, void 0, void 0, function* () {
             if (erc20) {
-                return GasPriceProvider_1.EthereumGasPriceProvider.gasLimiForErc20(currency, targetBalance || '0');
+                return yield this.erc20GasLimit(currency, from, to, amount); // To be calculated later
             }
             else {
                 return GasPriceProvider_1.EthereumGasPriceProvider.ETH_TX_GAS;
             }
         });
     }
-    getGas(erc20, currency, targetBalance, gasOverride) {
+    erc20GasLimit(currency, from, to, amountInt) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return 0;
+        });
+    }
+    getGas(erc20, currency, from, to, amount, gasOverride) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!!gasOverride && typeof gasOverride === 'object') {
                 const go = gasOverride;
                 const gasLimit = go.gasLimit && Number.isFinite(Number(go.gasLimit)) ?
-                    Number(go.gasLimit) : yield EthereumClient.getGasLimit(erc20, currency, targetBalance);
+                    Number(go.gasLimit) : yield this.getGasLimit(erc20, currency, from, to, amount);
+                ;
                 const gasPrice = ChainUtils_1.ChainUtils.toBigIntStr(go.gasPrice, ChainUtils_1.ETH_DECIMALS);
                 return [gasPrice, gasLimit];
             }
-            const gasLimit = yield EthereumClient.getGasLimit(erc20, currency, targetBalance);
+            const gasLimit = yield this.getGasLimit(erc20, currency, from, to, amount);
             if (erc20) {
                 const gasOverrideBN = new bn_js_1.default(web3_1.default.utils.toWei(gasOverride || '0', 'ether'));
                 let gasPriceBN = gasOverrideBN.divn(gasLimit);
@@ -361,7 +401,7 @@ class EthereumClient {
         return __awaiter(this, void 0, void 0, function* () {
             const web3 = this.web3();
             let sendAmount = toWei(ChainUtils_1.ETH_DECIMALS, amount);
-            const [gasPrice, gasLimit] = yield this.getGas(false, this.feeCurrency(), '0', gasOverride);
+            const [gasPrice, gasLimit] = yield this.getGas(false, this.feeCurrency(), from, to, '0', gasOverride);
             if (!nonce) {
                 yield this.throttler.throttle();
             }
@@ -452,7 +492,7 @@ class EthereumClient {
             if (currency === this.feeCurrency()) {
                 return this.createSendEth(fromAddress, targetAddress, amount, gasOverride, nonce);
             }
-            return this.createErc20SendTransaction(currency, fromAddress, targetAddress, amount, bal => this.getGas(true, currency, bal, gasOverride), nonce);
+            return this.createErc20SendTransaction(currency, fromAddress, targetAddress, amount, () => this.getGas(true, currency, fromAddress, targetAddress, amount, gasOverride), nonce);
         });
     }
     /**
@@ -555,10 +595,16 @@ class EthereumClient {
         }
     }
     getChainId() {
-        return this.networkStage === 'test' ? 4 : 1;
+        return exports.ETHEREUM_CHAIN_ID_FOR_NETWORK[this.network()];
     }
     getChainOptions() {
-        return { chain: this.networkStage === 'test' ? 'rinkeby' : 'mainnet', hardfork: 'petersburg' };
+        const chainName = ETHEREUM_CHAIN_NAME_FOR_NETWORK[this.network()];
+        const common = ethereumjs_common_1.default.forCustomChain(chainName, {
+            name: ETHEREUM_CHAIN_NAME_FOR_NETWORK[this.network()],
+            networkId: this.getChainId(),
+            chainId: this.getChainId(),
+        }, 'petersburg');
+        return { common };
     }
     static getTransactionError(web3, transaction) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -581,8 +627,7 @@ class EthereumClient {
             const decimals = yield this.getTokenDecimals(contractAddress);
             let sendAmount = new bn_js_1.default(ChainUtils_1.ChainUtils.toBigIntStr(amount, decimals));
             const myData = consumerContract.methods.transfer(to, '0x' + sendAmount.toString('hex')).encodeABI();
-            const targetBalance = yield this.getBalanceForContract(web3, to, contractAddress, 1);
-            const [gasPrice, gasLimit] = yield gasProvider(targetBalance);
+            const [gasPrice, gasLimit] = yield gasProvider();
             if (!nonce) {
                 yield this.throttler.throttle();
             }

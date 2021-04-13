@@ -376,7 +376,7 @@ test('Connecting to node with basic auth 11', function () {
         jest.setTimeout(100000);
         const dummyLogFac = new ferrum_plumbing_1.LoggerFactory(n => new ferrum_plumbing_1.ConsoleLogger(n));
         const url = 'ferrum_user:PW@http://127.0.0.1';
-        const client = new FullEthereumClient_1.FullEthereumClient('prod', { web3Provider: url }, new GasPriceProvider_1.EthereumGasPriceProvider(), dummyLogFac);
+        const client = new FullEthereumClient_1.FullEthereumClient('ETHEREUM', { web3Provider: url }, new GasPriceProvider_1.EthereumGasPriceProvider(), dummyLogFac);
         yield ferrum_plumbing_1.sleep(3000);
         const b = yield client.getBlockNumber();
         console.log('B IS ', { b });

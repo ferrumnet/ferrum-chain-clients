@@ -14,6 +14,7 @@ export declare class Erc20ReaderClient extends ContractClientBase implements Inj
     totalSupply(): Promise<string>;
     balanceOf(address: string): Promise<string | undefined>;
     allowance(owner: string, spender: string): Promise<string | undefined>;
+    estimateTransferGas(from: string, to: string, amount: string): Promise<number | undefined>;
     private rawToAmount;
     private amountToRaw;
 }

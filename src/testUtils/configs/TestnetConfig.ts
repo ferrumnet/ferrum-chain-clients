@@ -1,6 +1,7 @@
 import {MultiChainConfig} from '../../chainClient/types';
 import {
     BinanceGasPriceProvider,
+    BscGasPriceProvider,
     EthereumGasPriceProvider,
     EthGasPrice,
 } from '../../chainClient/GasPriceProvider';
@@ -57,7 +58,7 @@ const TEST_PROD_CONFIG = {
 } as MultiChainConfig;
 
 export function ethereumClientForProd() {
-    return new FullEthereumClient('prod', TEST_PROD_CONFIG, new EthereumGasPriceProvider(), dummyLogFac);
+    return new FullEthereumClient('ETHEREUM', TEST_PROD_CONFIG, new EthereumGasPriceProvider(), dummyLogFac);
 }
 
 export function binanceClientForProd() {
@@ -77,6 +78,7 @@ export function testChainClientFactory() {
         TESTNET_CONFIG,
         new BinanceGasPriceProvider(),
         new EthereumGasPriceProvider(),
+        new BscGasPriceProvider(),
         new CreateNewAddressFactory(),
         new LoggerFactory(n => new ConsoleLogger(n)),
     )
@@ -97,6 +99,7 @@ export function testGanacheClientFactory() {
     return new ChainClientFactory(
         GANACHE_CONFIG,
         new BinanceGasPriceProvider(),
+        new DummyGasPriceProvider(),
         new DummyGasPriceProvider(),
         new CreateNewAddressFactory(),
         new LoggerFactory(n => new ConsoleLogger(n)),
