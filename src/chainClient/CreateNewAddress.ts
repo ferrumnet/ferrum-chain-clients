@@ -42,6 +42,10 @@ export class CreateNewAddressFactory implements Injectable {
             case 'BINANCE_TESTNET':
                 return this.binanceTestnet;
             case 'ETHEREUM':
+            case 'BSC':
+            case 'BSC_TESTNET':
+            case 'POLYGON':
+            case 'MUMBAI_TESTNET':
                 return this.ethAddress;
             case 'RINKEBY':
                 return this.rinkebyAddress;

@@ -30,6 +30,8 @@ export const ETHEREUM_CHAIN_ID_FOR_NETWORK = {
     'RINKEBY': 4,
     'BSC': 56,
     'BSC_TESTNET': 97,
+    'POLYGON': 137,
+    'MUMBAI_TESTNET': 80001,
 } as any;
 
 const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
@@ -37,6 +39,8 @@ const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
     'RINKEBY': 'rinkeby',
     'BSC': 'mainnet',
     'BSC_TESTNET': 'testnet',
+    'POLYGON': 'mainnet',
+    'MUMBAI_TESTNET': 'mumbai',
 } as any;
 
 const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
@@ -44,6 +48,8 @@ const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
     'RINKEBY': 'eth',
     'BSC': 'bnb',
     'BSC_TESTNET': 'bnb',
+    'POLYGON': 'matic',
+    'MUMBAI_TESTNET': 'matic',
 } as any;
 
 
@@ -94,6 +100,12 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
                 break;
             case 'BSC_TESTNET':
                 provider = config.web3ProviderBscTestnet!;
+                break;
+            case 'POLYGON':
+                provider = config.web3ProviderPolygon!;
+                break;
+            case 'MUMBAI_TESTNET':
+                provider = config.web3ProviderMumbaiTestnet!;
                 break;
         }
         ValidationUtils.isTrue(!!provider, `No provider is configured for '${net}'`);

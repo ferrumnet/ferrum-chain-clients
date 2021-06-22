@@ -25,6 +25,25 @@ export const BINANCE_FEE = '0.000375';
 
 export const BITCOIN_FEE = '0.0001';
 export const BSC_FEE = '0.00000002';
+export const POLYGON_FEE = '0.00000002';
+
+export class PolygonGasPriceProvider implements GasPriceProvider, Injectable {
+    async getGasPrice(): Promise<EthGasPrice> {
+        return {
+            low: POLYGON_FEE,
+            medium: POLYGON_FEE,
+            high: POLYGON_FEE,
+        };
+    }
+
+    getTransactionGas(currency: string, _: string, __?: string) {
+        return POLYGON_FEE;
+    }
+
+    __name__(): string {
+        return 'PolygonGasPriceProvider';
+    }
+}
 
 export class BscGasPriceProvider implements GasPriceProvider, Injectable {
     async getGasPrice(): Promise<EthGasPrice> {

@@ -2,7 +2,7 @@ import {Injectable, LocalCache, Network, LoggerFactory} from 'ferrum-plumbing';
 import {EthereumClient} from "./EthereumClient";
 import {ChainClient, MultiChainConfig, NetworkStage, ChainHistoryClient} from "./types";
 import {BinanceChainClient} from './BinanceChainClient';
-import {BinanceGasPriceProvider, BscGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
+import {BinanceGasPriceProvider, BscGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider, PolygonGasPriceProvider} from './GasPriceProvider';
 import {CreateNewAddressFactory} from './CreateNewAddress';
 import {RemoteSignerClient} from "./remote/RemoteSignerClient";
 import {RemoteClientWrapper} from "./remote/RemoteClientWrapper";
@@ -17,6 +17,7 @@ export class ChainClientFactory implements Injectable {
                 private binanceGasProvider: BinanceGasPriceProvider,
                 private ethGasProvider: EthereumGasPriceProvider,
                 private bscGasProvider: BscGasPriceProvider,
+                private polygonGasProvider: PolygonGasPriceProvider,
                 private newAddressFactory: CreateNewAddressFactory,
                 private loggerFactory: LoggerFactory,
                 private remoteSigner?: RemoteSignerClient,
@@ -31,6 +32,8 @@ export class ChainClientFactory implements Injectable {
     private rinkebyClient: EthereumClient | undefined;
     private bscClient: EthereumClient | undefined;
     private bscTestnetClient: EthereumClient | undefined;
+    private polygonClient: EthereumClient | undefined;
+    private mumbaiTestnetClient: EthereumClient | undefined;
     private bitcoinClient: BitcoinClient | undefined;
     private bitcoinTestnetClient: BitcoinClient | undefined;
 
@@ -70,6 +73,16 @@ export class ChainClientFactory implements Injectable {
                     this.bscTestnetClient = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
                 }
                 return this.wrap(this.bscTestnetClient, 'RINKEBY');
+            case 'POLYGON':
+                if (!this.polygonClient) {
+                    this.polygonClient = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                }
+                return this.wrap(this.polygonClient, 'POLYGON');
+            case 'MUMBAI_TESTNET':
+                if (!this.mumbaiTestnetClient) {
+                    this.mumbaiTestnetClient = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                }
+                return this.wrap(this.mumbaiTestnetClient, 'MUMBAI_TESTNET');
             case 'RINKEBY':
                 if (!this.rinkebyClient) {
                     this.rinkebyClient = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
@@ -110,6 +123,10 @@ export class ChainClientFactory implements Injectable {
                 return this.bscGasProvider!;
             case 'BSC_TESTNET':
                 return this.bscGasProvider!;
+            case 'POLYGON':
+                return this.polygonGasProvider!;
+            case 'MUMBAI_TESTNET':
+                return this.polygonGasProvider!;
             case 'BITCOIN':
                 return this.bitcoinClient!;
             case 'BITCOIN_TESTNET':
@@ -133,6 +150,12 @@ export class ChainClientFactory implements Injectable {
             case 'BSC_TESTNET':
                 return new EtherScanHistoryClient(this.localConfig.bscscanApiKey!,
                     'BSC_TESTNET', this.loggerFactory);
+            case 'POLYGON':
+                return new EtherScanHistoryClient(this.localConfig.polygonscanApiKey!,
+                    'POLYGON', this.loggerFactory);
+            case 'MUMBAI_TESTNET':
+                return new EtherScanHistoryClient(this.localConfig.polygonscanApiKey!,
+                    'MUMBAI_TESTNET', this.loggerFactory);
             case 'BITCOIN':
             case 'BITCOIN_TESTNET':
                  if (!this.bitcoinClient) {
