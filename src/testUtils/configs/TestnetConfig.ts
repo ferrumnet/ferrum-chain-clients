@@ -79,6 +79,7 @@ export function testChainClientFactory() {
         new BinanceGasPriceProvider(),
         new EthereumGasPriceProvider(),
         new BscGasPriceProvider(),
+        new BscGasPriceProvider(),
         new CreateNewAddressFactory(),
         new LoggerFactory(n => new ConsoleLogger(n)),
     )
@@ -99,6 +100,7 @@ export function testGanacheClientFactory() {
     return new ChainClientFactory(
         GANACHE_CONFIG,
         new BinanceGasPriceProvider(),
+        new DummyGasPriceProvider(),
         new DummyGasPriceProvider(),
         new DummyGasPriceProvider(),
         new CreateNewAddressFactory(),

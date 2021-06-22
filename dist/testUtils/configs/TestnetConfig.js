@@ -68,7 +68,7 @@ function bitcoinClientForTest() {
 }
 exports.bitcoinClientForTest = bitcoinClientForTest;
 function testChainClientFactory() {
-    return new ChainClientFactory_1.ChainClientFactory(exports.TESTNET_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new GasPriceProvider_1.EthereumGasPriceProvider(), new GasPriceProvider_1.BscGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(), new ferrum_plumbing_1.LoggerFactory(n => new ferrum_plumbing_1.ConsoleLogger(n)));
+    return new ChainClientFactory_1.ChainClientFactory(exports.TESTNET_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new GasPriceProvider_1.EthereumGasPriceProvider(), new GasPriceProvider_1.BscGasPriceProvider(), new GasPriceProvider_1.BscGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(), new ferrum_plumbing_1.LoggerFactory(n => new ferrum_plumbing_1.ConsoleLogger(n)));
 }
 exports.testChainClientFactory = testChainClientFactory;
 class DummyGasPriceProvider extends GasPriceProvider_1.EthereumGasPriceProvider {
@@ -83,7 +83,7 @@ class DummyGasPriceProvider extends GasPriceProvider_1.EthereumGasPriceProvider 
     }
 }
 function testGanacheClientFactory() {
-    return new ChainClientFactory_1.ChainClientFactory(exports.GANACHE_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new DummyGasPriceProvider(), new DummyGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(), new ferrum_plumbing_1.LoggerFactory(n => new ferrum_plumbing_1.ConsoleLogger(n)));
+    return new ChainClientFactory_1.ChainClientFactory(exports.GANACHE_CONFIG, new GasPriceProvider_1.BinanceGasPriceProvider(), new DummyGasPriceProvider(), new DummyGasPriceProvider(), new DummyGasPriceProvider(), new CreateNewAddress_1.CreateNewAddressFactory(), new ferrum_plumbing_1.LoggerFactory(n => new ferrum_plumbing_1.ConsoleLogger(n)));
 }
 exports.testGanacheClientFactory = testGanacheClientFactory;
 //# sourceMappingURL=TestnetConfig.js.map

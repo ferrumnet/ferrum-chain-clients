@@ -74,8 +74,11 @@ export interface MultiChainConfig {
     web3ProviderRinkeby: string;
     web3ProviderBsc?: string;
     web3ProviderBscTestnet?: string;
+    web3ProviderPolygon?: string;
+    web3ProviderMumbaiTestnet?: string;
     etherscanApiKey: string;
     bscscanApiKey?: string;
+    polygonscanApiKey?: string;
     binanceChainUrl: string;
     binanceChainTestnetUrl?: string;
     binanceChainSeedNode: string;
@@ -89,6 +92,8 @@ export declare const NetworkNativeCurrencies: {
     'RINKEBY': string;
     'BSC': string;
     'BSC_TESTNET': string;
+    'POLYGON': string;
+    'MUMBAI_TESTNET': string;
     'BINANCE': string;
     'BINANCE_TESTNET': string;
 };

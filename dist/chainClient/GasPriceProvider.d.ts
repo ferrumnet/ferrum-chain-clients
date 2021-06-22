@@ -12,6 +12,12 @@ export interface GasPriceProvider {
 export declare const BINANCE_FEE = "0.000375";
 export declare const BITCOIN_FEE = "0.0001";
 export declare const BSC_FEE = "0.00000002";
+export declare const POLYGON_FEE = "0.00000002";
+export declare class PolygonGasPriceProvider implements GasPriceProvider, Injectable {
+    getGasPrice(): Promise<EthGasPrice>;
+    getTransactionGas(currency: string, _: string, __?: string): string;
+    __name__(): string;
+}
 export declare class BscGasPriceProvider implements GasPriceProvider, Injectable {
     getGasPrice(): Promise<EthGasPrice>;
     getTransactionGas(currency: string, _: string, __?: string): string;

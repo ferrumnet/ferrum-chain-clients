@@ -40,18 +40,24 @@ exports.ETHEREUM_CHAIN_ID_FOR_NETWORK = {
     'RINKEBY': 4,
     'BSC': 56,
     'BSC_TESTNET': 97,
+    'POLYGON': 137,
+    'MUMBAI_TESTNET': 80001,
 };
 const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
     'ETHEREUM': 'mainnet',
     'RINKEBY': 'rinkeby',
     'BSC': 'mainnet',
     'BSC_TESTNET': 'testnet',
+    'POLYGON': 'mainnet',
+    'MUMBAI_TESTNET': 'mumbai',
 };
 const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
     'ETHEREUM': 'eth',
     'RINKEBY': 'eth',
     'BSC': 'bnb',
     'BSC_TESTNET': 'bnb',
+    'POLYGON': 'matic',
+    'MUMBAI_TESTNET': 'matic',
 };
 function toDecimal(amount, decimals) {
     return ChainUtils_1.ChainUtils.toDecimalStr(amount, decimals);
@@ -91,6 +97,12 @@ class EthereumClient {
                 break;
             case 'BSC_TESTNET':
                 provider = config.web3ProviderBscTestnet;
+                break;
+            case 'POLYGON':
+                provider = config.web3ProviderPolygon;
+                break;
+            case 'MUMBAI_TESTNET':
+                provider = config.web3ProviderMumbaiTestnet;
                 break;
         }
         ferrum_plumbing_1.ValidationUtils.isTrue(!!provider, `No provider is configured for '${net}'`);
