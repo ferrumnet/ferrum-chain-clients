@@ -32,6 +32,7 @@ export const ETHEREUM_CHAIN_ID_FOR_NETWORK = {
     'BSC_TESTNET': 97,
     'POLYGON': 137,
     'MUMBAI_TESTNET': 80001,
+    'AVAX_TESTNET':43113
 } as any;
 
 const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
@@ -41,6 +42,7 @@ const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
     'BSC_TESTNET': 'testnet',
     'POLYGON': 'mainnet',
     'MUMBAI_TESTNET': 'mumbai',
+    'AVAX_TESTNET':'avax'
 } as any;
 
 const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
@@ -50,6 +52,7 @@ const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
     'BSC_TESTNET': 'bnb',
     'POLYGON': 'matic',
     'MUMBAI_TESTNET': 'matic',
+    'AVAX_TESTNET':'avax'
 } as any;
 
 
@@ -106,6 +109,9 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
                 break;
             case 'MUMBAI_TESTNET':
                 provider = config.web3ProviderMumbaiTestnet!;
+                break;
+            case 'AVAX_TESTNET':
+                provider = config.web3ProviderAvaxTestnet!;
                 break;
         }
         ValidationUtils.isTrue(!!provider, `No provider is configured for '${net}'`);
