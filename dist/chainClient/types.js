@@ -9,5 +9,6 @@ exports.NetworkNativeCurrencies = {
     'MUMBAI_TESTNET': 'MUMBAI_TESTNET:MATIC',
     'BINANCE': 'BINANCE:BNB',
     'BINANCE_TESTNET': 'BINANCE_TESTNET:BNB',
+    'AVAX_TESTNET': 'AVAX_TESTNET:AVAX',
 };
 //# sourceMappingURL=types.js.map
