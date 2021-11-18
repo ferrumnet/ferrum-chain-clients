@@ -81,6 +81,7 @@ export interface MultiChainConfig {
   web3ProviderBscTestnet?: string;
   web3ProviderPolygon?: string;
   web3ProviderMumbaiTestnet?: string;
+  web3ProviderAvaxTestnet?:string;
   etherscanApiKey: string;
   bscscanApiKey?: string;
   polygonscanApiKey?: string;
@@ -102,6 +103,7 @@ export const NetworkNativeCurrencies = {
   'MUMBAI_TESTNET': 'MUMBAI_TESTNET:MATIC',
   'BINANCE': 'BINANCE:BNB',
   'BINANCE_TESTNET': 'BINANCE_TESTNET:BNB',
+  'AVAX_TESTNET': 'AVAX_TESTNET:AVAX',
 };
 
 export interface EcSignature {
