@@ -42,6 +42,7 @@ exports.ETHEREUM_CHAIN_ID_FOR_NETWORK = {
     'BSC_TESTNET': 97,
     'POLYGON': 137,
     'MUMBAI_TESTNET': 80001,
+    'AVAX_TESTNET': 43113
 };
 const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
     'ETHEREUM': 'mainnet',
@@ -50,6 +51,7 @@ const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
     'BSC_TESTNET': 'testnet',
     'POLYGON': 'mainnet',
     'MUMBAI_TESTNET': 'mumbai',
+    'AVAX_TESTNET': 'avax'
 };
 const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
     'ETHEREUM': 'eth',
@@ -58,6 +60,7 @@ const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
     'BSC_TESTNET': 'bnb',
     'POLYGON': 'matic',
     'MUMBAI_TESTNET': 'matic',
+    'AVAX_TESTNET': 'avax'
 };
 function toDecimal(amount, decimals) {
     return ChainUtils_1.ChainUtils.toDecimalStr(amount, decimals);
@@ -103,6 +106,9 @@ class EthereumClient {
                 break;
             case 'MUMBAI_TESTNET':
                 provider = config.web3ProviderMumbaiTestnet;
+                break;
+            case 'AVAX_TESTNET':
+                provider = config.web3ProviderAvaxTestnet;
                 break;
         }
         ferrum_plumbing_1.ValidationUtils.isTrue(!!provider, `No provider is configured for '${net}'`);
