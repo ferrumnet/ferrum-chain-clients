@@ -36,6 +36,8 @@ export class ChainClientFactory implements Injectable {
     private mumbaiTestnetClient: EthereumClient | undefined;
     private bitcoinClient: BitcoinClient | undefined;
     private bitcoinTestnetClient: BitcoinClient | undefined;
+    private avaxTestnetClient: EthereumClient | undefined;
+
 
     private wrap(client: ChainClient, network: Network) {
         return this.remoteSigner ? new RemoteClientWrapper(client, this.remoteSigner, network) : client;
@@ -100,6 +102,12 @@ export class ChainClientFactory implements Injectable {
                       this.cache, new BitcoinAddress('test'));
                 }
                 return this.wrap(this.bitcoinTestnetClient, 'BITCOIN_TESTNET');
+            case 'AVAX_TESTNET':
+                if (!this.avaxTestnetClient) {
+                    this.avaxTestnetClient = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                }
+                //@ts-ignore
+                return this.wrap(this.avaxTestnetClient, 'AVAX_TESTNET');
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network)
         }
@@ -131,6 +139,8 @@ export class ChainClientFactory implements Injectable {
                 return this.bitcoinClient!;
             case 'BITCOIN_TESTNET':
                 return this.bitcoinTestnetClient!;
+            case 'AVAX_TESTNET':
+                return this.ethGasProvider;
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);
         }
@@ -163,6 +173,8 @@ export class ChainClientFactory implements Injectable {
                        this.cache, new BitcoinAddress('prod'));
                  }
                  return this.bitcoinClient!;
+            case 'AVAX_TESTNET':
+                return new EtherScanHistoryClient(this.localConfig.etherscanApiKey, 'AVAX_TESTNET', this.loggerFactory); 
             default:
                 throw new Error('ChainClientFactory.historyClient: Unsupported network: ' + network);
         }

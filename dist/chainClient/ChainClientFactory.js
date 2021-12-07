@@ -79,6 +79,12 @@ class ChainClientFactory {
                     this.bitcoinTestnetClient = new BitcoinClient_1.BitcoinClient('test', this.cache, new BitcoinAddress_1.BitcoinAddress('test'));
                 }
                 return this.wrap(this.bitcoinTestnetClient, 'BITCOIN_TESTNET');
+            case 'AVAX_TESTNET':
+                if (!this.avaxTestnetClient) {
+                    this.avaxTestnetClient = new FullEthereumClient_1.FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                }
+                //@ts-ignore
+                return this.wrap(this.avaxTestnetClient, 'AVAX_TESTNET');
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);
         }
@@ -108,6 +114,8 @@ class ChainClientFactory {
                 return this.bitcoinClient;
             case 'BITCOIN_TESTNET':
                 return this.bitcoinTestnetClient;
+            case 'AVAX_TESTNET':
+                return this.ethGasProvider;
             default:
                 throw new Error('ChainClientFactory: Unsupported network: ' + network);
         }
@@ -132,6 +140,8 @@ class ChainClientFactory {
                     this.bitcoinClient = new BitcoinClient_1.BitcoinClient('prod', this.cache, new BitcoinAddress_1.BitcoinAddress('prod'));
                 }
                 return this.bitcoinClient;
+            case 'AVAX_TESTNET':
+                return new EtherScanHistoryClient_1.EtherScanHistoryClient(this.localConfig.etherscanApiKey, 'AVAX_TESTNET', this.loggerFactory);
             default:
                 throw new Error('ChainClientFactory.historyClient: Unsupported network: ' + network);
         }

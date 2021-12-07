@@ -24,6 +24,7 @@ export declare class ChainClientFactory implements Injectable {
     private mumbaiTestnetClient;
     private bitcoinClient;
     private bitcoinTestnetClient;
+    private avaxTestnetClient;
     private wrap;
     forNetwork(network: Network): ChainClient;
     newAddress(network: Network): import("./CreateNewAddress").CreateNewAddress;
