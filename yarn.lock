@@ -2972,7 +2972,7 @@ fd-slicer@~1.1.0:
 
 "ferrum-plumbing@git+https://github.com/ferrumnet/ferrum-plumbing.git":
   version "1.0.0"
-  resolved "git+https://github.com/ferrumnet/ferrum-plumbing.git#0a855970415961e16d3c4e2bf2189ab44b849abc"
+  resolved "git+https://github.com/ferrumnet/ferrum-plumbing.git#548185eb45fbd912dc50440d9df80dda219ee5c8"
   dependencies:
     cross-fetch "^3.0.4"
 
