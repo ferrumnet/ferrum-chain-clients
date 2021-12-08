@@ -16,6 +16,11 @@ export declare class CreateNewAddressFactory implements Injectable {
     private readonly bitcoinTestnet;
     private readonly bitcoin;
     constructor();
+    /**
+     * Returns the address factory. Defaults to ETH network
+     * @param network The network
+     * @returns The address factory
+     */
     create(network: Network): CreateNewAddress;
     __name__(): string;
 }

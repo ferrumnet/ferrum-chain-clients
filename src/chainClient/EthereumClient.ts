@@ -11,7 +11,7 @@ import {
 // @ts-ignore
 import abiDecoder from 'abi-decoder';
 import * as abi from '../resources/erc20-abi.json';
-import {ValidationUtils, HexString, RetryableError, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache, UsesServiceMultiplexer, Network} from 'ferrum-plumbing';
+import {ValidationUtils, HexString, RetryableError, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache, UsesServiceMultiplexer, Network, Networks, NetworkedConfig} from 'ferrum-plumbing';
 import {ChainUtils, ETH_DECIMALS, waitForTx} from './ChainUtils';
 import {EthereumGasPriceProvider, GasPriceProvider} from './GasPriceProvider';
 import {Transaction} from "ethereumjs-tx";
@@ -25,6 +25,7 @@ const HACK_ZERO_REPLACEMENT = '0x0000000000000000000000000000000000000001';
 import Common from 'ethereumjs-common';
 import transaction from 'ethereumjs-tx';
 
+// NOTE: DEPRECATED. Do not use any more
 export const ETHEREUM_CHAIN_ID_FOR_NETWORK = {
     'ETHEREUM': 1,
     'RINKEBY': 4,
@@ -35,6 +36,7 @@ export const ETHEREUM_CHAIN_ID_FOR_NETWORK = {
     'AVAX_TESTNET':43113
 } as any;
 
+// NOTE: DEPRECATED. Do not use any more
 const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
     'ETHEREUM': 'mainnet',
     'RINKEBY': 'rinkeby',
@@ -42,16 +44,6 @@ const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
     'BSC_TESTNET': 'testnet',
     'POLYGON': 'mainnet',
     'MUMBAI_TESTNET': 'mumbai',
-    'AVAX_TESTNET':'avax'
-} as any;
-
-const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
-    'ETHEREUM': 'eth',
-    'RINKEBY': 'eth',
-    'BSC': 'bnb',
-    'BSC_TESTNET': 'bnb',
-    'POLYGON': 'matic',
-    'MUMBAI_TESTNET': 'matic',
     'AVAX_TESTNET':'avax'
 } as any;
 
@@ -87,32 +79,35 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
     throttler: Throttler;
     private web3Instances: {[p: string]: Web3} = {};
     private _network: Network;
-    protected constructor(net: Network, config: MultiChainConfig,
+    protected constructor(net: Network, config: MultiChainConfig | NetworkedConfig<string>,
         private gasService: GasPriceProvider, logFac: LoggerFactory) {
         let provider = '';
         this._network = net;
-        switch(net) {
-            case 'ETHEREUM':
-                provider = config.web3Provider;
-                break;
-            case 'RINKEBY':
-                provider = config.web3ProviderRinkeby;
-                break;
-            case 'BSC':
-                provider = config.web3ProviderBsc!;
-                break;
-            case 'BSC_TESTNET':
-                provider = config.web3ProviderBscTestnet!;
-                break;
-            case 'POLYGON':
-                provider = config.web3ProviderPolygon!;
-                break;
-            case 'MUMBAI_TESTNET':
-                provider = config.web3ProviderMumbaiTestnet!;
-                break;
-            case 'AVAX_TESTNET':
-                provider = config.web3ProviderAvaxTestnet!;
-                break;
+        provider = (config as NetworkedConfig<string>)[net];
+        if (!provider) {
+            switch(net) {
+                case 'ETHEREUM':
+                    provider = config.web3Provider;
+                    break;
+                case 'RINKEBY':
+                    provider = config.web3ProviderRinkeby;
+                    break;
+                case 'BSC':
+                    provider = config.web3ProviderBsc!;
+                    break;
+                case 'BSC_TESTNET':
+                    provider = config.web3ProviderBscTestnet!;
+                    break;
+                case 'POLYGON':
+                    provider = config.web3ProviderPolygon!;
+                    break;
+                case 'MUMBAI_TESTNET':
+                    provider = config.web3ProviderMumbaiTestnet!;
+                    break;
+                case 'AVAX_TESTNET':
+                    provider = config.web3ProviderAvaxTestnet!;
+                    break;
+            }
         }
         ValidationUtils.isTrue(!!provider, `No provider is configured for '${net}'`);
         provider.split(',').map(p => {
@@ -120,10 +115,11 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
         });
         this.providerMux = new ServiceMultiplexer<Web3>(
             provider.split(',').map(p => () => this.web3Instances[p]), logFac, dontRetryError);
+        const conf = config as MultiChainConfig;
         this.throttler = new Throttler(
-            Math.round(1000 / (config.ethereumTps || 20)) || 50); // TPS is 20 per second.
-        this.requiredConfirmations = config.requiredEthConfirmations !== undefined ? config.requiredEthConfirmations : 1;
-        this.txWaitTimeout = config.pendingTransactionShowTimeout
+            Math.round(1000 / (conf.ethereumTps || 20)) || 50); // TPS is 20 per second.
+        this.requiredConfirmations = conf.requiredEthConfirmations !== undefined ? conf.requiredEthConfirmations : 1;
+        this.txWaitTimeout = conf.pendingTransactionShowTimeout
           || ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT * 10;
         abiDecoder.addABI(abi.abi);
     }
@@ -310,9 +306,9 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
                 }
                 return undefined;
             } catch (e) {
-                console.warn('Error processing transaction ', tid, e);
-                if (e.toString().indexOf('JSON RPC') >= 0) {
-                    throw new RetryableError(e.message);
+                console.warn('Error processing transaction ', tid, e as Error);
+                if ((e as Error).toString().indexOf('JSON RPC') >= 0) {
+                    throw new RetryableError((e as Error).message);
                 }
             }
         });
@@ -620,13 +616,13 @@ export abstract class EthereumClient implements ChainClient, UsesServiceMultiple
     }
 
     private getChainId() {
-        return ETHEREUM_CHAIN_ID_FOR_NETWORK[this.network()];
+        return Networks.for(this.network()).chainId;
     }
 
     private getChainOptions() {
-        const chainName = ETHEREUM_CHAIN_NAME_FOR_NETWORK[this.network()];
+        const chainName = Networks.for(this.network()).chainId.toString();
         const common = Common.forCustomChain(chainName, {
-        name: ETHEREUM_CHAIN_NAME_FOR_NETWORK[this.network()],
+        name: Networks.for(this.network()).displayName,
         networkId: this.getChainId(),
         chainId: this.getChainId(),
         }, 'petersburg');

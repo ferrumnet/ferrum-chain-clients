@@ -1,4 +1,4 @@
-import {Injectable, LocalCache, Network, LoggerFactory} from 'ferrum-plumbing';
+import {Injectable, LocalCache, Network, LoggerFactory, NetworkedConfig} from 'ferrum-plumbing';
 import {EthereumClient} from "./EthereumClient";
 import {ChainClient, MultiChainConfig, NetworkStage, ChainHistoryClient} from "./types";
 import {BinanceChainClient} from './BinanceChainClient';
@@ -36,6 +36,7 @@ export class ChainClientFactory implements Injectable {
     private mumbaiTestnetClient: EthereumClient | undefined;
     private bitcoinClient: BitcoinClient | undefined;
     private bitcoinTestnetClient: BitcoinClient | undefined;
+    private evmClients: NetworkedConfig<EthereumClient> = {};
 
     private wrap(client: ChainClient, network: Network) {
         return this.remoteSigner ? new RemoteClientWrapper(client, this.remoteSigner, network) : client;
@@ -101,7 +102,10 @@ export class ChainClientFactory implements Injectable {
                 }
                 return this.wrap(this.bitcoinTestnetClient, 'BITCOIN_TESTNET');
             default:
-                throw new Error('ChainClientFactory: Unsupported network: ' + network)
+                if (!this.evmClients[network]) {
+                    this.evmClients[network] = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                }
+                return this.wrap(this.evmClients[network], network);
         }
     }
 

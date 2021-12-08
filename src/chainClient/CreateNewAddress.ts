@@ -35,6 +35,11 @@ export class CreateNewAddressFactory implements Injectable {
         this.bitcoin = new BitcoinAddress('prod');
     }
 
+    /**
+     * Returns the address factory. Defaults to ETH network
+     * @param network The network
+     * @returns The address factory
+     */
     create(network: Network): CreateNewAddress {
         switch (network) {
             case 'BINANCE':
@@ -54,7 +59,8 @@ export class CreateNewAddressFactory implements Injectable {
             case 'BITCOIN_TESTNET':
                 return this.bitcoinTestnet;
             default:
-                throw new Error('CreateNewAddressFactory.create: Network not supported: ' + network)
+                // Default to EVM 
+                return this.ethAddress;
         }
     }
 

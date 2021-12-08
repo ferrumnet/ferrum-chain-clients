@@ -40,6 +40,11 @@ class CreateNewAddressFactory {
         this.bitcoinTestnet = new BitcoinAddress_1.BitcoinAddress('test');
         this.bitcoin = new BitcoinAddress_1.BitcoinAddress('prod');
     }
+    /**
+     * Returns the address factory. Defaults to ETH network
+     * @param network The network
+     * @returns The address factory
+     */
     create(network) {
         switch (network) {
             case 'BINANCE':
@@ -59,7 +64,8 @@ class CreateNewAddressFactory {
             case 'BITCOIN_TESTNET':
                 return this.bitcoinTestnet;
             default:
-                throw new Error('CreateNewAddressFactory.create: Network not supported: ' + network);
+                // Default to EVM 
+                return this.ethAddress;
         }
     }
     __name__() { return 'CreateNewAddressFactory'; }

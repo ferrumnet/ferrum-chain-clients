@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import { BlockData, ChainClient, EcSignature, GasParameters, MultiChainConfig, SignableTransaction, SimpleTransferTransaction, ContractCallRequest } from "./types";
-import { HexString, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache, UsesServiceMultiplexer, Network } from 'ferrum-plumbing';
+import { HexString, ServiceMultiplexer, Throttler, LoggerFactory, LocalCache, UsesServiceMultiplexer, Network, NetworkedConfig } from 'ferrum-plumbing';
 import { GasPriceProvider } from './GasPriceProvider';
 export declare const ETHEREUM_CHAIN_ID_FOR_NETWORK: any;
 export declare abstract class EthereumClient implements ChainClient, UsesServiceMultiplexer {
@@ -11,7 +11,7 @@ export declare abstract class EthereumClient implements ChainClient, UsesService
     throttler: Throttler;
     private web3Instances;
     private _network;
-    protected constructor(net: Network, config: MultiChainConfig, gasService: GasPriceProvider, logFac: LoggerFactory);
+    protected constructor(net: Network, config: MultiChainConfig | NetworkedConfig<string>, gasService: GasPriceProvider, logFac: LoggerFactory);
     setMode(mode: 'load-balance' | 'one-hot'): void;
     protected network(): Network;
     feeCurrency(): string;

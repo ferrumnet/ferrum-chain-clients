@@ -17,6 +17,7 @@ class ChainClientFactory {
         this.newAddressFactory = newAddressFactory;
         this.loggerFactory = loggerFactory;
         this.remoteSigner = remoteSigner;
+        this.evmClients = {};
         this.cache = cache || new ferrum_plumbing_1.LocalCache();
     }
     wrap(client, network) {
@@ -80,7 +81,10 @@ class ChainClientFactory {
                 }
                 return this.wrap(this.bitcoinTestnetClient, 'BITCOIN_TESTNET');
             default:
-                throw new Error('ChainClientFactory: Unsupported network: ' + network);
+                if (!this.evmClients[network]) {
+                    this.evmClients[network] = new FullEthereumClient_1.FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);
+                }
+                return this.wrap(this.evmClients[network], network);
         }
     }
     newAddress(network) {

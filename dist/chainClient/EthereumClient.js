@@ -35,6 +35,7 @@ const BLOCK_CACH_TIMEOUT = 10 * 1000;
 const ERC_20_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const HACK_ZERO_REPLACEMENT = '0x0000000000000000000000000000000000000001';
 const ethereumjs_common_1 = __importDefault(require("ethereumjs-common"));
+// NOTE: DEPRECATED. Do not use any more
 exports.ETHEREUM_CHAIN_ID_FOR_NETWORK = {
     'ETHEREUM': 1,
     'RINKEBY': 4,
@@ -44,6 +45,7 @@ exports.ETHEREUM_CHAIN_ID_FOR_NETWORK = {
     'MUMBAI_TESTNET': 80001,
     'AVAX_TESTNET': 43113
 };
+// NOTE: DEPRECATED. Do not use any more
 const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
     'ETHEREUM': 'mainnet',
     'RINKEBY': 'rinkeby',
@@ -51,15 +53,6 @@ const ETHEREUM_CHAIN_NAME_FOR_NETWORK = {
     'BSC_TESTNET': 'testnet',
     'POLYGON': 'mainnet',
     'MUMBAI_TESTNET': 'mumbai',
-    'AVAX_TESTNET': 'avax'
-};
-const ETHEREUM_CHAIN_SYMBOL_FOR_NETWORK = {
-    'ETHEREUM': 'eth',
-    'RINKEBY': 'eth',
-    'BSC': 'bnb',
-    'BSC_TESTNET': 'bnb',
-    'POLYGON': 'matic',
-    'MUMBAI_TESTNET': 'matic',
     'AVAX_TESTNET': 'avax'
 };
 function toDecimal(amount, decimals) {
@@ -88,37 +81,41 @@ class EthereumClient {
         this.localCache = new ferrum_plumbing_1.LocalCache();
         let provider = '';
         this._network = net;
-        switch (net) {
-            case 'ETHEREUM':
-                provider = config.web3Provider;
-                break;
-            case 'RINKEBY':
-                provider = config.web3ProviderRinkeby;
-                break;
-            case 'BSC':
-                provider = config.web3ProviderBsc;
-                break;
-            case 'BSC_TESTNET':
-                provider = config.web3ProviderBscTestnet;
-                break;
-            case 'POLYGON':
-                provider = config.web3ProviderPolygon;
-                break;
-            case 'MUMBAI_TESTNET':
-                provider = config.web3ProviderMumbaiTestnet;
-                break;
-            case 'AVAX_TESTNET':
-                provider = config.web3ProviderAvaxTestnet;
-                break;
+        provider = config[net];
+        if (!provider) {
+            switch (net) {
+                case 'ETHEREUM':
+                    provider = config.web3Provider;
+                    break;
+                case 'RINKEBY':
+                    provider = config.web3ProviderRinkeby;
+                    break;
+                case 'BSC':
+                    provider = config.web3ProviderBsc;
+                    break;
+                case 'BSC_TESTNET':
+                    provider = config.web3ProviderBscTestnet;
+                    break;
+                case 'POLYGON':
+                    provider = config.web3ProviderPolygon;
+                    break;
+                case 'MUMBAI_TESTNET':
+                    provider = config.web3ProviderMumbaiTestnet;
+                    break;
+                case 'AVAX_TESTNET':
+                    provider = config.web3ProviderAvaxTestnet;
+                    break;
+            }
         }
         ferrum_plumbing_1.ValidationUtils.isTrue(!!provider, `No provider is configured for '${net}'`);
         provider.split(',').map(p => {
             this.web3Instances[p] = this.web3Instance(p);
         });
         this.providerMux = new ferrum_plumbing_1.ServiceMultiplexer(provider.split(',').map(p => () => this.web3Instances[p]), logFac, dontRetryError);
-        this.throttler = new ferrum_plumbing_1.Throttler(Math.round(1000 / (config.ethereumTps || 20)) || 50); // TPS is 20 per second.
-        this.requiredConfirmations = config.requiredEthConfirmations !== undefined ? config.requiredEthConfirmations : 1;
-        this.txWaitTimeout = config.pendingTransactionShowTimeout
+        const conf = config;
+        this.throttler = new ferrum_plumbing_1.Throttler(Math.round(1000 / (conf.ethereumTps || 20)) || 50); // TPS is 20 per second.
+        this.requiredConfirmations = conf.requiredEthConfirmations !== undefined ? conf.requiredEthConfirmations : 1;
+        this.txWaitTimeout = conf.pendingTransactionShowTimeout
             || ChainUtils_1.ChainUtils.DEFAULT_PENDING_TRANSACTION_SHOW_TIMEOUT * 10;
         abi_decoder_1.default.addABI(abi.abi);
     }
@@ -613,12 +610,12 @@ class EthereumClient {
         }
     }
     getChainId() {
-        return exports.ETHEREUM_CHAIN_ID_FOR_NETWORK[this.network()];
+        return ferrum_plumbing_1.Networks.for(this.network()).chainId;
     }
     getChainOptions() {
-        const chainName = ETHEREUM_CHAIN_NAME_FOR_NETWORK[this.network()];
+        const chainName = ferrum_plumbing_1.Networks.for(this.network()).chainId.toString();
         const common = ethereumjs_common_1.default.forCustomChain(chainName, {
-            name: ETHEREUM_CHAIN_NAME_FOR_NETWORK[this.network()],
+            name: ferrum_plumbing_1.Networks.for(this.network()).displayName,
             networkId: this.getChainId(),
             chainId: this.getChainId(),
         }, 'petersburg');
