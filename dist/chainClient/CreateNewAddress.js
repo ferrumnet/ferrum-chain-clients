@@ -8,22 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-// @ts-ignore
-const crypto = __importStar(require("@binance-chain/javascript-sdk/lib/crypto"));
-// @ts-ignore
-const utils = __importStar(require("@binance-chain/javascript-sdk/lib/utils"));
-const web3_1 = __importDefault(require("web3"));
 const ethereumjs_util_1 = require("ethereumjs-util");
 const buffer_1 = require("buffer");
 const ferrum_crypto_1 = require("ferrum-crypto");
@@ -35,8 +20,6 @@ class CreateNewAddressFactory {
     constructor() {
         this.ethAddress = new EthereumAddress('prod');
         this.rinkebyAddress = new EthereumAddress('test');
-        this.binance = new BinanceChainAddress('prod');
-        this.binanceTestnet = new BinanceChainAddress('test');
         this.bitcoinTestnet = new BitcoinAddress_1.BitcoinAddress('test');
         this.bitcoin = new BitcoinAddress_1.BitcoinAddress('prod');
     }
@@ -47,10 +30,6 @@ class CreateNewAddressFactory {
      */
     create(network) {
         switch (network) {
-            case 'BINANCE':
-                return this.binance;
-            case 'BINANCE_TESTNET':
-                return this.binanceTestnet;
             case 'ETHEREUM':
             case 'BSC':
             case 'BSC_TESTNET':
@@ -71,43 +50,6 @@ class CreateNewAddressFactory {
     __name__() { return 'CreateNewAddressFactory'; }
 }
 exports.CreateNewAddressFactory = CreateNewAddressFactory;
-class BinanceChainAddress {
-    constructor(networkStage) {
-        this.network = networkStage;
-    }
-    __name__() {
-        return 'BinanceChainAddress';
-    }
-    addressFromSk(sk) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const pk = crypto.getPublicKeyFromPrivateKey(sk);
-            const address = crypto.getAddressFromPrivateKey(sk, this.network === 'prod' ? 'bnb' : 'tbnb');
-            // Test
-            const testData = utils.sha3(web3_1.default.utils.toHex('TEST DATA'));
-            const sign = crypto.generateSignature(testData, sk);
-            const verif = crypto.verifySignature(sign, testData, pk);
-            if (!verif) {
-                const msg = 'CreateNewAddress: Error creating a new address. Could not verify generated signature';
-                console.error(msg, sk);
-                throw new Error(msg);
-            }
-            return {
-                address: address.toString('hex'),
-                network: this.network === 'test' ? 'BINANCE_TESTNEET' : 'BINANCE',
-                privateKeyHex: sk,
-                createdAt: Date.now(),
-            };
-        });
-    }
-    newAddress() {
-        return __awaiter(this, void 0, void 0, function* () {
-            // Create a new private key
-            const sk = crypto.generatePrivateKey();
-            return this.addressFromSk(sk);
-        });
-    }
-}
-exports.BinanceChainAddress = BinanceChainAddress;
 class EthereumAddress {
     constructor(networkStage) {
         this.network = networkStage;

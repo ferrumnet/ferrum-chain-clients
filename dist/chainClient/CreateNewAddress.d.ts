@@ -11,8 +11,6 @@ export interface CreateNewAddress {
 export declare class CreateNewAddressFactory implements Injectable {
     private readonly ethAddress;
     private readonly rinkebyAddress;
-    private readonly binance;
-    private readonly binanceTestnet;
     private readonly bitcoinTestnet;
     private readonly bitcoin;
     constructor();
@@ -23,13 +21,6 @@ export declare class CreateNewAddressFactory implements Injectable {
      */
     create(network: Network): CreateNewAddress;
     __name__(): string;
-}
-export declare class BinanceChainAddress implements CreateNewAddress, Injectable {
-    private readonly network;
-    constructor(networkStage: NetworkStage);
-    __name__(): string;
-    addressFromSk(sk: HexString): Promise<AddressWithSecretKeys>;
-    newAddress(): Promise<AddressWithSecretKeys>;
 }
 export declare class EthereumAddress implements CreateNewAddress, Injectable {
     private readonly network;

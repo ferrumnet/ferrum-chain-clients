@@ -1,9 +1,5 @@
 import {HexString, Injectable} from 'ferrum-plumbing';
 import {AddressWithSecretKeys, Network} from 'ferrum-plumbing';
-// @ts-ignore
-import * as crypto from '@binance-chain/javascript-sdk/lib/crypto';
-// @ts-ignore
-import * as utils from '@binance-chain/javascript-sdk/lib/utils';
 import Web3 from 'web3';
 import {NetworkStage} from './types';
 import {ecrecover, ecsign, privateToAddress, publicToAddress} from 'ethereumjs-util';
@@ -22,15 +18,11 @@ export interface CreateNewAddress {
 export class CreateNewAddressFactory implements Injectable {
     private readonly ethAddress: EthereumAddress;
     private readonly rinkebyAddress: EthereumAddress;
-    private readonly binance: BinanceChainAddress;
-    private readonly binanceTestnet: BinanceChainAddress;
     private readonly bitcoinTestnet: BitcoinAddress;
     private readonly bitcoin: BitcoinAddress;
     constructor() {
         this.ethAddress = new EthereumAddress('prod');
         this.rinkebyAddress = new EthereumAddress('test');
-        this.binance = new BinanceChainAddress('prod');
-        this.binanceTestnet = new BinanceChainAddress('test');
         this.bitcoinTestnet = new BitcoinAddress('test');
         this.bitcoin = new BitcoinAddress('prod');
     }
@@ -42,10 +34,6 @@ export class CreateNewAddressFactory implements Injectable {
      */
     create(network: Network): CreateNewAddress {
         switch (network) {
-            case 'BINANCE':
-                return this.binance;
-            case 'BINANCE_TESTNET':
-                return this.binanceTestnet;
             case 'ETHEREUM':
             case 'BSC':
             case 'BSC_TESTNET':
@@ -65,43 +53,6 @@ export class CreateNewAddressFactory implements Injectable {
     }
 
     __name__(): string { return 'CreateNewAddressFactory'; }
-}
-
-export class BinanceChainAddress implements CreateNewAddress, Injectable {
-    private readonly network: "test" | "prod";
-    constructor(networkStage: NetworkStage) {
-        this.network = networkStage;
-    }
-
-    __name__(): string {
-        return 'BinanceChainAddress';
-    }
-
-    async addressFromSk(sk: HexString) {
-        const pk = crypto.getPublicKeyFromPrivateKey(sk) as HexString;
-        const address = crypto.getAddressFromPrivateKey(sk, this.network === 'prod' ? 'bnb' : 'tbnb') as Buffer;
-        // Test
-        const testData = utils.sha3(Web3.utils.toHex('TEST DATA'));
-        const sign = crypto.generateSignature(testData, sk) as Buffer;
-        const verif = crypto.verifySignature(sign, testData, pk) as Buffer;
-        if (!verif) {
-            const msg = 'CreateNewAddress: Error creating a new address. Could not verify generated signature';
-            console.error(msg, sk);
-            throw new Error(msg);
-        }
-        return {
-            address: address.toString('hex'),
-            network: this.network === 'test' ? 'BINANCE_TESTNEET' : 'BINANCE',
-            privateKeyHex: sk,
-            createdAt: Date.now(),
-        } as AddressWithSecretKeys;
-    }
-
-    async newAddress(): Promise<AddressWithSecretKeys> {
-        // Create a new private key
-        const sk = crypto.generatePrivateKey() as HexString;
-        return this.addressFromSk(sk);
-    }
 }
 
 export class EthereumAddress implements CreateNewAddress, Injectable {
