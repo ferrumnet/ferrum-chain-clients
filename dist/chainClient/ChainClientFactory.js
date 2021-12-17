@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const ferrum_plumbing_1 = require("ferrum-plumbing");
-const BinanceChainClient_1 = require("./BinanceChainClient");
 const RemoteClientWrapper_1 = require("./remote/RemoteClientWrapper");
 const FullEthereumClient_1 = require("./ethereum/FullEthereumClient");
 const BitcoinClient_1 = require("./bitcoin/BitcoinClient");
@@ -26,15 +25,9 @@ class ChainClientFactory {
     forNetwork(network) {
         switch (network) {
             case 'BINANCE':
-                if (!this.bnbClient) {
-                    this.bnbClient = new BinanceChainClient_1.BinanceChainClient('prod', this.localConfig);
-                }
-                return this.wrap(this.bnbClient, 'BINANCE');
+                throw new Error('Support removed');
             case 'BINANCE_TESTNET':
-                if (!this.bnbClientTestnet) {
-                    this.bnbClientTestnet = new BinanceChainClient_1.BinanceChainClient('test', this.localConfig);
-                }
-                return this.wrap(this.bnbClientTestnet, 'BINANCE_TESTNET');
+                throw new Error('Support removed');
             case 'ETHEREUM':
                 if (!this.ethClient) {
                     this.ethClient = new FullEthereumClient_1.FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);

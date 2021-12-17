@@ -9,7 +9,6 @@ __export(require("./chainClient/ChainUtils"));
 __export(require("./chainClient/EthereumClient"));
 __export(require("./chainClient/GasPriceProvider"));
 __export(require("./chainClient/CreateNewAddress"));
-__export(require("./chainClient/BinanceChainClient"));
 __export(require("./chainClient/ethereum/ContractClientBase"));
 __export(require("./chainClient/ethereum/Erc20ReaderClient"));
 __export(require("./chainClient/remote/RemoteSignerClient"));

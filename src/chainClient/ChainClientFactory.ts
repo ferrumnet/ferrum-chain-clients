@@ -1,7 +1,6 @@
 import {Injectable, LocalCache, Network, LoggerFactory, NetworkedConfig} from 'ferrum-plumbing';
 import {EthereumClient} from "./EthereumClient";
-import {ChainClient, MultiChainConfig, NetworkStage, ChainHistoryClient} from "./types";
-import {BinanceChainClient} from './BinanceChainClient';
+import {ChainClient, MultiChainConfig, ChainHistoryClient} from "./types";
 import {BinanceGasPriceProvider, BscGasPriceProvider, EthereumGasPriceProvider, GasPriceProvider, PolygonGasPriceProvider} from './GasPriceProvider';
 import {CreateNewAddressFactory} from './CreateNewAddress';
 import {RemoteSignerClient} from "./remote/RemoteSignerClient";
@@ -26,8 +25,6 @@ export class ChainClientFactory implements Injectable {
         this.cache = cache || new LocalCache();
     }
 
-    private bnbClient: BinanceChainClient | undefined;
-    private bnbClientTestnet: BinanceChainClient | undefined;
     private ethClient: EthereumClient | undefined;
     private rinkebyClient: EthereumClient | undefined;
     private bscClient: EthereumClient | undefined;
@@ -45,15 +42,9 @@ export class ChainClientFactory implements Injectable {
     forNetwork(network: Network): ChainClient {
         switch (network) {
             case 'BINANCE':
-                if (!this.bnbClient) {
-                    this.bnbClient = new BinanceChainClient('prod', this.localConfig);
-                }
-                return this.wrap(this.bnbClient, 'BINANCE');
+                throw new Error('Support removed');
             case 'BINANCE_TESTNET':
-                if (!this.bnbClientTestnet) {
-                    this.bnbClientTestnet = new BinanceChainClient('test', this.localConfig);
-                }
-                return this.wrap(this.bnbClientTestnet, 'BINANCE_TESTNET');
+                throw new Error('Support removed');
             case 'ETHEREUM':
                 if (!this.ethClient) {
                     this.ethClient = new FullEthereumClient(network, this.localConfig, this.ethGasProvider, this.loggerFactory);

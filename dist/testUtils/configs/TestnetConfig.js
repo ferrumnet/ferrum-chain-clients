@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const GasPriceProvider_1 = require("../../chainClient/GasPriceProvider");
 const CreateNewAddress_1 = require("../../chainClient/CreateNewAddress");
 const FullEthereumClient_1 = require("../../chainClient/ethereum/FullEthereumClient");
-const BinanceChainClient_1 = require("../../chainClient/BinanceChainClient");
 const ChainClientFactory_1 = require("../../chainClient/ChainClientFactory");
 const BitcoinClient_1 = require("../../chainClient/bitcoin/BitcoinClient");
 const ferrum_plumbing_1 = require("ferrum-plumbing");
@@ -55,10 +54,9 @@ function ethereumClientForProd() {
     return new FullEthereumClient_1.FullEthereumClient('ETHEREUM', TEST_PROD_CONFIG, new GasPriceProvider_1.EthereumGasPriceProvider(), dummyLogFac);
 }
 exports.ethereumClientForProd = ethereumClientForProd;
-function binanceClientForProd() {
-    return new BinanceChainClient_1.BinanceChainClient('prod', TEST_PROD_CONFIG);
-}
-exports.binanceClientForProd = binanceClientForProd;
+// export function binanceClientForProd() {
+//     return new BinanceChainClient('prod', TEST_PROD_CONFIG);
+// }
 function bitcoinClientForProd() {
     return new BitcoinClient_1.BitcoinClient('prod', new ferrum_plumbing_1.LocalCache(), new BitcoinAddress_1.BitcoinAddress('prod'));
 }

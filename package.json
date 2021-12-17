@@ -33,7 +33,6 @@
     "typescript": "^3.5.3"
   },
   "dependencies": {
-    "@binance-chain/javascript-sdk": "^2.15.0",
     "abi-decoder": "latest",
     "bitcore-lib": "^8.17.0",
     "bn.js": "latest",

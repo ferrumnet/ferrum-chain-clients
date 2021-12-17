@@ -7,7 +7,6 @@ import {
 } from '../../chainClient/GasPriceProvider';
 import {CreateNewAddressFactory} from '../../chainClient/CreateNewAddress';
 import {FullEthereumClient} from "../../chainClient/ethereum/FullEthereumClient";
-import {BinanceChainClient} from "../../chainClient/BinanceChainClient";
 import {ChainClientFactory} from "../../chainClient/ChainClientFactory";
 import {BitcoinClient} from "../../chainClient/bitcoin/BitcoinClient";
 import {LocalCache, LoggerFactory, ConsoleLogger} from "ferrum-plumbing";
@@ -61,9 +60,9 @@ export function ethereumClientForProd() {
     return new FullEthereumClient('ETHEREUM', TEST_PROD_CONFIG, new EthereumGasPriceProvider(), dummyLogFac);
 }
 
-export function binanceClientForProd() {
-    return new BinanceChainClient('prod', TEST_PROD_CONFIG);
-}
+// export function binanceClientForProd() {
+//     return new BinanceChainClient('prod', TEST_PROD_CONFIG);
+// }
 
 export function bitcoinClientForProd() {
     return new BitcoinClient('prod', new LocalCache(), new BitcoinAddress('prod'));
